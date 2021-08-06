@@ -1,0 +1,46 @@
+name = "MLCourse"
+uuid = "bdb52a37-b1f4-4443-a4d5-f8ef0db855e0"
+authors = ["Johanni Brea <jbrea@users.noreply.github.com>"]
+version = "0.1.0"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+HypertextLiteral = "ac1192a8-f4b3-4bfe-ba22-af5b92cd3ab2"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+MLDatasets = "eb30cadb-4394-5ae3-aed4-317e484a6458"
+MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
+MLJBase = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
+MLJFlux = "094fc8d1-fd35-5302-93ea-dabda2abf845"
+MLJGLMInterface = "caf8df21-4939-456d-ac9c-5fefbfb04c0c"
+MLJLinearModels = "6ee0df7b-362f-4a72-a706-9e79364fb692"
+MLJOpenML = "cbea4545-8c96-4583-ad3a-44078d60d369"
+MLJScikitLearnInterface = "5ae90465-5518-4432-b9d2-8a1def2f0cab"
+MLJSerialization = "17bed46d-0ab5-4cd4-b792-a5c4b8547c6d"
+MLJTuning = "03970b2e-30c4-11ea-3135-d1576263f10f"
+MLJXGBoostInterface = "54119dfa-1dab-4055-a167-80440f4f7a91"
+Markdown = "d6f4376e-aef5-505a-96c1-9c027394607a"
+NearestNeighborModels = "636a865e-7cf4-491e-846c-de09b730eb36"
+PackageCompiler = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
+Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+Pluto = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
+PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
+TextAnalysis = "a2db99b7-8b79-58f8-94bf-bbc811eef33d"
+Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
+
+[compat]
+julia = "^1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
