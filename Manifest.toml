@@ -1115,7 +1115,7 @@ version = "1.20.0"
 
 [[Pluto]]
 deps = ["Base64", "Configurations", "Dates", "Distributed", "FileWatching", "FuzzyCompletions", "HTTP", "InteractiveUtils", "Logging", "Markdown", "MsgPack", "Pkg", "REPL", "Sockets", "TableIOInterface", "Tables", "UUIDs"]
-git-tree-sha1 = "6af6088f72ae82c8b6712047b5fe79c22016b878"
+path = "/home/j/.julia/dev/Pluto"
 uuid = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
 version = "0.15.1"
 
