@@ -8,25 +8,8 @@ include("notebooks.jl")
 include_dependency("../Project.toml")
 const _VERSION = VersionNumber(Pkg.TOML.parsefile(project_relative_path("Project.toml"))["version"])
 
-using RDatasets, Zygote, Plots, MLJ, MLJLinearModels, MLJGLMInterface,
-      MLJScikitLearnInterface, Markdown
+using Zygote, Plots, MLJ, MLJLinearModels, MLJGLMInterface, Markdown
 export description, gradient_descent, plot_residuals!, fitted_linear_func, grid
-
-struct RDatasetsDescription
-    content::String
-end
-function description(package_name::AbstractString, dataset_name::AbstractString)
-    RDatasetsDescription(read(joinpath(pkgdir(RDatasets), "doc",
-                                       package_name, "$dataset_name.html"), String))
-end
-function Base.show(io::IO, mime::MIME"text/plain", d::RDatasetsDescription)
-    nohtml = replace(d.content, Regex("<[^>]*>") => "")
-    s = replace(nohtml, Regex("\n\n+") => "\n\n")
-    show(io, mime, Docs.Text(s))
-end
-function Base.show(io::IO, mime::MIME"text/html", d::RDatasetsDescription)
-    show(io, mime, HTML(d.content))
-end
 
 function plot_residuals!(x, y, f; kwargs...)
     for (xi, yi) in zip(x, y)
