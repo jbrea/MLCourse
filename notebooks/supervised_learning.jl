@@ -24,7 +24,7 @@ end
 
 # ╔═╡ f63c04e8-eefe-11eb-39f6-83b31ebe73e7
 begin
-    using MLDatasets, Plots
+    using Plots
     gr()
 end # with a begin ... end block we can write multiple lines in one cell
 
@@ -65,7 +65,7 @@ md"In this notebook we have a first look at some data sets and the [MLJ machine 
 
 
 # ╔═╡ f63c04e8-eefe-11eb-1a14-8305504a6f1c
-mnist_x, mnist_y = MLDatasets.MNIST.traindata();
+mnist = MLJOpenML.load(554) |> DataFrame;
 
 # ╔═╡ f63c04f2-eefe-11eb-2562-e530426e4300
 md"With the semicolon we omit output. If you want to know more about the syntax
@@ -74,29 +74,31 @@ md"With the semicolon we omit output. If you want to know more about the syntax
 
 
 # ╔═╡ f63c04f2-eefe-11eb-3ceb-ff1e36a2a302
-mnist_y # labels is a vector of 60'000 integers between 0 and 9.
+mnist.class # labels is a vector of 70'000 integers between 0 and 9.
 
 
 # ╔═╡ f63c04fc-eefe-11eb-35b6-5345dda134e7
-size(mnist_x)
+size(mnist)
 
 
 # ╔═╡ f63c04fc-eefe-11eb-043c-7fec2fc41913
-md"The input of this data set consists of 60'000 grayscale images of 28x28 pixels.
-This data is loaded as an array of size (28, 28, 60000).
+md"The input of this data set consists of 70'000 grayscale images of 28x28 pixels.
 
 We can plot different input images with the following code.
 
-Explanation: `data[:, :, 19]` gets all pixels of the 19th image.
+Explanation: `data[19, 1:end-1]` gets all pixels of the 19th image.
+Next we transform the dataframe row to an `Array`. In OpenML, the inputs are
+ 8-bit integer; we transform to values between 0 and 1 by dividing by 255.
+Then we reshape the vector of 784 entries to a matrix of size 28x28 with `reshape`.
 `'` transposes the matrix (alternatively we could use `PermutedDimsArray`; look it up in the Live docs, if you are interested). `Gray.(...)` applies the `Gray` function elementwise to all the pixels, to reinterpret these numbers as grayscale values."
 
 
 # ╔═╡ f63c0506-eefe-11eb-1857-e3eaf731c152
-plot(Gray.(mnist_x[:, :, 19]'))
+plot(Gray.(reshape(Array(mnist[19, 1:end-1]) ./ 255, 28, 28)'))
 
 
 # ╔═╡ f63c0506-eefe-11eb-399f-455ee06548da
-mnist_y[19] # the label corresponding to image 19 is a 6 :)
+mnist.class[19] # the label corresponding to image 19 is a 6 :)
 
 
 # ╔═╡ f63c050e-eefe-11eb-1709-0ddce2aee0ed
