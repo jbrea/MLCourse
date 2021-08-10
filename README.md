@@ -1,14 +1,24 @@
-# MLCourse.jl
+# MLCourse
 
-![Lifecycle](https://img.shields.io/badge/lifecycle-experimental-orange.svg)<!--
-![Lifecycle](https://img.shields.io/badge/lifecycle-maturing-blue.svg)
-![Lifecycle](https://img.shields.io/badge/lifecycle-stable-green.svg)
-![Lifecycle](https://img.shields.io/badge/lifecycle-retired-orange.svg)
-![Lifecycle](https://img.shields.io/badge/lifecycle-archived-red.svg)
-![Lifecycle](https://img.shields.io/badge/lifecycle-dormant-blue.svg) -->
-[![Build Status](https://travis-ci.com/jbrea/MLCourse.jl.svg?branch=master)](https://travis-ci.com/jbrea/MLCourse.jl)
-[![codecov.io](http://codecov.io/github/jbrea/MLCourse.jl/coverage.svg?branch=master)](http://codecov.io/github/jbrea/MLCourse.jl?branch=master)
-<!--
-[![Documentation](https://img.shields.io/badge/docs-stable-blue.svg)](https://jbrea.github.io/MLCourse.jl/stable)
-[![Documentation](https://img.shields.io/badge/docs-master-blue.svg)](https://jbrea.github.io/MLCourse.jl/dev)
--->
+This repository contains teaching material for an introductory machine learning course.
+
+To use the code, please download [julia](julialang.org/downloads) (at least version 1.6)
+open julia and install the code in this repository with
+```julia
+julia> using Pkg
+       Pkg.develop(url = "https://github.com/jbrea/MLCourse")
+       Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+       Pkg.instantiate()
+```
+
+To use the notebooks, start julia and type
+```julia
+julia> using MLCourse
+       MLCourse.start()
+```
+
+To reduce loading times of the pluto notebooks you can create a custom system image with
+```julia
+julia> using MLCourse
+       MLCourse.create_sysimage()
+```
