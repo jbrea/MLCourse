@@ -24,9 +24,10 @@ end
 
 # ╔═╡ 6d84c382-27d5-47bd-97a9-88153d20b2fc
 begin
-    using MLDatasets
-    mnist_x, mnist_y = let (X, y) = MLDatasets.MNIST.traindata()
-		float.(DataFrame(PermutedDimsArray(reshape(X, :, size(X, 3)), (2, 1)), :auto)), coerce(y, Multiclass)
+    using MLJOpenML
+    mnist_x, mnist_y = let df = MLJOpenML.load(554)
+        coerce!(df[:, 1:end-1], Count => Continuous) ./ 255,
+        coerce(df.class, Multiclass)
 	end
 end;
 
