@@ -287,6 +287,62 @@ let σ(x) = 1/(1 + exp(-x)), f(x1, x2) = σ(θ₀ + θ₁ * x1 + θ₂ * x2)
 end
 
 
+# ╔═╡ fd4165dc-c3e3-4c4c-9605-167b5b4416da
+md"## Confusion Matrix, ROC and AUC"
+
+# ╔═╡ 7738c156-8e1b-4723-9818-fba364822171
+md"s = $(@bind s Slider(-4:.1:4, default = 0, show_value = true))
+
+seed = $(@bind seed Slider(1:100, show_value = true))
+
+threshold = $(@bind threshold Slider(.01:.01:.99, default = 0.5, show_value = true))
+"
+
+# ╔═╡ 0fcfd7d2-6ea3-4c75-bad3-7d0fdd6fde11
+begin
+    logistic(x) = 1/(1 + exp(-x))
+    logodds(p) = log(p/(1-p))
+    function error_rates(x, y, t)
+        P = sum(y)
+        N = length(y) - P
+        pos_pred = y[(logistic.(x) .> t)]
+        TP = sum(pos_pred)
+        FP = sum(1 .- pos_pred)
+        FP/N, TP/P
+    end
+end;
+
+# ╔═╡ 285c6bfc-5f29-46e0-a2c1-8abbec74501b
+begin
+    Random.seed!(seed)
+    auc_samples_x = 2 * randn(200)
+end;
+
+# ╔═╡ c98524b5-d6b3-469c-82a1-7d231cc792d6
+begin
+    auc_samples_y = logistic.(2.0^s * auc_samples_x) .> rand(200)
+    auc = [error_rates(2.0^s * auc_samples_x, auc_samples_y, t)
+           for t in .01:.01:.99]
+    push!(auc, (0., 0.))
+    prepend!(auc, [(1., 1.)])
+end;
+
+# ╔═╡ 3336ab15-9e9b-44af-a7d5-1d6472241e62
+let
+    gr()
+    p1 = scatter(auc_samples_x, auc_samples_y, markershape = :vline, label = nothing, color = :black)
+    plot!(x -> logistic(2.0^s * x), color = :blue, label = nothing, xlims = (-8, 8))
+    vline!([1/(2.0^s) * logodds(threshold)], w = 3, color = :red,
+           label = nothing, xlabel = "x", ylabel = "y")
+    p2 = plot(first.(auc), last.(auc), title = "ROC", label = nothing)
+    fp, tp = auc[floor(Int, threshold * 100)]
+    scatter!([fp], [tp], color = :red, xlims = (-.01, 1.01), ylims = (-.01, 1.01),
+            labels = nothing, ylabel = "true positive rate",
+            xlabel = "false positive rate")
+    plot(p1, p2, size = (700, 400))
+end
+
+
 # ╔═╡ 62ad57e5-1366-4635-859b-ccdab2efd3b8
 md"## Multiple Logistic Regression on the spam data"
 
@@ -408,6 +464,12 @@ md"# Exercises
 # ╟─ec1c2ea5-29ce-4371-be49-08798305ff50
 # ╟─f7117513-283f-4e32-a2a1-3594c794c94d
 # ╟─4f89ceab-297f-4c2c-9029-8d2d7fad084f
+# ╟─fd4165dc-c3e3-4c4c-9605-167b5b4416da
+# ╟─7738c156-8e1b-4723-9818-fba364822171
+# ╠═0fcfd7d2-6ea3-4c75-bad3-7d0fdd6fde11
+# ╟─3336ab15-9e9b-44af-a7d5-1d6472241e62
+# ╟─285c6bfc-5f29-46e0-a2c1-8abbec74501b
+# ╟─c98524b5-d6b3-469c-82a1-7d231cc792d6
 # ╟─62ad57e5-1366-4635-859b-ccdab2efd3b8
 # ╠═29e1d9ff-4375-455a-a69b-8dd0c2cac57d
 # ╠═1d1a24c6-c166-49a2-aa21-7acf50b55a66
