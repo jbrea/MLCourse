@@ -8,7 +8,7 @@ include("notebooks.jl")
 include_dependency("../Project.toml")
 const _VERSION = VersionNumber(Pkg.TOML.parsefile(project_relative_path("Project.toml"))["version"])
 
-using Zygote, Plots, MLJ, MLJLinearModels, MLJGLMInterface, Markdown
+using Zygote, Plots, MLJ, MLJLinearModels, MLJGLMInterface, Markdown, DataFrames
 export description, gradient_descent, plot_residuals!, fitted_linear_func, grid
 
 function plot_residuals!(x, y, f; kwargs...)
