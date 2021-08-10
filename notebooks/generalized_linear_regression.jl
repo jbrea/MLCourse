@@ -353,20 +353,16 @@ md"# Exercises
    How much higher is the test error compared to the fit with all available predictors?
 2. In this exercise we perform linear classification of the MNIST handwritten digits
    dataset.
-   - Load the MNIST training set (Hint: see notebook \"supervised learning\").
-   - The input data comes as a 28x28x60000 array. We transform this to a `DataFrame`
-     with ``n = 60000`` rows and ``p = 784`` columns using the command
-     `mnist_input = DataFrame(reshape(PermutedDimsArray(mnist_x, (3, 1, 2)), size(mnist_x, 3), :), :auto)`.
-     - `PermutedDimsArray(x, (3, 1, 2))` brings the last dimension to the front
-     - `reshape(x, n, :)` transforms the 60000x28x28 array to shape 60000x784
-     - `DataFrame(x, :auto)` puts the data into a dataframe with automatic labels
-   - Coerce the output with the command `coerce(mnist_y, Multiclass)`.
+   - Load the MNIST data set (Hint: see notebook \"supervised learning\").
+   - Usually the first 60'000 images are taken as training set, but for this exercise I recommend to use fewer rows, e.g. the first 5000.
+   - Coerce the output to multiclass (for classification) and the input to real numbers  with the command `coerce!(mnist, :class => Multiclass); coerce!(mnist, Count => Continuous)`.
+   - Scale the input values to the interval [0, 1) with `mnist[:, 1:784] ./= 255`
    - Fit a `MLJLinearModels.MultinomialClassifier(penalty = :none)` to the data.
      Hint: this may take a long time. Just use e.g. the first 5000 rows of the data
      if you want to wait less.
    - Compute the misclassification rate and the confusion matrix on the training set.
-   - Load the test set with `MLDatasets.MNIST.testdata()` and compute the
-      misclassification rate and the confusion matrix on this test set.
+   - Use as test data rows 60001 to 70000 and compute the misclassification rate
+     and the confusion matrix on this test set.
    - Plot some of the wrongly classified training and test images.
      Are they also difficult for you to classify?
 "

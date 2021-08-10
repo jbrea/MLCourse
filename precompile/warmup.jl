@@ -10,11 +10,9 @@ session.options.security.require_secret_for_access = false
 # for file in last.(MLCourse.NOTEBOOKS)
 #     Base.include(Module(), joinpath(@__DIR__, "..", "notebooks", file))
 # end
-using MLDatasets, CSV, DataFrames, MLJ, MLJLinearModels, NearestNeighborModels,
+using CSV, DataFrames, MLJ, MLJLinearModels, NearestNeighborModels,
       Random, Distributions, MLJGLMInterface, Plots, StatsPlots, Statistics,
       LinearAlgebra
-
-MLDatasets.MNIST.traindata()
 
 weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), DataFrame)
 @df weather corrplot([:BAS_pressure :LUG_pressure :LUZ_pressure :LUZ_wind_peak],
