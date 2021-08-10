@@ -500,9 +500,9 @@ md"# Exercises
 # ╠═f63c05ba-eefe-11eb-18b5-7522b326ab65
 # ╠═f63c05ba-eefe-11eb-1b7a-21cbd9bbeb37
 # ╠═f63c05c4-eefe-11eb-030e-6f7484849852
-# ╠═25eb24a4-5414-481b-88d5-5ad50d75f8c9
+# ╟─25eb24a4-5414-481b-88d5-5ad50d75f8c9
 # ╠═f0f6ac8f-2e61-4b08-9383-45ff5b02c5b1
-# ╠═7336e7b4-a7c2-4409-8d9d-00285cf633fb
+# ╟─7336e7b4-a7c2-4409-8d9d-00285cf633fb
 # ╠═f63c05c4-eefe-11eb-2d60-f7bf7beb8118
 # ╠═f63c05ce-eefe-11eb-1ccd-c9b7714f3bd5
 # ╠═f63c05d8-eefe-11eb-2a11-fd8f954bf059
@@ -523,7 +523,7 @@ md"# Exercises
 # ╟─8060861a-1931-4fae-b6ee-afb94ef2a3d5
 # ╟─6124e1eb-0aec-4ac9-aee6-383b25865220
 # ╟─5d3efbe5-8937-45c0-894d-d24ece9b2262
-# ╟─897fc69d-f1e9-49e9-9a61-25eb6849f7ec
+# ╠═897fc69d-f1e9-49e9-9a61-25eb6849f7ec
 # ╟─f63c0616-eefe-11eb-268a-271fdc2ddd98
 # ╠═f63c0616-eefe-11eb-1cea-dfdaa64e6233
 # ╠═f63c0616-eefe-11eb-1bfa-5b2ef11fcf4d
