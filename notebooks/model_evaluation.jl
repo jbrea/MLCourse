@@ -64,6 +64,24 @@ let i = argmin(losses1)
     scatter!([i], [losses1[i]], label = nothing)
 end
 
+# ╔═╡ 35c964a9-45ce-4563-8d8f-c18f2e0079c1
+md"For this split into training and validation set the best degree found by the
+validation set approach is $(argmin(losses1)). Let us look at the test loss of
+this model. Remember, we expect the validation loss of the winner to be below the
+test error, because the winner of the validation set approach may have overfit
+some peculiarities of the validation set.
+"
+
+# ╔═╡ 44f2a54d-f9a2-4d26-9db8-d5c16c2f0e9c
+let
+    best_mach = fit!(machine(LinearRegressor(),
+                             preprocessor(4)(data1.train),
+                             data1.train.y))
+    (validation_loss = minimum(losses1),
+     test_loss = mean((predict(best_mach, preprocessor(4)(data1.test)) .-
+                      data1.test.y) .^ 2))
+end
+
 # ╔═╡ ac3c7e84-6c47-4dc1-b862-de4cfb05dad9
 losses = [fit_and_evaluate(LinearRegressor(),
                            data_split(data_generator(seed = seed)),
@@ -79,6 +97,21 @@ end
 # ╔═╡ 46bffe01-1a7c-405b-b3ec-bfe7570b8a3c
 md"# Cross-Validation"
 
+# ╔═╡ b3aed705-5072-4d9b-bb8f-865ac1561bf6
+
+
+# ╔═╡ c14c9e49-a993-456e-9115-97da86f8e498
+
+
+# ╔═╡ 4b435518-2f12-4921-bb1f-fdd049ddfaed
+
+
+# ╔═╡ 1e584a38-2fef-4877-87f6-92237d71c4b3
+
+
+# ╔═╡ a7c88b3f-92cb-4253-a889-c78683722c1d
+
+
 # ╔═╡ Cell order:
 # ╟─7eb6a060-f948-4d85-881a-4909e74c15bd
 # ╠═7dd7e9a7-9245-4c64-af0c-8f7d2f62b2bf
@@ -86,8 +119,15 @@ md"# Cross-Validation"
 # ╠═751880ec-1a82-4142-b875-177d436bbc72
 # ╠═2e02ac0d-c4d0-47ba-be57-445adeb6ab8b
 # ╠═91eecd2b-af18-4a63-9684-28950e604d1a
+# ╟─35c964a9-45ce-4563-8d8f-c18f2e0079c1
+# ╠═44f2a54d-f9a2-4d26-9db8-d5c16c2f0e9c
 # ╠═ac3c7e84-6c47-4dc1-b862-de4cfb05dad9
 # ╟─26362233-b006-423d-8fb5-7cd9150405b4
 # ╟─46bffe01-1a7c-405b-b3ec-bfe7570b8a3c
+# ╠═b3aed705-5072-4d9b-bb8f-865ac1561bf6
+# ╠═c14c9e49-a993-456e-9115-97da86f8e498
+# ╠═4b435518-2f12-4921-bb1f-fdd049ddfaed
+# ╠═1e584a38-2fef-4877-87f6-92237d71c4b3
+# ╠═a7c88b3f-92cb-4253-a889-c78683722c1d
 # ╟─c693088f-7f80-4cdd-b9b5-65a50da732ac
 # ╟─736856ce-f490-11eb-3349-057c86edfe7e
