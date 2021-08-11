@@ -87,6 +87,20 @@ function start()
     end
 end
 
+function update()
+    @info "Performing an automatic update while keeping local changes.
+    If this fails, please run manually `git pull` in the directory
+    `$(project_relative_path())`."
+    current_dir = pwd()
+    cd(project_relative_path())
+    if !isempty(readlines(`git diff --stat`))
+        run(`git add -u`)
+        run(`git commit -m "automatic commit of local changes"`)
+    end
+    run(`git pull origin main -s recursive -X patience -X ours -X ignore-all-space --no-edit`)
+    cd(current_dir)
+end
+
 function create_sysimage()
     exe = joinpath(Sys.BINDIR, "julia")
     run(`$exe $(project_relative_path("precompile", "precompile.jl"))`)
