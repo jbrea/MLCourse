@@ -152,6 +152,15 @@ let validlosses = getproperty.(losses_cv10, :valid), i = argmin(validlosses, dim
              xlabel = "degree", ylabel = "validation loss")
 end
 
+# ╔═╡ 0ab1238e-8279-43d5-9803-848cb00156c2
+let validlosses = getproperty.(losses_cv10, :valid),
+	testlosses = getproperty.(losses_cv10, :test),
+	winners = argmin(validlosses, dims = 1)
+	(mean_valid_winner = mean(validlosses[winners]),
+	 mean_test_winner = mean(testlosses[winners]))
+end
+
+
 # ╔═╡ eaacf529-1727-4743-941b-360c53088b1d
 md"Instead of our own cross-validation function we can also use the builtin functions of MLJ."
 
@@ -163,6 +172,48 @@ let data = data_generator(seed = 1)
 	evaluate(LinearRegressor(), preprocessor(4)(data), data.y,
 		     resampling = CV(nfolds = 10))
 end
+
+# ╔═╡ abb71af3-8aae-4806-9d5a-d144c15d22ef
+losses_mlj_cv10 = [let data = data_generator(seed = seed)[1:100, :]
+                       evaluate(LinearRegressor(),
+                                preprocessor(degree)(data),
+                                data.y,
+                                resampling = CV(nfolds = 10),
+                                measure = rmse,
+                                verbosity = 0).measurement[]
+                   end
+                   for degree in 1:10, seed in 1:20]
+
+# ╔═╡ 6599d2b4-68f4-4c22-8e40-bf3722597692
+let validlosses  = losses_mlj_cv10, i = argmin(validlosses, dims = 1)
+    plot(validlosses, label = nothing, ylims = (0, 10))
+    scatter!((x -> x[1]).(i), validlosses[i], label = nothing,
+             xlabel = "degree", ylabel = "validation loss")
+end
+
+# ╔═╡ ee89c448-1e69-4fd1-a4b8-7297a09f2685
+md"# Exercises
+
+## Conceptual
+1. We review k-fold cross-validation.
+    - Explain how k-fold cross-validation is implemented.
+    - What are the advantages and disadvantages of k-fold cross-validation relative to:
+        - The validation set approach?
+        - LOOCV?
+
+## Applied
+1. Perform k-nearest neighbors regression on data generated with our `data_generator`
+   defined in the first cell of this notebook and find the optimal number k of neighbors
+   with k-fold cross validation.
+2. Take the artificial generator of classification data in our notebook on
+   \"flexibility and bias-variance-decomposition notebook\" and find with k-fold
+   cross-validation the optimal number k of neighbors of kNN
+   classification, using the AUC measure. Hint: the `evaluate` function of `MLJ`
+   accepts a measure argument and `MLJ` has the builtin function `auc`.
+"
+
+# ╔═╡ 5d1fccfa-7362-4aed-a3f1-5fbd743ae9ab
+
 
 # ╔═╡ Cell order:
 # ╟─7eb6a060-f948-4d85-881a-4909e74c15bd
@@ -183,8 +234,13 @@ end
 # ╟─4b435518-2f12-4921-bb1f-fdd049ddfaed
 # ╠═1e584a38-2fef-4877-87f6-92237d71c4b3
 # ╟─a7c88b3f-92cb-4253-a889-c78683722c1d
+# ╠═0ab1238e-8279-43d5-9803-848cb00156c2
 # ╟─eaacf529-1727-4743-941b-360c53088b1d
 # ╠═967a6e08-f0e6-45b7-988b-d0df237f3ddf
 # ╠═8ae790b3-3987-4f41-8e21-adbb71081eb9
+# ╠═abb71af3-8aae-4806-9d5a-d144c15d22ef
+# ╟─6599d2b4-68f4-4c22-8e40-bf3722597692
+# ╟─ee89c448-1e69-4fd1-a4b8-7297a09f2685
+# ╠═5d1fccfa-7362-4aed-a3f1-5fbd743ae9ab
 # ╟─c693088f-7f80-4cdd-b9b5-65a50da732ac
 # ╟─736856ce-f490-11eb-3349-057c86edfe7e
