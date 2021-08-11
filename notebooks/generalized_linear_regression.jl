@@ -276,6 +276,7 @@ and the samples.
 let σ(x) = 1/(1 + exp(-x)), f(x1, x2) = σ(θ₀ + θ₁ * x1 + θ₂ * x2)
     p1 = wireframe(-3:.1:3, -3:.1:3, f, zlims = (0, 1))
     p2 = contour(-3:.1:3, -3:.1:3, f, contour_labels = true, levels = 20, cbar = false)
+	plotly()
     samples = (X1 = 6 * rand(200) .- 3, X2 = 6 * rand(200) .- 3)
     labels = f.(samples.X1, samples.X2) .> rand(200)
     xgrid = MLCourse.grid(-3:.2:3, -3:.2:3, names = (:X1, :X2))
