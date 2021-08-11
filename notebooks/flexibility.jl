@@ -25,9 +25,11 @@ end
 # ╔═╡ 6d84c382-27d5-47bd-97a9-88153d20b2fc
 begin
     using MLJOpenML
-    mnist_x, mnist_y = let df = MLJOpenML.load(554)
-        coerce!(df[:, 1:end-1], Count => Continuous) ./ 255,
-        coerce(df.class, Multiclass)
+    mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
+		coerce!(df, :class => Multiclass)
+        coerce!(df, Count => Continuous)
+		df[:, 1:end-1] ./ 255,
+        df.class
 	end
 end;
 
