@@ -380,7 +380,8 @@ function losses(machine, input, response)
     (loglikelihood = -sum(log_loss(predict(machine, input), response)),
      misclassification_rate = mean(predict_mode(machine, input) .!= response),
      accuracy = accuracy(predict_mode(machine, input), response),
-     auc = auc(predict(machine, input), response))
+     auc = MLJ.auc(predict(machine, input), response)
+	)
 end;
 
 # ╔═╡ dd463687-b73d-4e70-b2cf-97a56a0ad409
