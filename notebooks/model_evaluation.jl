@@ -16,7 +16,7 @@ end
 # ╔═╡ c693088f-7f80-4cdd-b9b5-65a50da732ac
 begin
     using MLCourse
-    import MLCourse: poly, poly2
+    import MLCourse: poly
     MLCourse.list_notebooks(@__FILE__)
 end
 
@@ -47,19 +47,33 @@ data1 = data_split(data_generator(seed = 1))
 
 # ╔═╡ 751880ec-1a82-4142-b875-177d436bbc72
 begin
-    preprocessor(degree) = X -> MLCourse.poly(select(X, Not(:y)), degree)
-	mse(mach, data, p) = mean((predict(mach, p(data)) .- data.y).^2)
-    function fit_and_evaluate(model, data, degree)
-        p = preprocessor(degree)
-        mach = fit!(machine(model, p(data.train), data.train.y), verbosity = 0)
-        (train = √(mse(mach, data.train, p)),
-		 valid = √(mse(mach, data.valid, p)),
-		 test = √(mse(mach, data.test, p)))
+    function fit_and_evaluate(model, data)
+        mach = fit!(machine(model, select(data.train, :x), data.train.y),
+                    verbosity = 0)
+        (train = rmse(predict(mach, select(data.train, :x)), data.train.y),
+         valid = rmse(predict(mach, select(data.valid, :x)), data.valid.y),
+         test = rmse(predict(mach, select(data.test, :x)), data.test.y))
+    end
+end
+
+# ╔═╡ da2bbb4d-d45d-4d2a-9c8a-21395bcbb851
+begin
+    Base.@kwdef mutable struct PolynomialRegressor{T} <: Deterministic
+        degree::Int = 3
+        regressor::T = LinearRegressor()
+    end
+    function MLJ.MLJBase.fit(model::PolynomialRegressor, verbosity, X, y)
+        Xpoly = poly(X, model.degree)
+        MLJ.MLJBase.fit(model.regressor, verbosity, Xpoly, y)
+    end
+    function MLJ.MLJBase.predict(model::PolynomialRegressor, fitresult, Xnew)
+        Xpoly = poly(Xnew, model.degree)
+        MLJ.MLJBase.predict(model.regressor, fitresult, Xpoly)
     end
 end
 
 # ╔═╡ 2e02ac0d-c4d0-47ba-be57-445adeb6ab8b
-losses1 = [fit_and_evaluate(LinearRegressor(), data1, degree) for degree in 1:10]
+losses1 = [fit_and_evaluate(PolynomialRegressor(; degree), data1) for degree in 1:10]
 
 # ╔═╡ 91eecd2b-af18-4a63-9684-28950e604d1a
 let validlosses = getproperty.(losses1, :valid), i = argmin(validlosses)
@@ -73,9 +87,8 @@ md"For this seed of the random number generator the optimal degree (x coordinate
 Let us now look at other seeds."
 
 # ╔═╡ ac3c7e84-6c47-4dc1-b862-de4cfb05dad9
-losses = [fit_and_evaluate(LinearRegressor(),
-                           data_split(data_generator(seed = seed)),
-                           degree)
+losses = [fit_and_evaluate(PolynomialRegressor(; degree),
+                           data_split(data_generator(seed = seed)))
           for degree in 1:10, seed in 1:20]
 
 # ╔═╡ 26362233-b006-423d-8fb5-7cd9150405b4
@@ -111,10 +124,9 @@ begin
          end
          for i in 1:K]
     end
-    function cross_validation(model, data, degree; K = 5)
+    function cross_validation(model, data; K = 5)
         losses = [fit_and_evaluate(model,
-                                   data_split(data; idxs...),
-                                   degree)
+                                   data_split(data; idxs...))
                   for idxs in cross_validation_sets(1:100, K)]
         (train = mean(getproperty.(losses, :train)),
          valid = mean(getproperty.(losses, :valid)),
@@ -126,9 +138,8 @@ end
 cross_validation_sets(1:100, 4)
 
 # ╔═╡ c14c9e49-a993-456e-9115-97da86f8e498
-losses1_cv10 = [cross_validation(LinearRegressor(),
+losses1_cv10 = [cross_validation(PolynomialRegressor(; degree),
 		                         data_generator(seed = 1),
-					 		     degree,
 		                         K = 10) for degree in 1:10]
 
 # ╔═╡ 4b435518-2f12-4921-bb1f-fdd049ddfaed
@@ -139,9 +150,8 @@ let validlosses = getproperty.(losses1_cv10, :valid), i = argmin(validlosses)
 end
 
 # ╔═╡ 1e584a38-2fef-4877-87f6-92237d71c4b3
-losses_cv10 = [cross_validation(LinearRegressor(),
+losses_cv10 = [cross_validation(PolynomialRegressor(; degree),
                                 data_generator(seed = seed),
-                                degree,
                                 K = 10)
                for degree in 1:10, seed in 1:20]
 
@@ -168,15 +178,15 @@ md"Instead of our own cross-validation function we can also use the builtin func
 MLJ.MLJBase.train_test_pairs(CV(nfolds = 10), 1:100)
 
 # ╔═╡ 8ae790b3-3987-4f41-8e21-adbb71081eb9
-let data = data_generator(seed = 1)
-	evaluate(LinearRegressor(), preprocessor(4)(data), data.y,
-		     resampling = CV(nfolds = 10))
+let data = data_generator(seed = 1, n = 100)
+    evaluate(PolynomialRegressor(degree = 4), select(data, :x), data.y,
+             resampling = CV(nfolds = 10), measure = rmse)
 end
 
 # ╔═╡ abb71af3-8aae-4806-9d5a-d144c15d22ef
 losses_mlj_cv10 = [let data = data_generator(seed = seed)[1:100, :]
-                       evaluate(LinearRegressor(),
-                                preprocessor(degree)(data),
+                       evaluate(PolynomialRegressor(; degree),
+                                select(data, :x),
                                 data.y,
                                 resampling = CV(nfolds = 10),
                                 measure = rmse,
@@ -190,6 +200,33 @@ let validlosses  = losses_mlj_cv10, i = argmin(validlosses, dims = 1)
     scatter!((x -> x[1]).(i), validlosses[i], label = nothing,
              xlabel = "degree", ylabel = "validation loss")
 end
+
+# ╔═╡ 29683c99-6a6a-4f65-bea2-d592895d887e
+md"# Model Tuning"
+
+# ╔═╡ f93f20db-4fed-481f-b085-ca744b68fa8f
+begin
+    model = PolynomialRegressor(degree = 7)
+    data2 = data_generator(seed = 2, n = 100)
+    self_tuning_model = TunedModel(model = model,
+                                   resampling = CV(nfolds = 10),
+                                   tuning = Grid(),
+                                   range = range(model, :degree, values = 1:17),
+                                   measure = rmse)
+    self_tuning_mach = machine(self_tuning_model, select(data2, :x), data2.y) |> fit!
+end
+
+
+# ╔═╡ 59245b3e-ddfc-46c4-ba44-86ce191672ae
+report(self_tuning_mach)
+
+# ╔═╡ 47a2c14b-a02d-43d7-ac8a-4d95a0d91fa8
+let x = -3:.1:3
+    scatter(data2.x, data2.y, label = "data", legend = :bottomleft)
+    plot!(f, label = "generator", w = 2, xlims = (-3, 3))
+    plot!(x, predict(self_tuning_mach, (x = x,)), label = "self tuning fit", w = 2)
+end
+
 
 # ╔═╡ ee89c448-1e69-4fd1-a4b8-7297a09f2685
 md"# Exercises
@@ -220,6 +257,7 @@ md"# Exercises
 # ╠═7dd7e9a7-9245-4c64-af0c-8f7d2f62b2bf
 # ╠═fa9b4b9e-4e97-4e5c-865d-ad3ef288e4cf
 # ╠═751880ec-1a82-4142-b875-177d436bbc72
+# ╠═da2bbb4d-d45d-4d2a-9c8a-21395bcbb851
 # ╠═2e02ac0d-c4d0-47ba-be57-445adeb6ab8b
 # ╟─91eecd2b-af18-4a63-9684-28950e604d1a
 # ╟─b45b32b1-8a65-4823-b3bb-f0b7cc57604b
@@ -240,6 +278,10 @@ md"# Exercises
 # ╠═8ae790b3-3987-4f41-8e21-adbb71081eb9
 # ╠═abb71af3-8aae-4806-9d5a-d144c15d22ef
 # ╟─6599d2b4-68f4-4c22-8e40-bf3722597692
+# ╟─29683c99-6a6a-4f65-bea2-d592895d887e
+# ╠═f93f20db-4fed-481f-b085-ca744b68fa8f
+# ╠═59245b3e-ddfc-46c4-ba44-86ce191672ae
+# ╟─47a2c14b-a02d-43d7-ac8a-4d95a0d91fa8
 # ╟─ee89c448-1e69-4fd1-a4b8-7297a09f2685
 # ╠═5d1fccfa-7362-4aed-a3f1-5fbd743ae9ab
 # ╟─c693088f-7f80-4cdd-b9b5-65a50da732ac
