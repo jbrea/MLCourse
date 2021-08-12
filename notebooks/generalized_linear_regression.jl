@@ -19,7 +19,7 @@ begin
 	Pkg.activate(joinpath(@__DIR__, ".."))
 	using PlutoUI, Plots, DataFrames, Random, CSV, MLJ, MLJGLMInterface
     import MLJLinearModels
-    plotly()
+    gr()
 	PlutoUI.TableOfContents()
 end
 
@@ -115,22 +115,30 @@ md"β₀ = $(@bind β₀ Slider(-1:.02:1, default = .4, show_value = true))
 β₂ = $(@bind β₂ Slider(-1:.02:1, default = -.6, show_value = true))
 "
 
+# ╔═╡ 0f544053-1b7a-48d6-b18b-72092b124305
+begin
+    Random.seed!(3)
+	X = DataFrame(X1 = randn(20), X2 = randn(20))
+    f0(X1, X2, β₀, β₁, β₂) = β₀ + β₁ * X1 + β₂ * X2
+    f0(β₀, β₁, β₂) = (X1, X2) -> f0(X1, X2, β₀, β₁, β₂)
+	data_generator(X1, X2; β₀, β₁, β₂, σ = 0.8) = f0(X1, X2, β₀, β₁, β₂) + σ * randn()
+	y = data_generator.(X.X1, X.X2, β₀ = .4, β₁ = .5, β₂ = -.6)
+end;
+
+
 # ╔═╡ d541a8cd-5aa4-4c2d-bfdf-5e6297bb65a8
 begin
-    Random.seed!(3); β₀ + β₁ + β₂;
-	X = DataFrame(X1 = randn(20), X2 = randn(20))
-	data_generator(X1, X2; β₀ = β₀, β₁ = β₁, β₂ = β₂, σ = 0.8) = β₀ + β₁ * X1 + β₂ * X2 + σ * randn()
-	y = data_generator.(X.X1, X.X2, β₀ = .4, β₁ = .5, β₂ = -.6)
+    plotly()
     p1 = scatter3d(X.X1, X.X2, y, markersize = 1,
                    xlims = (-3, 3), xlabel = "X1",
                    ylims = (-3, 3), ylabel = "X2",
                    zlims = (-4, 4), zlabel = "y", label = "data")
-	wireframe!(-3:.1:3, -3:.1:3, (X1, X2) -> data_generator(X1, X2, σ = 0),
+    wireframe!(-3:.1:3, -3:.1:3, f0(β₀, β₁, β₂),
                label = "function", title = "data & function", color = :green)
-	plot_residuals!(X.X1, X.X2, y, (X1, X2) -> data_generator(X1, X2, σ = 0))
-    p2 = contour(-1:.1:1, -1:.1:1, (β₀, β₁) -> mean(abs2, β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y), levels = 100, ylabel = "β₁", cbar = false, title = "loss")
+    plot_residuals!(X.X1, X.X2, y, f0(β₀, β₁, β₂))
+    p2 = contour(-1:.1:1, -1:.1:1, (β₀, β₁) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2), levels = 100, ylabel = "β₁", cbar = false, title = "loss")
     scatter!([β₀], [β₁], label = nothing)
-    p3 = contour(-1:.1:1, -1:.1:1, (β₀, β₂) -> mean(abs2, β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y), levels = 100, xlabel = "β₀", ylabel = "β₂")
+    p3 = contour(-1:.1:1, -1:.1:1, (β₀, β₂) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2), levels = 100, xlabel = "β₀", ylabel = "β₂")
     scatter!([β₀], [β₂], label = "current loss")
     plot(p1, plot(p2, p3, layout = (2, 1)), layout = (1, 2),
          size = (700, 400), legend = false)
@@ -183,6 +191,7 @@ expected_error(f, .1)
 
 # ╔═╡ dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
 let x = rand(100), grid = 0:.05:1
+    gr()
     p1 = scatter(x, vcat(conditional_generator.(x, n = 1)...), label = "samples")
     plot!(f, label = "f")
     plot!(f̂, label = "f̂")
@@ -252,7 +261,13 @@ end
 # ╔═╡ ec1c2ea5-29ce-4371-be49-08798305ff50
 Markdown.parse("Here we go: now we have a matrix of size
  $(join(size(normalized_word_counts), " x ")) as input and a vector of binary label as
- output. This we will be able to use in multiple logistic regression.")
+ output. We will be able to use this as input in multiple logistic regression.
+ For future usage we save this preprocessed representation of the spam data to
+ a file.")
+
+# ╔═╡ 681cb7b9-f041-4aea-907e-4d85135c005a
+CSV.write(joinpath(dirname(pathof(MLCourse)), "..", "data", "spam_preprocessed.csv"),
+          [normalized_word_counts DataFrame(spam_or_ham = spam_or_ham)])
 
 # ╔═╡ f7117513-283f-4e32-a2a1-3594c794c94d
 md"## Multiple Logistic Regression
@@ -271,22 +286,6 @@ and the samples.
 
 θ₂ = $(@bind θ₂ Slider(-8:8, default = 0, show_value = true))
 "
-
-# ╔═╡ 4f89ceab-297f-4c2c-9029-8d2d7fad084f
-let σ(x) = 1/(1 + exp(-x)), f(x1, x2) = σ(θ₀ + θ₁ * x1 + θ₂ * x2)
-    p1 = wireframe(-3:.1:3, -3:.1:3, f, zlims = (0, 1))
-    p2 = contour(-3:.1:3, -3:.1:3, f, contour_labels = true, levels = 20, cbar = false)
-	plotly()
-    samples = (X1 = 6 * rand(200) .- 3, X2 = 6 * rand(200) .- 3)
-    labels = f.(samples.X1, samples.X2) .> rand(200)
-    xgrid = MLCourse.grid(-3:.2:3, -3:.2:3, names = (:X1, :X2))
-    scatter(xgrid.X1, xgrid.X2, color = (f.(xgrid.X1, xgrid.X2) .> .5) .+ 1,
-            markersize = 2, markerstrokewidth = 0, label = nothing)
-    p3 = scatter!(samples.X1, samples.X2, color = labels .+ 1, xlabel = "X1")
-    plot(p1, p2, plot(), p3, layout = (2, 2), size = (700, 600),
-         ylabel = "X2", legend = false)
-end
-
 
 # ╔═╡ fd4165dc-c3e3-4c4c-9605-167b5b4416da
 md"## Confusion Matrix, ROC and AUC"
@@ -312,6 +311,22 @@ begin
         FP/N, TP/P
     end
 end;
+
+# ╔═╡ 4f89ceab-297f-4c2c-9029-8d2d7fad084f
+let f(x1, x2) = logistic(θ₀ + θ₁ * x1 + θ₂ * x2)
+    p1 = wireframe(-3:.1:3, -3:.1:3, f, zlims = (0, 1))
+    p2 = contour(-3:.1:3, -3:.1:3, f, contour_labels = true, levels = 20, cbar = false)
+	plotly()
+    samples = (X1 = 6 * rand(200) .- 3, X2 = 6 * rand(200) .- 3)
+    labels = f.(samples.X1, samples.X2) .> rand(200)
+    xgrid = MLCourse.grid(-3:.2:3, -3:.2:3, names = (:X1, :X2))
+    scatter(xgrid.X1, xgrid.X2, color = (f.(xgrid.X1, xgrid.X2) .> .5) .+ 1,
+            markersize = 2, markerstrokewidth = 0, label = nothing)
+    p3 = scatter!(samples.X1, samples.X2, color = labels .+ 1, xlabel = "X1")
+    plot(p1, p2, plot(), p3, layout = (2, 2), size = (700, 600),
+         ylabel = "X2", legend = false)
+end
+
 
 # ╔═╡ 285c6bfc-5f29-46e0-a2c1-8abbec74501b
 begin
@@ -371,6 +386,13 @@ begin
     confusion_matrix(predict_mode(m3, test_input), test_labels)
 end
 
+# ╔═╡ ba4b5683-5932-415e-8772-8b3eef5eb63d
+md"We save also the test data for future usage."
+
+# ╔═╡ 9e1076f0-c7c3-4d04-8c00-317d39c5340b
+CSV.write(joinpath(dirname(pathof(MLCourse)), "..", "data",
+                   "spam_preprocessed_test.csv"),
+          [test_input DataFrame(spam_or_ham = test_labels)])
 
 # ╔═╡ a30578dd-aecb-46eb-b947-f009282cf2fc
 md"Let us evaluate the fit in terms of commonly used losses for binary classification."
@@ -442,6 +464,7 @@ md"# Exercises
 # ╟─c65b81bd-395f-4461-a73b-3535903cb2d7
 # ╟─51c9ea74-3110-4536-a4af-7cc73b45a4a6
 # ╟─d541a8cd-5aa4-4c2d-bfdf-5e6297bb65a8
+# ╟─0f544053-1b7a-48d6-b18b-72092b124305
 # ╟─da6462d8-3343-41d8-82dd-48770176d4ba
 # ╠═753ec309-1363-485d-a2bd-b9fa100d9058
 # ╠═618ef3c7-0fda-4970-88e8-1dac195545de
@@ -464,6 +487,7 @@ md"# Exercises
 # ╠═bf4110a9-31a4-48a3-bd6d-85c404d0e72d
 # ╠═534681d5-71d8-402a-b455-f491cfbb353e
 # ╟─ec1c2ea5-29ce-4371-be49-08798305ff50
+# ╠═681cb7b9-f041-4aea-907e-4d85135c005a
 # ╟─f7117513-283f-4e32-a2a1-3594c794c94d
 # ╟─4f89ceab-297f-4c2c-9029-8d2d7fad084f
 # ╟─fd4165dc-c3e3-4c4c-9605-167b5b4416da
@@ -478,6 +502,8 @@ md"# Exercises
 # ╠═32bafa9e-a35e-4f54-9857-d269b47f95c3
 # ╟─4e4f4adf-364f-49b9-9391-5050a4c1286a
 # ╠═50c035e6-b892-4157-a52f-824578366977
+# ╟─ba4b5683-5932-415e-8772-8b3eef5eb63d
+# ╠═9e1076f0-c7c3-4d04-8c00-317d39c5340b
 # ╟─a30578dd-aecb-46eb-b947-f009282cf2fc
 # ╠═8ed39cdc-e99e-48ff-9973-66df41aa0f78
 # ╠═dd463687-b73d-4e70-b2cf-97a56a0ad409

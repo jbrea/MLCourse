@@ -71,6 +71,19 @@ function poly2(data, degree)
     res
 end
 
+Base.@kwdef mutable struct PolynomialRegressor{T <: Deterministic} <: Deterministic
+    degree::Int = 3
+    regressor::T = LinearRegressor()
+end
+function MLJ.MLJBase.fit(model::PolynomialRegressor, verbosity, X, y)
+    Xpoly = poly(X, model.degree)
+    MLJ.MLJBase.fit(model.regressor, verbosity, Xpoly, y)
+end
+function MLJ.MLJBase.predict(model::PolynomialRegressor, fitresult, Xnew)
+    Xpoly = poly(Xnew, model.degree)
+    MLJ.MLJBase.predict(model.regressor, fitresult, Xpoly)
+end
+
 
 function start()
     sysimg = project_relative_path("precompile", "mlcourse.so")

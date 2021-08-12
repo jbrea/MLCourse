@@ -2,8 +2,8 @@ const NOTEBOOKS = [("Introduction", "introduction.jl"),
                    ("Supervised Learning", "supervised_learning.jl"),
                    ("Generalized Linear Regression", "generalized_linear_regression.jl"),
                    ("Flexibility and Bias-Variance-Decomposition", "flexibility.jl"),
-#                    ("Model Assessment", "model_evaluation.jl"),
-#                    ("Regularization", "regularization.jl"),
+                   ("Model Assessment", "model_evaluation.jl"),
+                   ("Regularization", "regularization.jl"),
 #                    ("Gradient Descent", "gradient_descent.jl")
                   ]
 
