@@ -182,6 +182,12 @@ git-tree-sha1 = "3f71217b538d7aaee0b69ab47d9b7724ca8afa0d"
 uuid = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
 version = "4.0.4"
 
+[[DSP]]
+deps = ["FFTW", "IterTools", "LinearAlgebra", "Polynomials", "Random", "Reexport", "SpecialFunctions", "Statistics"]
+git-tree-sha1 = "2a63cb5fc0e8c1f0f139475ef94228c7441dc7d0"
+uuid = "717857b8-e6f2-59f4-9121-6e50c889abd2"
+version = "0.6.10"
+
 [[DataAPI]]
 git-tree-sha1 = "ee400abb2298bd13bfc3df1c412ed228061a2385"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
@@ -497,6 +503,12 @@ git-tree-sha1 = "1470c80592cf1f0a35566ee5e93c5f8221ebc33a"
 uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 version = "0.13.3"
 
+[[Intervals]]
+deps = ["Dates", "Printf", "RecipesBase", "Serialization", "TimeZones"]
+git-tree-sha1 = "323a38ed1952d30586d0fe03412cde9399d3618b"
+uuid = "d8418881-c3e1-53bb-8760-2df7ec849ed5"
+version = "1.5.0"
+
 [[InvertedIndices]]
 deps = ["Test"]
 git-tree-sha1 = "15732c475062348b0165684ffe28e85ea8396afc"
@@ -595,6 +607,12 @@ deps = ["InteractiveUtils", "JSON"]
 git-tree-sha1 = "b1a564061268ccc3f3397ac0982983a657d4dcb8"
 uuid = "8ef0a80b-9436-5d2c-a485-80b904378c43"
 version = "0.4.3"
+
+[[Lasso]]
+deps = ["DSP", "Distributions", "GLM", "LinearAlgebra", "MLBase", "Random", "Reexport", "SparseArrays", "StatsBase", "StatsModels"]
+git-tree-sha1 = "dd6c894269116a8c96fa88c1d79c82ad423a6318"
+uuid = "b4fcebef-c861-5a0f-a7e2-ba9dc32b180a"
+version = "0.6.1"
 
 [[Latexify]]
 deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "Printf", "Requires"]
@@ -726,6 +744,12 @@ deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl",
 git-tree-sha1 = "c253236b0ed414624b083e6b72bfe891fbd2c7af"
 uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
 version = "2021.1.1+1"
+
+[[MLBase]]
+deps = ["IterTools", "Random", "Reexport", "StatsBase", "Test"]
+git-tree-sha1 = "f63a8d37429568b8c4384d76c4a96fc2897d6ddf"
+uuid = "f0e99cf1-93fa-52ec-9ecc-5026115318e0"
+version = "0.8.0"
 
 [[MLJ]]
 deps = ["CategoricalArrays", "ComputationalResources", "Distributed", "Distributions", "LinearAlgebra", "MLJBase", "MLJEnsembles", "MLJIteration", "MLJModels", "MLJOpenML", "MLJSerialization", "MLJTuning", "Pkg", "ProgressMeter", "Random", "ScientificTypes", "Statistics", "StatsBase", "Tables"]
@@ -1041,6 +1065,12 @@ deps = ["Base64", "Dates", "InteractiveUtils", "Logging", "Markdown", "Random", 
 git-tree-sha1 = "45ce174d36d3931cd4e37a47f93e07d1455f038d"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
 version = "0.7.1"
+
+[[Polynomials]]
+deps = ["Intervals", "LinearAlgebra", "OffsetArrays", "RecipesBase"]
+git-tree-sha1 = "0b15f3597b01eb76764dd03c3c23d6679a3c32c8"
+uuid = "f27b6e38-b328-58d1-80ce-0feddd5e7a45"
+version = "1.2.1"
 
 [[PooledArrays]]
 deps = ["DataAPI", "Future"]
