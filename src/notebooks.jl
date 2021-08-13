@@ -4,6 +4,7 @@ const NOTEBOOKS = [("Introduction", "introduction.jl"),
                    ("Flexibility and Bias-Variance-Decomposition", "flexibility.jl"),
                    ("Model Assessment", "model_evaluation.jl"),
                    ("Regularization", "regularization.jl"),
+                   ("Transformations of Input or Output", "transformations.jl")
 #                    ("Gradient Descent", "gradient_descent.jl")
                   ]
 
