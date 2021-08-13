@@ -280,6 +280,15 @@ let lambda = log.(weather_fits.λ),
     p
 end
 
+# ╔═╡ 40bb385f-1cbd-4555-a8ab-544a67f33595
+let lambda = log.(weather_fits.λ)
+    p1 = plot(lambda, 100 * weather_fits.pct_dev, ylabel = "% variance explained")
+    p2 = plot(lambda, reshape(sum(weather_fits.coefs .!= 0, dims = 1), :),
+              ylabel = "non-zero parameters",
+              xlabel = "log(λ)")
+    plot(p1, p2, layout = (2, 1), legend = false)
+end
+
 # ╔═╡ c9ed011c-8d36-4926-9ec4-84be3b4878d7
 scatter(weather_input.BER_wind_peak, weather_output)
 
@@ -370,6 +379,7 @@ and ``Y = X_1 + \epsilon`` with ``\mathrm{Var}(\epsilon) = 0.1^2``.
 # ╠═470dc7f4-04a9-4253-8125-9112778021eb
 # ╠═ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
 # ╟─4652a904-5edb-463c-a046-5c5d378f7cca
+# ╟─40bb385f-1cbd-4555-a8ab-544a67f33595
 # ╠═c9ed011c-8d36-4926-9ec4-84be3b4878d7
 # ╟─8262b948-6d54-4348-87d1-4c762c74db30
 # ╠═912ffa99-9e9c-4be9-9bf4-3e477de17ee4
