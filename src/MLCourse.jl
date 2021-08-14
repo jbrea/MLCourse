@@ -9,7 +9,7 @@ include_dependency("../Project.toml")
 const _VERSION = VersionNumber(Pkg.TOML.parsefile(project_relative_path("Project.toml"))["version"])
 
 using Zygote, Plots, MLJ, MLJLinearModels, MLJGLMInterface, Markdown, DataFrames
-export description, gradient_descent, plot_residuals!, fitted_linear_func, grid
+export plot_residuals!, fitted_linear_func, grid
 
 function plot_residuals!(x, y, f; kwargs...)
     for (xi, yi) in zip(x, y)
@@ -35,12 +35,11 @@ function fitted_linear_func(mach)
     x -> θ̂₀ + θ̂₁ * x
 end;
 
-function gradient_descent(f, x0;
-        learning_rate = .1, maxiters = 10^4, callback = x -> nothing)
-    x = copy(x0)
-    for i in 1:maxiters
-        x .-= learning_rate * gradient(f, x)[1]
-        callback(x)
+function gradient_descent(f, x₀, η, T; callback = x -> nothing)
+    x = copy(x₀) # use copy to not overwrite the input
+    for t in 1:T
+        x .-= η * gradient(f, x)[1] # update parameters in direction of -∇f
+        callback(x) # the callback will be used to save intermediate values
     end
     x
 end
