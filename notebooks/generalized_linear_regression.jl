@@ -148,19 +148,19 @@ end
 md"## Wind speed prediction with multiple predictors"
 
 # ╔═╡ 753ec309-1363-485d-a2bd-b9fa100d9058
-m2 = machine(LinearRegressor(), select(weather[1:end-5,:], Not(:LUZ_wind_peak)),
+m2 = machine(LinearRegressor(), select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time])),
              weather.LUZ_wind_peak[6:end]) |> fit!;
 
 # ╔═╡ 618ef3c7-0fda-4970-88e8-1dac195545de
-sort!(DataFrame(predictor = names(select(weather, Not(:LUZ_wind_peak))),
+sort!(DataFrame(predictor = names(select(weather, Not([:LUZ_wind_peak, :time]))),
                 value = fitted_params(m2).coef), :value)
 
 # ╔═╡ 2d25fbb6-dc9b-40ad-bdce-4c952cdad077
-rmse(predict_mean(m2, select(weather[1:end-5,:], Not(:LUZ_wind_peak))),
+rmse(predict_mean(m2, select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
      weather.LUZ_wind_peak[6:end])
 
 # ╔═╡ c9f10ace-3299-45fb-b98d-023a35dd405a
-rmse(predict_mean(m2, select(weather_test[1:end-5,:], Not(:LUZ_wind_peak))),
+rmse(predict_mean(m2, select(weather_test[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
      weather_test.LUZ_wind_peak[6:end])
 
 # ╔═╡ 99a371b2-5158-4c42-8f50-329352b6c1f2
