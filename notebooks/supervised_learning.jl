@@ -272,7 +272,7 @@ L(mach, data) = mean((predict(mach, select(data, :x)) .- data.y).^2);
 L(mach, training_data) # this is the training data
 
 # ╔═╡ f63c05d8-eefe-11eb-2a11-fd8f954bf059
-function fitted_linear_func(mach)
+function MLCourse.fitted_linear_func(mach)
     θ̂ = fitted_params(mach)
     θ̂₀ = θ̂.intercept
     θ̂₁ = θ̂.coefs[1][2]
