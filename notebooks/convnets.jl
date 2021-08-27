@@ -9,7 +9,6 @@ begin
     using Pkg
     Pkg.activate(joinpath(@__DIR__, ".."))
     using PlutoUI, Base64
-    gr()
     PlutoUI.TableOfContents()
 end
 
