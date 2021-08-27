@@ -22,17 +22,6 @@ begin
     PlutoUI.TableOfContents()
 end
 
-# ╔═╡ 6d84c382-27d5-47bd-97a9-88153d20b2fc
-begin
-    using MLJOpenML
-    mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
-		coerce!(df, :class => Multiclass)
-        coerce!(df, Count => Continuous)
-		df[:, 1:end-1] ./ 255,
-        df.class
-	end
-end;
-
 # ╔═╡ efda845a-4390-40bc-bdf2-89e555d3b1b2
 begin
     using MLCourse
@@ -308,16 +297,28 @@ end
 
 # ╔═╡ cc8ed1de-beab-43e5-979e-e83df23f96ae
 md"## Application to Handwritten Digit Recognition (MNIST)
+
+In the following we are fitting a first nearest-neigbor classifier to the MNIST
+data set.
+
+WARNING: The following code takes more than 10 minutes to run.
+Especially the prediction is slow, because for every test image the closest out
+of 60'000 training images has to be found.
+
+```julia
+using MLJOpenML
+mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
+    coerce!(df, :class => Multiclass)
+    coerce!(df, Count => Continuous)
+    df[:, 1:end-1] ./ 255,
+    df.class
+end
+m5 = fit!(machine(KNNClassifier(K = 1), mnist_x[1:60000, :], mnist_y[1:60000]))
+mnist_errorrate = mean(predict_mode(m5, mnist_x[60001:70000, :]) .!= mnist_y[60001:70000])
+```
+We find a misclassification rate of approximately 3%. This is clearly better than the
+approximately 7.8% obtained with Multinomial Logistic Regression.
 "
-
-# ╔═╡ b26387d0-36b6-4001-8718-afa3a2b49db1
-m5 = fit!(machine(KNNClassifier(K = 1), mnist_x[1:5000, :], mnist_y[1:5000]));
-
-# ╔═╡ be295d99-17e1-4689-bc62-91495787edf9
-mnist_errorrate = mean(predict_mode(m5, mnist_x[5001:10^4, :]) .!= mnist_y[5001:10^4])
-
-# ╔═╡ 69f82636-1371-46ee-8617-6d475e2e366a
-md"The average mis-classification rate of 1-NN on MNIST is approximately $mnist_errorrate."
 
 # ╔═╡ f6093c98-7e89-48ba-95c9-4d1f60a25033
 md"# Bias-Variance Decomposition"
@@ -427,10 +428,6 @@ md"# Exercises
 # ╟─12942fc8-efb1-11eb-0c02-0150ef55ae98
 # ╟─0a57f15b-c292-4c64-986d-f046260da66e
 # ╟─cc8ed1de-beab-43e5-979e-e83df23f96ae
-# ╠═6d84c382-27d5-47bd-97a9-88153d20b2fc
-# ╠═b26387d0-36b6-4001-8718-afa3a2b49db1
-# ╠═be295d99-17e1-4689-bc62-91495787edf9
-# ╟─69f82636-1371-46ee-8617-6d475e2e366a
 # ╟─f6093c98-7e89-48ba-95c9-4d1f60a25033
 # ╠═376d62fc-2859-422d-9944-bd9c7929f942
 # ╠═1fd15c67-a196-4324-94f6-9e4ccdc92482
