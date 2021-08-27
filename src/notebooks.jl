@@ -5,7 +5,10 @@ const NOTEBOOKS = [("Introduction", "introduction.jl"),
                    ("Model Assessment", "model_evaluation.jl"),
                    ("Regularization", "regularization.jl"),
                    ("Transformations of Input or Output", "transformations.jl"),
-                   ("Gradient Descent", "gradient_descent.jl")
+                   ("Gradient Descent", "gradient_descent.jl"),
+                   ("Multilayer Perceptrons", "mlp.jl"),
+                   ("Convolutional Neural Networks", "convnets.jl"),
+                   ("Recurrent Neural Networks", "rnn.jl")
                   ]
 
 function list_notebooks(file)
