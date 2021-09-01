@@ -13,12 +13,14 @@ julia> using Pkg
 
 To use the notebooks, start julia and type
 ```julia
-julia> using MLCourse
+julia> using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+       using MLCourse
        MLCourse.start()
 ```
 
 To reduce loading times of the pluto notebooks you can create a custom system image with
 ```julia
-julia> using MLCourse
+julia> using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+       using MLCourse
        MLCourse.create_sysimage()
 ```
