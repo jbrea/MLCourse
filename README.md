@@ -2,7 +2,7 @@
 
 This repository contains teaching material for an introductory machine learning course.
 
-To use the code, please download [julia](julialang.org/downloads) (at least version 1.6)
+To use the code, please download [julia](https://julialang.org/downloads) (at least version 1.6)
 open julia and install the code in this repository with
 ```julia
 julia> using Pkg
