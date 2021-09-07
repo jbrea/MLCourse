@@ -13,7 +13,7 @@ const NOTEBOOKS = [("Introduction", "introduction.jl"),
 
 function _linkname(path, file)
     if haskey(ENV, "html_export") && ENV["html_export"] == "true"
-        "$(splitext(file)[1]).html"
+        "notebooks/$(splitext(splitpath(file)[end])[1]).html"
     else
         "open?path=" * joinpath(path, nb)
     end
@@ -24,7 +24,7 @@ function list_notebooks(file)
     filename = split(sp[end], "#")[1]
     list = join(["1. " * (nb == filename ?
                             name * " (this notebook)" :
-                            "[$name](" * _linkname(path, file) * ")")
+                            "[$name](" * _linkname(path, nb) * ")")
                  for (name, nb) in NOTEBOOKS], "\n")
 Markdown.parse("""# Course Overview
 
