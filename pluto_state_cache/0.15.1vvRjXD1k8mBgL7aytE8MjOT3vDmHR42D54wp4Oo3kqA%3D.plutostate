@@ -162,7 +162,8 @@ return tocNode
 .plutoui-toc.indent section a.H6 {
 	padding-left: 50px;
 }
-</style>°persist_js_stateÂ¤mime©text/html²last_run_timestampËAØMÜW¹¬rootassigneeÀ§cell_idÙ$64bac944-8008-498d-a89b-b9f8ee54aa98¹depends_on_disabled_cellsÂ§runtimeÎ	ËÖı§erroredÂÙ$2bbf9876-0676-11ec-3985-73f4dcaea02fˆ¦queuedÂ±published_objects€§runningÂ¦output…¤bodyÚ¢£<div class="markdown"><h1>Exercises</h1>
+</style>°persist_js_stateÂ¤mime©text/html²last_run_timestampËAØMß¤µÿ&¬rootassigneeÀ§cell_idÙ$64bac944-8008-498d-a89b-b9f8ee54aa98¹depends_on_disabled_cellsÂ§runtimeÎ
+BÃ§erroredÂÙ$2bbf9876-0676-11ec-3985-73f4dcaea02fˆ¦queuedÂ±published_objects€§runningÂ¦output…¤bodyÚ¢£<div class="markdown"><h1>Exercises</h1>
 <h2>Conceptual</h2>
 <ol>
 <li><p>Here below is an image &#40;with padding 1 already applied&#41;. We would like to process it with a convolutional network with one convolution layer with two <span class="tex">$3 \times 3$</span> filters &#40;depicted below the image&#41;, stride 1 and relu non-linearity.</p>
@@ -190,7 +191,7 @@ return tocNode
 <li><p>Try to find a convolutional network that works better than all methods you considered so far for the Fashion-MNIST dataset.</p>
 </li>
 </ol>
-</div>°persist_js_stateÂ¤mime©text/html²last_run_timestampËAØMÜ’?Ø¬rootassigneeÀ§cell_idÙ$2bbf9876-0676-11ec-3985-73f4dcaea02f¹depends_on_disabled_cellsÂ§runtimeÎ S{§erroredÂÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26ˆ¦queuedÂ±published_objects€§runningÂ¦output…¤bodyÚ"¤<div class="markdown"><h1>Fitting MNIST with a Convolutional Neural Networks</h1>
+</div>°persist_js_stateÂ¤mime©text/html²last_run_timestampËAØMß©›¹Ë¬rootassigneeÀ§cell_idÙ$2bbf9876-0676-11ec-3985-73f4dcaea02f¹depends_on_disabled_cellsÂ§runtimeÎ XÎ§erroredÂÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26ˆ¦queuedÂ±published_objects€§runningÂ¦output…¤bodyÚ"¤<div class="markdown"><h1>Fitting MNIST with a Convolutional Neural Networks</h1>
 <p>In the following we fit a convolutional neural network to the MNIST data set.</p>
 <p>Running this example takes more than 10 minutes.</p>
 <p>We load the data</p>
@@ -224,7 +225,32 @@ fit&#33;&#40;m, rows &#61; 1:60000, verbosity &#61; 2&#41;</code></pre>
 <p>Finally, let us compute the test error rate</p>
 <pre><code class="language-julia">mean&#40;predict_mode&#40;m, images&#91;60001:70000&#93;&#41; .&#33;&#61; mnist_y&#91;60001:70000&#93;&#41;</code></pre>
 <p>The result is a misclassification rate of 1.4&#37; which is again a strong improvement over the MLP result. Note that we achieved this value without tuning of the hyper-parameters. Well-tuned convolutional networks achieve performances below 1&#37; error.</p>
-</div>°persist_js_stateÂ¤mime©text/html²last_run_timestampËAØMÜ’9)E¬rootassigneeÀ§cell_idÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26¹depends_on_disabled_cellsÂ§runtimeÎ"‚z§erroredÂÙ$01a467a5-7389-44d1-984d-244dfb1ea39fˆ¦queuedÂ±published_objects€§runningÂ¦output…¤body‚£msgÙ7TypeError: non-boolean (String) used in boolean contextªstacktrace–…¤call½_linkname(::String, ::String)§inlinedÂ¤file¬notebooks.jl¤line¤pathÙ4/home/runner/work/MLCourse/MLCourse/src/notebooks.jl…¤callÙR(::MLCourse.var"#1#2"{String, SubString{String}, String})(::Tuple{String, String})§inlinedÂ¤file¤none¤line ¤path¦./none…¤call§iterate§inlinedÃ¤file¬generator.jl¤line/¤path®./generator.jl…¤callÙocollect(::Base.Generator{Vector{Tuple{String, String}}, MLCourse.var"#1#2"{String, SubString{String}, String}})§inlinedÂ¤file¨array.jl¤lineÍ¦¤pathª./array.jl…¤call¸list_notebooks(::String)§inlinedÂ¤file¬notebooks.jl¤line¤pathÙ4/home/runner/work/MLCourse/MLCourse/src/notebooks.jl…¤call¯top-level scope§inlinedÂ¤fileÙ3convnets.jl#==#01a467a5-7389-44d1-984d-244dfb1ea39f¤line¤pathÙa/home/runner/work/MLCourse/MLCourse/notebooks/convnets.jl#==#01a467a5-7389-44d1-984d-244dfb1ea39f°persist_js_stateÂ¤mimeÙ'application/vnd.pluto.stacktrace+object²last_run_timestampËAØMÜ’‚E¬rootassigneeÀ§cell_idÙ$01a467a5-7389-44d1-984d-244dfb1ea39f¹depends_on_disabled_cellsÂ§runtimeÀ§erroredÃ±cell_dependencies„Ù$64bac944-8008-498d-a89b-b9f8ee54aa98„´precedence_heuristic§cell_idÙ$64bac944-8008-498d-a89b-b9f8ee54aa98´downstream_cells_mapƒ£Pkg‘Ù$64bac944-8008-498d-a89b-b9f8ee54aa98¦Base64§PlutoUI‘Ù$64bac944-8008-498d-a89b-b9f8ee54aa98²upstream_cells_map†£Pkg‘Ù$64bac944-8008-498d-a89b-b9f8ee54aa98§PlutoUI‘Ù$64bac944-8008-498d-a89b-b9f8ee54aa98¨joinpath¬Pkg.activate¨@__DIR__·PlutoUI.TableOfContentsÙ$2bbf9876-0676-11ec-3985-73f4dcaea02f„´precedence_heuristic§cell_idÙ$2bbf9876-0676-11ec-3985-73f4dcaea02f´downstream_cells_map€²upstream_cells_map†®Markdown.parse¤open¨joinpath¨@__DIR__¨Markdown¬base64encodeÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26„´precedence_heuristic§cell_idÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26´downstream_cells_map€²upstream_cells_map†®Markdown.parse¤open¨joinpath¨@__DIR__¨Markdown¬base64encodeÙ$01a467a5-7389-44d1-984d-244dfb1ea39f„´precedence_heuristic§cell_idÙ$01a467a5-7389-44d1-984d-244dfb1ea39f´downstream_cells_map¨MLCourse‘Ù$01a467a5-7389-44d1-984d-244dfb1ea39f²upstream_cells_mapƒ©@__FILE__·MLCourse.list_notebooks¨MLCourse‘Ù$01a467a5-7389-44d1-984d-244dfb1ea39f´cell_execution_order”Ù$64bac944-8008-498d-a89b-b9f8ee54aa98Ù$01a467a5-7389-44d1-984d-244dfb1ea39fÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26Ù$2bbf9876-0676-11ec-3985-73f4dcaea02f©shortpath«convnets.jl®process_status¥ready¤pathÙ9/home/runner/work/MLCourse/MLCourse/notebooks/convnets.jlªcell_order”Ù$7cfd274d-75d8-4cd9-b38b-4176466c9e26Ù$2bbf9876-0676-11ec-3985-73f4dcaea02fÙ$01a467a5-7389-44d1-984d-244dfb1ea39fÙ$64bac944-8008-498d-a89b-b9f8ee54aa98¥nbpkg‡²installed_versions€°terminal_outputs€§enabledÂ·restart_recommended_msgÀ´restart_required_msgÀ­busy_packages¬instantiatedÂ«cell_inputs„Ù$64bac944-8008-498d-a89b-b9f8ee54aa98„§cell_idÙ$64bac944-8008-498d-a89b-b9f8ee54aa98°running_disabledÂ¤codeÙzbegin
+</div>°persist_js_stateÂ¤mime©text/html²last_run_timestampËAØMß©—¯\¬rootassigneeÀ§cell_idÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26¹depends_on_disabled_cellsÂ§runtimeÎ;Kì§erroredÂÙ$01a467a5-7389-44d1-984d-244dfb1ea39fˆ¦queuedÂ±published_objects€§runningÂ¦output…¤bodyÚ<div class="markdown"><h1>Course Overview</h1>
+<ol>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Introduction</a></p>
+</li>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Supervised Learning</a></p>
+</li>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Generalized Linear Regression</a></p>
+</li>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Flexibility and Bias-Variance-Decomposition</a></p>
+</li>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Model Assessment</a></p>
+</li>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Regularization</a></p>
+</li>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Transformations of Input or Output</a></p>
+</li>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Gradient Descent</a></p>
+</li>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Multilayer Perceptrons</a></p>
+</li>
+<li><p>Convolutional Neural Networks &#40;this notebook&#41;</p>
+</li>
+<li><p><a href="/home/runner/work/MLCourse/MLCourse/notebooks/convnets.html">Recurrent Neural Networks</a></p>
+</li>
+</ol>
+</div>°persist_js_stateÂ¤mime©text/html²last_run_timestampËAØMß©}D¬rootassigneeÀ§cell_idÙ$01a467a5-7389-44d1-984d-244dfb1ea39f¹depends_on_disabled_cellsÂ§runtimeÏ   0›†ş§erroredÂ±cell_dependencies„Ù$64bac944-8008-498d-a89b-b9f8ee54aa98„´precedence_heuristic§cell_idÙ$64bac944-8008-498d-a89b-b9f8ee54aa98´downstream_cells_mapƒ£Pkg‘Ù$64bac944-8008-498d-a89b-b9f8ee54aa98¦Base64§PlutoUI‘Ù$64bac944-8008-498d-a89b-b9f8ee54aa98²upstream_cells_map†£Pkg‘Ù$64bac944-8008-498d-a89b-b9f8ee54aa98§PlutoUI‘Ù$64bac944-8008-498d-a89b-b9f8ee54aa98¨joinpath¬Pkg.activate¨@__DIR__·PlutoUI.TableOfContentsÙ$2bbf9876-0676-11ec-3985-73f4dcaea02f„´precedence_heuristic§cell_idÙ$2bbf9876-0676-11ec-3985-73f4dcaea02f´downstream_cells_map€²upstream_cells_map†®Markdown.parse¤open¨joinpath¨@__DIR__¨Markdown¬base64encodeÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26„´precedence_heuristic§cell_idÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26´downstream_cells_map€²upstream_cells_map†®Markdown.parse¤open¨joinpath¨@__DIR__¨Markdown¬base64encodeÙ$01a467a5-7389-44d1-984d-244dfb1ea39f„´precedence_heuristic§cell_idÙ$01a467a5-7389-44d1-984d-244dfb1ea39f´downstream_cells_map¨MLCourse‘Ù$01a467a5-7389-44d1-984d-244dfb1ea39f²upstream_cells_mapƒ©@__FILE__·MLCourse.list_notebooks¨MLCourse‘Ù$01a467a5-7389-44d1-984d-244dfb1ea39f´cell_execution_order”Ù$64bac944-8008-498d-a89b-b9f8ee54aa98Ù$01a467a5-7389-44d1-984d-244dfb1ea39fÙ$7cfd274d-75d8-4cd9-b38b-4176466c9e26Ù$2bbf9876-0676-11ec-3985-73f4dcaea02f©shortpath«convnets.jl®process_status¥ready¤pathÙ9/home/runner/work/MLCourse/MLCourse/notebooks/convnets.jlªcell_order”Ù$7cfd274d-75d8-4cd9-b38b-4176466c9e26Ù$2bbf9876-0676-11ec-3985-73f4dcaea02fÙ$01a467a5-7389-44d1-984d-244dfb1ea39fÙ$64bac944-8008-498d-a89b-b9f8ee54aa98¥nbpkg‡²installed_versions€°terminal_outputs€§enabledÂ·restart_recommended_msgÀ´restart_required_msgÀ­busy_packages¬instantiatedÂ«cell_inputs„Ù$64bac944-8008-498d-a89b-b9f8ee54aa98„§cell_idÙ$64bac944-8008-498d-a89b-b9f8ee54aa98°running_disabledÂ¤codeÙzbegin
     using Pkg
     Pkg.activate(joinpath(@__DIR__, ".."))
     using PlutoUI, Base64
@@ -296,4 +322,4 @@ over the MLP result. Note that we achieved this value without tuning of the hype
 «code_foldedÃÙ$01a467a5-7389-44d1-984d-244dfb1ea39f„§cell_idÙ$01a467a5-7389-44d1-984d-244dfb1ea39f°running_disabledÂ¤codeÙCbegin
     using MLCourse
     MLCourse.list_notebooks(@__FILE__)
-end«code_foldedÃ«notebook_idÙ$f56ddcce-0fe4-11ec-3684-c338314723b1«in_temp_dirÂ
+end«code_foldedÃ«notebook_idÙ$5395eccc-0fec-11ec-264a-31e4c24b5388«in_temp_dirÂ

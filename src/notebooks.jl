@@ -12,7 +12,7 @@ const NOTEBOOKS = [("Introduction", "introduction.jl"),
                   ]
 
 function _linkname(path, file)
-    if haskey(ENV, "html_export") && ENV["html_export"]
+    if haskey(ENV, "html_export") && ENV["html_export"] == "true"
         "$(splitext(file)[1]).html"
     else
         "open?path=" * joinpath(path, nb)

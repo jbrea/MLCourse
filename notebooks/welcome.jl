@@ -26,7 +26,17 @@ notebook rather quickly.
 "
 
 # ╔═╡ f61dd02c-bb38-4b9b-b631-5b261f069d99
-Markdown.parse("
+Markdown.parse(
+(haskey(ENV, "html_export") && ENV["html_export"] == "true") ?
+"!!! warning
+
+    This is a static export of the interactive notebooks.
+    Therefore most interactive animations don't work;
+    i.e moving the sliders won't have any effect.
+    To use the actual notebooks follow the instructions on
+    [https://github.com/jbrea/MLCourse](https://github.com/jbrea/MLCourse).
+" :
+"
 $(isfile(joinpath(@__DIR__, "..", "precompile", "mlcourse.so")) ? "" : "Hint: A custom system image can improve the initial loading times. Create one in the julia REPL with `MLCourse.create_sysimage()`.")")
 
 # ╔═╡ Cell order:
