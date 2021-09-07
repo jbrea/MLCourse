@@ -39,7 +39,7 @@ jobs:
                   ]);
 
                   import PlutoSliderServer;
-                  ENV["html_export"] = true;
+                  ENV["html_export"] = "true";
 
                   PlutoSliderServer.github_action(;
                     Export_cache_dir="pluto_state_cache",
