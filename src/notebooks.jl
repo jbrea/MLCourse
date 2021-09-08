@@ -11,9 +11,9 @@ const NOTEBOOKS = [("Introduction", "introduction.jl"),
                    ("Recurrent Neural Networks", "rnn.jl")
                   ]
 
-function _linkname(path, file)
+function _linkname(path, nb)
     if haskey(ENV, "html_export") && ENV["html_export"] == "true"
-        "$(splitext(splitpath(file)[end])[1]).html"
+        "$(splitext(nb)[1]).html"
     else
         "open?path=" * joinpath(path, nb)
     end
