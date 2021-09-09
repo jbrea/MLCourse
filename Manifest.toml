@@ -401,9 +401,9 @@ uuid = "9fa8497b-333b-5362-9e8d-4d0656e87820"
 
 [[FuzzyCompletions]]
 deps = ["REPL"]
-git-tree-sha1 = "b62fa7b1fe8716459846db4efbe786283d318a46"
+git-tree-sha1 = "2cc2791b324e8ed387a91d7226d17be754e9de61"
 uuid = "fb4132e2-a121-4a70-b8a1-d5b831dcdcc2"
-version = "0.4.2"
+version = "0.4.3"
 
 [[GLFW_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libglvnd_jll", "Pkg", "Xorg_libXcursor_jll", "Xorg_libXi_jll", "Xorg_libXinerama_jll", "Xorg_libXrandr_jll"]
@@ -771,7 +771,9 @@ version = "0.18.15"
 
 [[MLJClusteringInterface]]
 deps = ["Clustering", "Distances", "MLJModelInterface"]
-path = "/home/j/.julia/dev/MLJClusteringInterface"
+git-tree-sha1 = "d846cecc01f542bfe316bd0514b73b9c01abfcd9"
+repo-rev = "master"
+repo-url = "https://github.com/jbrea/MLJClusteringInterface.jl"
 uuid = "d354fa79-ed1c-40d4-88ef-b8c7bd1568af"
 version = "0.1.4"
 
@@ -1074,7 +1076,7 @@ version = "1.19.3"
 
 [[Pluto]]
 deps = ["Base64", "Configurations", "Dates", "Distributed", "FileWatching", "FuzzyCompletions", "HTTP", "InteractiveUtils", "Logging", "Markdown", "MsgPack", "Pkg", "REPL", "Sockets", "TableIOInterface", "Tables", "UUIDs"]
-path = "/home/j/.julia/dev/Pluto"
+git-tree-sha1 = "6af6088f72ae82c8b6712047b5fe79c22016b878"
 uuid = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
 version = "0.15.1"
 
