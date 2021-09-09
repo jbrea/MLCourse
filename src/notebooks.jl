@@ -8,7 +8,9 @@ const NOTEBOOKS = [("Introduction", "introduction.jl"),
                    ("Gradient Descent", "gradient_descent.jl"),
                    ("Multilayer Perceptrons", "mlp.jl"),
                    ("Convolutional Neural Networks", "convnets.jl"),
-                   ("Recurrent Neural Networks", "rnn.jl")
+                   ("Recurrent Neural Networks", "rnn.jl"),
+                   ("Clustering", "clustering.jl"),
+                   ("Principal Component Analysis", "pca.jl"),
                   ]
 
 function list_notebooks(file)
