@@ -18,7 +18,7 @@ begin
     using Pkg
     Pkg.activate(joinpath(@__DIR__, ".."))
     using PlutoUI, Plots, MLJ, DataFrames, Random, CSV, Flux, Distributions,
-          StatsPlots, Base64, MLJFlux, MLJOpenML, Random
+          StatsPlots, MLJFlux, MLJOpenML, Random
     gr()
     PlutoUI.TableOfContents()
 end
@@ -142,7 +142,7 @@ begin
     @df xor_results dotplot!(:n_hidden, :test_accuracy, label = \"test\")
 end
 ```
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "overparametrized.png"))))
+$(MLCourse.embed_figure("overparametrized.png"))
 ")
 
 # ╔═╡ 5c2154ef-2a35-4d91-959d-f72100049894
@@ -361,7 +361,7 @@ scatter(predict(mach, weather_test_x), weather_test_y,
         xlabel = \"predicted\", ylabel = \"data\")
 plot!(identity, legend = false)
 ```
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "weather_mlp.png"))))
+$(MLCourse.embed_figure("weather_mlp.png"))
 ")
 
 # ╔═╡ 0ba71a2a-f2f9-4fc7-aa81-416799e79e57
@@ -423,7 +423,7 @@ plot!(grid', m .+ s, c = :red, linestyle = :dash, w = 3, label = \"± standard d
 plot!(grid', m .- s, c = :red, linestyle = :dash, w = 3, label = nothing)
 ```
 
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "weather_mlp_normal.png"))))
+$(MLCourse.embed_figure("weather_mlp_normal.png"))
 
 We see that the neural network found a slightly non-linear relationship between
 input and average output and the variance of the noise is smaller for high
@@ -459,7 +459,7 @@ let
 end
 ```
 
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "poly.png"))))
+$(MLCourse.embed_figure("poly.png"))
 ")
 
 # ╔═╡ 14a8eacb-352e-4c3b-8908-2a6f77ffc6fe

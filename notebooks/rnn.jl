@@ -8,7 +8,7 @@ using InteractiveUtils
 begin
     using Pkg
     Pkg.activate(joinpath(@__DIR__, ".."))
-    using PlutoUI, Base64
+    using PlutoUI
     PlutoUI.TableOfContents()
 end
 

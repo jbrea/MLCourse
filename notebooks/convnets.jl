@@ -8,7 +8,7 @@ using InteractiveUtils
 begin
     using Pkg
     Pkg.activate(joinpath(@__DIR__, ".."))
-    using PlutoUI, Base64
+    using PlutoUI
     PlutoUI.TableOfContents()
 end
 
@@ -41,7 +41,7 @@ images = coerce(PermutedDimsArray(reshape(Array(mnist_x), :, 28, 28), (3, 2, 1))
                 GrayImage);
 plot(images[1])
 ```
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "mnist_example1.png"))))
+$(MLCourse.embed_figure("mnist_example1.png"))
 
 Now we define our network builder
 ```julia
@@ -79,7 +79,7 @@ Markdown.parse("# Exercises
 1. Here below is an image (with padding 1 already applied). We would like to process it with a convolutional network with one convolution layer with two ``3 \\times 3`` filters (depicted below the image), stride 1 and relu non-linearity.
     - Determine the width, height and depth of the volume after the convolutional layer.
     - Compute the output of the convolutional layer assuming the two biases to be zero.
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "conv_exercise.png"))))
+$(MLCourse.embed_figure("conv_exercise.png"))
 2. Given a volume of width ``n``, height ``n`` and depth ``c``:
     - Convince yourself that the convolution with ``k`` filters of size ``f\\times f\\times c`` with stride ``s`` and padding ``p`` leads to a new volume of size ``\\left( \\frac{n + 2p - f}{s} + 1\\right)\\times \\left( \\frac{n + 2p - f}{s} + 1\\right)\\times k\\, .``
     - Flux knows the padding option `pad = SamePad()`. It means that the output volume should have the same x and y dimension as the input volume. In this exercise we compute the padding needed this option.  What padding ``p`` do you have to choose for a given ``n`` and ``f`` such that the input and output volumes have the same width and depth for stride ``s=1``. Check you result for the special case of ``n=4`` and ``f=3``.
