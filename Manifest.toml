@@ -320,6 +320,12 @@ git-tree-sha1 = "3676abafff7e4ff07bbd2c42b3d8201f31653dcc"
 uuid = "f5851436-0d7a-5f13-b9de-f02708fd171a"
 version = "3.3.9+8"
 
+[[FileIO]]
+deps = ["Pkg", "Requires", "UUIDs"]
+git-tree-sha1 = "937c29268e405b6808d958a9ac41bfe1a31b08e7"
+uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+version = "1.11.0"
+
 [[FilePathsBase]]
 deps = ["Dates", "Mmap", "Printf", "Test", "UUIDs"]
 git-tree-sha1 = "0f5e8d0cb91a6386ba47bd1527b240bd5725fbae"
@@ -763,6 +769,12 @@ git-tree-sha1 = "ad7fdd566e2639c1a189e0d1b2ef43085091c2c7"
 uuid = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
 version = "0.18.15"
 
+[[MLJClusteringInterface]]
+deps = ["Clustering", "Distances", "MLJModelInterface"]
+path = "/home/j/.julia/dev/MLJClusteringInterface"
+uuid = "d354fa79-ed1c-40d4-88ef-b8c7bd1568af"
+version = "0.1.4"
+
 [[MLJEnsembles]]
 deps = ["CategoricalArrays", "ComputationalResources", "Distributed", "Distributions", "MLJBase", "MLJModelInterface", "ProgressMeter", "Random", "ScientificTypesBase", "StatsBase"]
 git-tree-sha1 = "b9ce7bbc4bba927d52c26a3446ac2913777072c8"
@@ -804,6 +816,12 @@ deps = ["CategoricalArrays", "Dates", "Distances", "Distributions", "Interactive
 git-tree-sha1 = "0b8b6edb9076fb237cdedec9a62b8512397a520f"
 uuid = "d491faf4-2d78-11e9-2867-c94bc002c0b7"
 version = "0.14.8"
+
+[[MLJMultivariateStatsInterface]]
+deps = ["Distances", "LinearAlgebra", "MLJModelInterface", "MultivariateStats", "StatsBase"]
+git-tree-sha1 = "0cfc81ff677ea13ed72894992ee9e5f8ae4dbb9d"
+uuid = "1b6a4a23-ba22-4f51-9698-8599985d3728"
+version = "0.2.2"
 
 [[MLJOpenML]]
 deps = ["CSV", "HTTP", "JSON", "Markdown", "ScientificTypes"]
@@ -1056,7 +1074,7 @@ version = "1.19.3"
 
 [[Pluto]]
 deps = ["Base64", "Configurations", "Dates", "Distributed", "FileWatching", "FuzzyCompletions", "HTTP", "InteractiveUtils", "Logging", "Markdown", "MsgPack", "Pkg", "REPL", "Sockets", "TableIOInterface", "Tables", "UUIDs"]
-git-tree-sha1 = "6af6088f72ae82c8b6712047b5fe79c22016b878"
+path = "/home/j/.julia/dev/Pluto"
 uuid = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
 version = "0.15.1"
 
@@ -1350,6 +1368,12 @@ version = "0.3.0"
 [[TOML]]
 deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+
+[[TSne]]
+deps = ["Distances", "LinearAlgebra", "Printf", "ProgressMeter", "Statistics"]
+git-tree-sha1 = "6f1dfbf9dad6958439816fa9c5fa20898203fdf4"
+uuid = "24678dba-d5e9-5843-a4c6-250288b04835"
+version = "1.3.0"
 
 [[TableIOInterface]]
 git-tree-sha1 = "9a0d3ab8afd14f33a35af7391491ff3104401a35"
