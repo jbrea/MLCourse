@@ -13,13 +13,20 @@ const NOTEBOOKS = [("Introduction to Julia", "introduction.jl"),
 #                    ("Principal Component Analysis", "pca.jl"),
                   ]
 
+function _linkname(path, nb)
+    if haskey(ENV, "html_export") && ENV["html_export"] == "true"
+        "$(splitext(nb)[1]).html"
+    else
+        "open?path=" * joinpath(path, nb)
+    end
+end
 function list_notebooks(file)
     sp = splitpath(file)
     path = joinpath(@__DIR__, "..", "notebooks")
     filename = split(sp[end], "#")[1]
     list = join(["1. " * (nb == filename ?
                             name * " (this notebook)" :
-                            "[$name](open?path=" * joinpath(path, nb) * ")")
+                            "[$name](" * _linkname(path, nb) * ")")
                  for (name, nb) in NOTEBOOKS], "\n")
 Markdown.parse("""# Course Overview
 
