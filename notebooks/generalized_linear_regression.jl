@@ -16,7 +16,7 @@ end
 # ╔═╡ 94f8e29e-ef91-11eb-1ae9-29bc46fa505a
 begin
 	using Pkg
-	Pkg.activate(joinpath(@__DIR__, ".."))
+	joinpath(Pkg.devdir(), "MLCourse")
 	using PlutoUI, Plots, DataFrames, Random, CSV, MLJ, MLJGLMInterface
     import MLJLinearModels
     gr()

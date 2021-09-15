@@ -16,7 +16,7 @@ end
 # ╔═╡ 12942f34-efb1-11eb-3eb4-c1a38396cfb8
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI, Plots, MLJ, MLJLinearModels, NearestNeighborModels, DataFrames, Random, Statistics
     gr()
     PlutoUI.TableOfContents()
@@ -306,8 +306,8 @@ Especially the prediction is slow, because for every test image the closest out
 of 60'000 training images has to be found.
 
 ```julia
-using MLJOpenML
-mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
+using OpenML
+mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     coerce!(df, :class => Multiclass)
     coerce!(df, Count => Continuous)
     df[:, 1:end-1] ./ 255,

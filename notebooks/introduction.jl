@@ -7,7 +7,7 @@ using InteractiveUtils
 # ╔═╡ 065a1e67-6b63-43df-9d6d-303af08d8434
 begin
 	using Pkg
-	Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI
     PlutoUI.TableOfContents()
 end
@@ -177,6 +177,7 @@ split(s2)
 
 # ╔═╡ 732ae082-b90f-4108-9872-36077fb2c54c
 md"Whenever you see just text here, it is actually the output of a markdown cell.
+Markdown cells can be written in two ways: either as a markdown string `md\"this is a markdown string\"` (note the trailing `md`) or as `Markdown.parse(\"this is a markdown string\")`.
 You can look at the code of this cell by toggling its visibility with the \"eye\"
 button on the left. For you to take notes, it may be useful to know some of the
 markdown features. We look at some in the cell below.
@@ -522,8 +523,11 @@ md"# Exercises
    2. Create a vector whose i'th element contains the sum of the i'th entries of columns A and B of the data frame created in 1.
    3. Select all rows with `:hop` in column C and display the resulting data frame.
 2. Write a function that returns the smallest entry of a vector.
-3. Plot the `cos` function on the interval 0 to 4π.
+3. Plot the `cos` function on the interval 0 to 4π. Hint: type `\pi + [Tab]` to enter the symbol π. To learn how to place custom tick labels on the x-axis, type `xticks` in a cell and open the \"Live docs\" at the bottom-right.
 "
+
+# ╔═╡ 0314376e-ff8c-4ad0-8a4b-f94f04f31f2c
+MLCourse.footer()
 
 # ╔═╡ Cell order:
 # ╟─f3508747-da29-47c9-a98e-22ea15caaf2f
@@ -655,3 +659,4 @@ md"# Exercises
 # ╟─4a03cfae-9876-4cf0-a498-d750853191cb
 # ╟─d6e5fe02-21a5-486c-a237-878be1d95439
 # ╟─065a1e67-6b63-43df-9d6d-303af08d8434
+# ╟─0314376e-ff8c-4ad0-8a4b-f94f04f31f2c

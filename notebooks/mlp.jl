@@ -16,9 +16,9 @@ end
 # ╔═╡ 87f59dc7-5149-4eb6-9d81-440ee8cecd72
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI, Plots, MLJ, DataFrames, Random, CSV, Flux, Distributions,
-          StatsPlots, MLJFlux, MLJOpenML, Random
+          StatsPlots, MLJFlux, OpenML, Random
     gr()
     PlutoUI.TableOfContents()
 end
@@ -471,7 +471,7 @@ The following code to fit the MNIST data with a multilayer perceptron takes a
 few minutes to run.
 
 ```julia
-mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
+mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     coerce!(df, :class => Multiclass)
     coerce!(df, Count => MLJ.Continuous)
     Float32.(df[:, 1:end-1] ./ 255),
@@ -513,8 +513,8 @@ md"# Exercises
 1. Derive the loss function we used in section \"Parametrizing Variances of Log-Normal Distributions with MLPs\" above.
 
 ## Applied
-1. In this exercise our goal is to find a good machine learning model to classify images of Zalando's articles. You can load a description of the so-called Fashion-MNIST data set with `MLJOpenML.describe_dataset(40996)` and load the data set with `MLJOpenML.load(40996)`. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline. Hints: cleaning is not necessary, but plotting some examples is advisable; linear classification is a good starting point for a first benchmark, but you should also explore other models and tune their hyper-parameters; if you are impatient: choose smaller training sets.
-2. In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `MLJOpenML.describe_dataset(505)`.
+1. In this exercise our goal is to find a good machine learning model to classify images of Zalando's articles. You can load a description of the so-called Fashion-MNIST data set with `OpenML.describe_dataset(40996)` and load the data set with `OpenML.load(40996)`. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline. Hints: cleaning is not necessary, but plotting some examples is advisable; linear classification is a good starting point for a first benchmark, but you should also explore other models and tune their hyper-parameters; if you are impatient: choose smaller training sets.
+2. In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `OpenML.describe_dataset(505)`.
 "
 
 # ╔═╡ Cell order:

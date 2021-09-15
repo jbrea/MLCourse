@@ -16,7 +16,7 @@ end
 # ╔═╡ b97724e4-d7b0-4085-b88e-eb3c5bcbe441
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI
     PlutoUI.TableOfContents()
 end
@@ -26,7 +26,7 @@ using TSne
 
 # ╔═╡ 8bd459cb-20bb-483e-a849-e18caae3beef
 begin
-    using MLCourse, MLJ, DataFrames, MLJMultivariateStatsInterface, MLJOpenML,
+    using MLCourse, MLJ, DataFrames, MLJMultivariateStatsInterface, OpenML,
     Plots, LinearAlgebra, Statistics, Random, CSV, MLJLinearModels
     chop(x, eps = 1e-12) = abs(x) > eps ? x : zero(typeof(x))
     MLCourse.list_notebooks(@__FILE__)
@@ -260,7 +260,7 @@ end
 md"## PCA for Visualization"
 
 # ╔═╡ 265594dd-ba59-408a-925a-c2a173343df7
-wine = MLJOpenML.load(187) |> DataFrame; rename!(n -> replace(n, "'" => ""), wine);
+wine = OpenML.load(187) |> DataFrame; rename!(n -> replace(n, "'" => ""), wine);
 
 # ╔═╡ 51720585-09c8-40bb-8ec2-c2f25804d731
 X = float.(select(wine, Not(:class)))
@@ -361,7 +361,7 @@ end
 md"## PCA for Compression"
 
 # ╔═╡ 026a362d-3234-409b-b9cb-e6a2a50c6a0d
-faces = MLJOpenML.load(41083) |> DataFrame;
+faces = OpenML.load(41083) |> DataFrame;
 
 # ╔═╡ e967a9cb-ad95-4bd2-8fbd-491dc6fe0475
 let
@@ -493,7 +493,7 @@ Markdown.parse("Also for real data PCA sometimes fails to find the clusters in
 the data. We demonstrate this here with the MNIST data set.
 
 ```julia
-mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
+mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     coerce!(df, :class => Multiclass)
     coerce!(df, Count => MLJ.Continuous)
     select(df, Not(:class)),

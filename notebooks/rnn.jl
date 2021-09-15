@@ -7,7 +7,7 @@ using InteractiveUtils
 # ╔═╡ baabe9c8-055e-46f2-a495-17ccc3bfced1
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI
     PlutoUI.TableOfContents()
 end

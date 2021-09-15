@@ -16,14 +16,14 @@ end
 # ╔═╡ 7b013132-0ee2-11ec-1dd2-25a9f16f0568
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI
     PlutoUI.TableOfContents()
 end
 
 # ╔═╡ 15830699-57c5-4bc2-bc92-54105597ab26
 begin
-    using MLCourse, MLJ, DataFrames, MLJMultivariateStatsInterface, MLJOpenML,
+    using MLCourse, MLJ, DataFrames, MLJMultivariateStatsInterface, OpenML,
     Plots, LinearAlgebra, Statistics, Random, MLJClusteringInterface, StatsPlots
     MLCourse.list_notebooks(@__FILE__)
 end
@@ -33,7 +33,7 @@ md"# K-means Clustering"
 
 # ╔═╡ 49a1493b-ba68-4e7a-8c3d-47423f7a8204
 begin
-    iris = DataFrame(MLJOpenML.load(61))
+    iris = DataFrame(OpenML.load(61))
     iris = rename!(iris, replace.(names(iris), "'" => ""))
     coerce!(iris, :class => Multiclass)
 end
@@ -70,7 +70,7 @@ Markdown.parse("
 Let us try to apply K-Means Clustering to the MNIST data set.
 
 ```julia
-mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
+mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     coerce!(df, :class => Multiclass)
     coerce!(df, Count => MLJ.Continuous)
     select(df, Not(:class)),

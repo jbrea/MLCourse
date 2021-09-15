@@ -147,7 +147,7 @@ function update()
         run(`git add -u`)
         run(`git commit -m "automatic commit of local changes"`)
     end
-    run(`git pull origin main -s recursive -X patience -X ours -X ignore-all-space --no-edit`)
+    run(`git pull -s recursive -X patience -X ours -X ignore-all-space --no-edit`)
     cd(current_dir)
     Pkg.activate(project_relative_path())
     Pkg.instantiate()

@@ -16,7 +16,7 @@ end
 # ╔═╡ f63c04d4-eefe-11eb-3fda-1729ac6de2cb
 begin
 	using Pkg
-	Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI
     PlutoUI.TableOfContents()
 end
@@ -38,7 +38,7 @@ using StatsPlots
 
 
 # ╔═╡ f63c0560-eefe-11eb-2617-f543fe2bdd5f
-using MLJOpenML
+using OpenML
 
 
 # ╔═╡ f63c0592-eefe-11eb-0d69-91d4d396c540
@@ -65,7 +65,7 @@ md"In this notebook we have a first look at some data sets and the [MLJ machine 
 
 
 # ╔═╡ f63c04e8-eefe-11eb-1a14-8305504a6f1c
-mnist = MLJOpenML.load(554) |> DataFrame;
+mnist = OpenML.load(554) |> DataFrame;
 
 # ╔═╡ f63c04f2-eefe-11eb-2562-e530426e4300
 md"With the semicolon we omit output. If you want to know more about the syntax
@@ -167,15 +167,15 @@ We use them as follows."
 
 
 # ╔═╡ f63c0560-eefe-11eb-0251-2d0443448e66
-MLJOpenML.list_datasets(output_format = DataFrame)
+OpenML.list_datasets(output_format = DataFrame)
 
 
 # ╔═╡ f63c056a-eefe-11eb-199e-2b05b1385be4
-MLJOpenML.describe_dataset(61)
+OpenML.describe_dataset(61)
 
 
 # ╔═╡ f63c056a-eefe-11eb-218c-afc51fdf1704
-iris = MLJOpenML.load(61) |> DataFrame
+iris = OpenML.load(61) |> DataFrame
 
 
 # ╔═╡ f63c0574-eefe-11eb-2d7c-bd74b7d83f23
@@ -461,6 +461,9 @@ md"# Exercises
    - Repeat the 2 steps above with a training set of size ``n = 10^4``.
 "
 
+# ╔═╡ e3aa458a-486c-4d5b-a330-67fb68e6f516
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─f63c04dc-eefe-11eb-1e24-1d02a686920a
 # ╠═f63c04e8-eefe-11eb-39f6-83b31ebe73e7
@@ -535,3 +538,4 @@ md"# Exercises
 # ╟─f63c0632-eefe-11eb-3b93-8549af7aaed9
 # ╟─0cfbd543-8b9b-406e-b3b4-c6cafbbec212
 # ╟─f63c04d4-eefe-11eb-3fda-1729ac6de2cb
+# ╟─e3aa458a-486c-4d5b-a330-67fb68e6f516

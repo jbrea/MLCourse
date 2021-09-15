@@ -16,7 +16,7 @@ end
 # ╔═╡ 7aa547f8-25d4-488d-9fc3-f633f7f03f57
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI, MLJ, MLJLinearModels, Plots, LinearAlgebra, Zygote, Flux, Random, DataFrames, Distributions
     gr()
     PlutoUI.TableOfContents()

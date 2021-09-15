@@ -7,7 +7,7 @@ using InteractiveUtils
 # ╔═╡ 736856ce-f490-11eb-3349-057c86edfe7e
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI, MLJ, MLJLinearModels, Plots, DataFrames, Random
     gr()
     PlutoUI.TableOfContents()

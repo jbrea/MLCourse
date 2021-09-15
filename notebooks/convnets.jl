@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.15.1
+# v0.16.0
 
 using Markdown
 using InteractiveUtils
@@ -7,7 +7,7 @@ using InteractiveUtils
 # ╔═╡ 64bac944-8008-498d-a89b-b9f8ee54aa98
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using PlutoUI
     PlutoUI.TableOfContents()
 end
@@ -27,8 +27,8 @@ Running this example takes more than 10 minutes.
 
 We load the data
 ```julia
-using MLJ, Plots, MLJFlux, Flux, MLJOpenML, DataFrames
-mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
+using MLJ, Plots, MLJFlux, Flux, OpenML, DataFrames
+mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     coerce!(df, :class => Multiclass)
     coerce!(df, Count => MLJ.Continuous)
     Float32.(df[:, 1:end-1] ./ 255),
@@ -88,8 +88,12 @@ $(MLCourse.embed_figure("conv_exercise.png"))
 1. Try to find a convolutional network that works better than all methods you considered so far for the Fashion-MNIST dataset.
 ")
 
+# ╔═╡ 463ec69d-7b07-46e8-b24b-9c953aebd2ba
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─7cfd274d-75d8-4cd9-b38b-4176466c9e26
 # ╟─2bbf9876-0676-11ec-3985-73f4dcaea02f
 # ╟─01a467a5-7389-44d1-984d-244dfb1ea39f
 # ╟─64bac944-8008-498d-a89b-b9f8ee54aa98
+# ╟─463ec69d-7b07-46e8-b24b-9c953aebd2ba
