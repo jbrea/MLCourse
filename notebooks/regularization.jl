@@ -24,9 +24,6 @@ begin
 end
 
 
-# ╔═╡ 470dc7f4-04a9-4253-8125-9112778021eb
-using GLMNet
-
 # ╔═╡ e04c5e8a-15f8-44a8-845d-60acaf795813
 begin
     using MLCourse
@@ -261,6 +258,9 @@ md"## The Lasso Path for the Weather Data"
 
 # ╔═╡ 1fa932c1-ce29-40ca-a8dc-e636aa2ecf66
 weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), DataFrame);
+
+# ╔═╡ 470dc7f4-04a9-4253-8125-9112778021eb
+import GLMNet: glmnet
 
 # ╔═╡ ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
 begin
