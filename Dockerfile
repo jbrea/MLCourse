@@ -1,7 +1,7 @@
 FROM julia:1.6.2
 
 # HTTP port
-EXPOSE 1234
+EXPOSE 8000
 RUN apt-get update -y && apt-get upgrade -y
 # add a new user called "MLCourse"
 RUN useradd -ms /bin/bash MLCourse
@@ -18,4 +18,4 @@ ENV JULIA_PKG_DEVDIR=/home
 RUN julia --project=/home/MLCourse -e "import Pkg; Pkg.instantiate(); Pkg.precompile(); using MLCourse"
 
 # The "default command" for this docker thing.
-CMD ["julia", "--project=/home/MLCourse", "-e", "import PlutoSliderServer; PlutoSliderServer.run_directory(\".\"; static_export = true, run_server = true, Export_baked_state = false, SliderServer_port=1234, SliderServer_host=\"0.0.0.0\", Export_slider_server_url=\"http://127.0.0.1:1234/\")"]
+CMD ["julia", "--project=/home/MLCourse", "-e", "import PlutoSliderServer; PlutoSliderServer.run_directory(\".\"; notebook_paths = [\"notebooks/regularization.jl\"], static_export = true, run_server = true, Export_baked_state = false, SliderServer_port=8000, SliderServer_host=\"0.0.0.0\", Export_slider_server_url=\"https://bio322.epfl.ch/\")"]
