@@ -40,15 +40,16 @@ begin
 end
 
 # ╔═╡ f3508747-da29-47c9-a98e-22ea15caaf2f
-md"Hi and welcome to an introduction to the Julia programming language.
+Markdown.parse("Hi and welcome to an introduction to the Julia programming language.
 
-This is an interactive notebook. You can create new cells by clicking any \"+\" above or below existing cells. In these cells you can write code and run it by clicking the play button or [Shift] + [Enter] on your keyboard (or [Ctrl] + [Enter]).
+$(haskey(ENV, "html_export") ? "" :
+"This is an interactive notebook. You can create new cells by clicking any \"+\" above or below existing cells. In these cells you can write code and run it by clicking the play button or [Shift] + [Enter] on your keyboard (or [Ctrl] + [Enter]).
 The output gets displayed above the cell.
 
-To get help, please open the Live docs at the bottom right of this page and click on the code you want to get help for. For example, click on the ÷ symbol in the 8th cell below.
+To get help, please open the Live docs at the bottom right of this page and click on the code you want to get help for. For example, click on the ÷ symbol in the 8th cell below.")
 
 If you want to learn more about Julia visit [julialang.org](https://julialang.org).
-In the following sections you find links to different chapters of the [manual](https://docs.julialang.org/en/v1/). There is also this [cheat sheet](https://juliadocs.github.io/Julia-Cheat-Sheet/)."
+In the following sections you find links to different chapters of the [manual](https://docs.julialang.org/en/v1/). There is also this [cheat sheet](https://juliadocs.github.io/Julia-Cheat-Sheet/).")
 
 # ╔═╡ d92c0729-c7ab-42cc-b713-30f00e237833
 md"# Mathematical Operations
