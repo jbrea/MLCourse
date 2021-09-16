@@ -394,6 +394,9 @@ md"# Exercises
 1. Apply K-nearest neighbors regression to the weather data set and compare the result you obtain to the one of linear regression.
 "
 
+# ╔═╡ 2320f424-7652-4e9f-83ef-fc011b722dcc
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─12942f50-efb1-11eb-01c0-055b6be166e0
 # ╠═12942f5a-efb1-11eb-399a-a1300d636217
@@ -436,3 +439,4 @@ md"# Exercises
 # ╟─ae86ee9c-3645-43d2-9a42-79658521c3fb
 # ╟─efda845a-4390-40bc-bdf2-89e555d3b1b2
 # ╟─12942f34-efb1-11eb-3eb4-c1a38396cfb8
+# ╟─2320f424-7652-4e9f-83ef-fc011b722dcc

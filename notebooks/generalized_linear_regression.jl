@@ -254,7 +254,7 @@ end
 
 # ╔═╡ 534681d5-71d8-402a-b455-f491cfbb353e
 begin
-    spam_or_ham = coerce(spamdata.label[1:2000], Binary)
+    spam_or_ham = coerce(String.(spamdata.label[1:2000]), Binary)
     normalized_word_counts = float.(DataFrame(tf(m), :auto))
 end
 
@@ -382,17 +382,15 @@ almost always correctly. Let us see how well this works for test data.
 begin
     test_crps = Corpus(StringDocument.(spamdata.text[2001:4000]))
     test_input = float.(DataFrame(tf(DocumentTermMatrix(test_crps, small_lex)), :auto))
-    test_labels = coerce(spamdata.label[2001:4000], Binary)
+    test_labels = coerce(String.(spamdata.label[2001:4000]), Binary)
     confusion_matrix(predict_mode(m3, test_input), test_labels)
 end
 
+# ╔═╡ 21b66582-3fda-401c-9421-73ae2f455a75
+predict_mode(m3, normalized_word_counts)
+
 # ╔═╡ ba4b5683-5932-415e-8772-8b3eef5eb63d
 md"We save also the test data for future usage."
-
-# ╔═╡ 9e1076f0-c7c3-4d04-8c00-317d39c5340b
-CSV.write(joinpath(dirname(pathof(MLCourse)), "..", "data",
-                   "spam_preprocessed_test.csv"),
-          [test_input DataFrame(spam_or_ham = test_labels)])
 
 # ╔═╡ a30578dd-aecb-46eb-b947-f009282cf2fc
 md"Let us evaluate the fit in terms of commonly used losses for binary classification."
@@ -408,6 +406,9 @@ end;
 
 # ╔═╡ dd463687-b73d-4e70-b2cf-97a56a0ad409
 losses(m3, normalized_word_counts, spam_or_ham)
+
+# ╔═╡ 57dcadc0-2da2-4521-aeaf-6fd01f4bd82b
+spam_or_ham
 
 # ╔═╡ 935adbcd-48ab-4a6f-907c-b04137ca3abe
 losses(m3, test_input, test_labels)
@@ -446,6 +447,9 @@ md"# Exercises
    - Plot some of the wrongly classified training and test images.
      Are they also difficult for you to classify?
 "
+
+# ╔═╡ 7f08fcaa-000d-422d-80b4-e58a2f489d74
+MLCourse.footer()
 
 # ╔═╡ Cell order:
 # ╟─8217895b-b120-4b08-b18f-d921dfdddf10
@@ -502,12 +506,14 @@ md"# Exercises
 # ╠═32bafa9e-a35e-4f54-9857-d269b47f95c3
 # ╟─4e4f4adf-364f-49b9-9391-5050a4c1286a
 # ╠═50c035e6-b892-4157-a52f-824578366977
+# ╠═21b66582-3fda-401c-9421-73ae2f455a75
 # ╟─ba4b5683-5932-415e-8772-8b3eef5eb63d
-# ╠═9e1076f0-c7c3-4d04-8c00-317d39c5340b
 # ╟─a30578dd-aecb-46eb-b947-f009282cf2fc
 # ╠═8ed39cdc-e99e-48ff-9973-66df41aa0f78
 # ╠═dd463687-b73d-4e70-b2cf-97a56a0ad409
+# ╠═57dcadc0-2da2-4521-aeaf-6fd01f4bd82b
 # ╠═935adbcd-48ab-4a6f-907c-b04137ca3abe
 # ╟─8b0451bf-59b0-4e71-be84-549e23b5bfe7
 # ╟─20c5c7bc-664f-4c04-8215-8f3a9a2095c9
 # ╟─94f8e29e-ef91-11eb-1ae9-29bc46fa505a
+# ╟─7f08fcaa-000d-422d-80b4-e58a2f489d74

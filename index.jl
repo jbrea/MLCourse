@@ -8,7 +8,7 @@ using InteractiveUtils
 begin
     using Pkg
     include(joinpath(Pkg.devdir(), "MLCourse", "src", "notebooks.jl"))
-    list_notebooks(@__FILE__)
+    list_notebooks(@__FILE__, "notebooks")
 end
 
 # ╔═╡ bd586b9b-2701-42ce-a56c-bdadf2576212

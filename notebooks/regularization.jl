@@ -24,6 +24,9 @@ begin
 end
 
 
+# ╔═╡ 470dc7f4-04a9-4253-8125-9112778021eb
+using GLMNet
+
 # ╔═╡ e04c5e8a-15f8-44a8-845d-60acaf795813
 begin
     using MLCourse
@@ -224,9 +227,11 @@ correctly generated in the \"Generalized Linear Regression\" notebook.
 begin
     spam_train = CSV.read(joinpath(dirname(pathof(MLCourse)), "..", "data",
                                    "spam_preprocessed.csv"), DataFrame)
+	spam_train.spam_or_ham = String.(spam_train.spam_or_ham)
     coerce!(spam_train, :spam_or_ham => Binary)
     spam_test = CSV.read(joinpath(dirname(pathof(MLCourse)), "..", "data",
                                   "spam_preprocessed_test.csv"), DataFrame)
+	spam_test.spam_or_ham = String.(spam_test.spam_or_ham)
     coerce!(spam_test, :spam_or_ham => Binary)
 end;
 
@@ -257,23 +262,20 @@ md"## The Lasso Path for the Weather Data"
 # ╔═╡ 1fa932c1-ce29-40ca-a8dc-e636aa2ecf66
 weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), DataFrame);
 
-# ╔═╡ 470dc7f4-04a9-4253-8125-9112778021eb
-import Lasso
-
 # ╔═╡ ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
 begin
     weather_input = select(weather, Not(:LUZ_wind_peak))[1:end-5, :]
     weather_output = weather.LUZ_wind_peak[6:end]
-    weather_fits = Lasso.fit(Lasso.LassoPath, Array(weather_input), weather_output)
+    weather_fits = glmnet(Array(weather_input), weather_output)
 end
 
 # ╔═╡ 4652a904-5edb-463c-a046-5c5d378f7cca
-let lambda = log.(weather_fits.λ),
+let lambda = log.(weather_fits.lambda),
     col_names = names(weather_input)
     plotly()
     p = plot()
-    for i in 1:size(weather_fits.coefs, 1)
-        plot!(lambda, weather_fits.coefs[i, :], label = col_names[i])
+    for i in 1:size(weather_fits.betas, 1)
+        plot!(lambda, weather_fits.betas[i, :], label = col_names[i])
     end
     plot!(legend = :outertopright, xlabel = "log(λ)", size = (700, 400))
     gr()
@@ -281,9 +283,9 @@ let lambda = log.(weather_fits.λ),
 end
 
 # ╔═╡ 40bb385f-1cbd-4555-a8ab-544a67f33595
-let lambda = log.(weather_fits.λ)
-    p1 = plot(lambda, 100 * weather_fits.pct_dev, ylabel = "% variance explained")
-    p2 = plot(lambda, reshape(sum(weather_fits.coefs .!= 0, dims = 1), :),
+let lambda = log.(weather_fits.lambda)
+    p1 = plot(lambda, 100 * weather_fits.dev_ratio, ylabel = "% variance explained")
+    p2 = plot(lambda, reshape(sum(weather_fits.betas .!= 0, dims = 1), :),
               ylabel = "non-zero parameters",
               xlabel = "log(λ)")
     plot(p1, p2, layout = (2, 1), legend = false)
@@ -349,6 +351,9 @@ and ``Y = X_1 + \epsilon`` with ``\mathrm{Var}(\epsilon) = 0.1^2``.
 # ╔═╡ 912ffa99-9e9c-4be9-9bf4-3e477de17ee4
 
 
+# ╔═╡ c48dff95-8028-4e97-8ec6-705ea2b9c72e
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
 # ╠═9e1e8284-a8c1-47a9-83d0-2d8fbd8ce005
@@ -385,3 +390,4 @@ and ``Y = X_1 + \epsilon`` with ``\mathrm{Var}(\epsilon) = 0.1^2``.
 # ╠═912ffa99-9e9c-4be9-9bf4-3e477de17ee4
 # ╟─e04c5e8a-15f8-44a8-845d-60acaf795813
 # ╟─150d58e7-0e73-4b36-836c-d81eef531a9c
+# ╟─c48dff95-8028-4e97-8ec6-705ea2b9c72e

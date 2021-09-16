@@ -249,8 +249,8 @@ md"# Exercises
    accepts a measure argument and `MLJ` has the builtin function `auc`.
 "
 
-# ╔═╡ 5d1fccfa-7362-4aed-a3f1-5fbd743ae9ab
-
+# ╔═╡ 0651292e-3f4e-4263-8235-4caa563403ec
+MLCourse.footer()
 
 # ╔═╡ Cell order:
 # ╟─7eb6a060-f948-4d85-881a-4909e74c15bd
@@ -283,6 +283,6 @@ md"# Exercises
 # ╠═59245b3e-ddfc-46c4-ba44-86ce191672ae
 # ╟─47a2c14b-a02d-43d7-ac8a-4d95a0d91fa8
 # ╟─ee89c448-1e69-4fd1-a4b8-7297a09f2685
-# ╠═5d1fccfa-7362-4aed-a3f1-5fbd743ae9ab
 # ╟─c693088f-7f80-4cdd-b9b5-65a50da732ac
 # ╟─736856ce-f490-11eb-3349-057c86edfe7e
+# ╟─0651292e-3f4e-4263-8235-4caa563403ec
