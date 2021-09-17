@@ -517,6 +517,9 @@ md"# Exercises
 2. In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `OpenML.describe_dataset(505)`.
 "
 
+# ╔═╡ 8c72c4b5-452d-4ba3-903b-866cac1c799d
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─c95ad296-5191-4f72-a7d7-87ddebc43a65
 # ╠═fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
@@ -541,3 +544,4 @@ md"# Exercises
 # ╟─2f034d19-1c00-4a10-a880-99436ab00957
 # ╟─83e2c454-042f-11ec-32f7-d9b38eeb7769
 # ╟─87f59dc7-5149-4eb6-9d81-440ee8cecd72
+# ╟─8c72c4b5-452d-4ba3-903b-866cac1c799d

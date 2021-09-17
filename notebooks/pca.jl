@@ -662,6 +662,12 @@ To do so, treat each row of this image as a single data point.
 # ╔═╡ 00229efb-352e-4ef0-abb5-23952f21a197
 
 
+# ╔═╡ 7cb6d62e-c076-45d1-891b-8c7a2b1380b5
+
+
+# ╔═╡ 147f9c9c-72dd-4003-90b1-33fd68d762ce
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─31bcc3f0-88c1-4035-b0de-b4217623dc22
 # ╠═e24cff15-a966-405a-b083-4b86be09c6f1
@@ -744,3 +750,5 @@ To do so, treat each row of this image as a single data point.
 # ╠═00229efb-352e-4ef0-abb5-23952f21a197
 # ╟─8bd459cb-20bb-483e-a849-e18caae3beef
 # ╟─b97724e4-d7b0-4085-b88e-eb3c5bcbe441
+# ╠═7cb6d62e-c076-45d1-891b-8c7a2b1380b5
+# ╟─147f9c9c-72dd-4003-90b1-33fd68d762ce

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.0
+# v0.15.1
 
 using Markdown
 using InteractiveUtils
@@ -91,9 +91,13 @@ $(MLCourse.embed_figure("conv_exercise.png"))
 # ╔═╡ 463ec69d-7b07-46e8-b24b-9c953aebd2ba
 MLCourse.footer()
 
+# ╔═╡ 3bd0ed27-7d3b-4036-87a4-2dd0e2874b58
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─7cfd274d-75d8-4cd9-b38b-4176466c9e26
 # ╟─2bbf9876-0676-11ec-3985-73f4dcaea02f
 # ╟─01a467a5-7389-44d1-984d-244dfb1ea39f
 # ╟─64bac944-8008-498d-a89b-b9f8ee54aa98
 # ╟─463ec69d-7b07-46e8-b24b-9c953aebd2ba
+# ╟─3bd0ed27-7d3b-4036-87a4-2dd0e2874b58

@@ -114,9 +114,13 @@ md"# Exercise
     spam data set.
 "
 
+# ╔═╡ eab07572-ff5d-48c5-843d-18c5f5f4b4dd
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─9c575c1a-9c9f-4c27-9a53-717e5eca2dab
 # ╠═27127d83-ee72-4cc1-8772-d85130fb5fa4
 # ╟─d1258b22-0680-11ec-1a56-1bde845491c0
 # ╟─2f376d84-0460-4f19-b6a3-b9d17d452823
 # ╟─baabe9c8-055e-46f2-a495-17ccc3bfced1
+# ╟─eab07572-ff5d-48c5-843d-18c5f5f4b4dd

@@ -134,6 +134,9 @@ begin
 	plot!(x -> pdf(gamma_fit, x), w = 2, label = "fitted Gamma distribution")
 end
 
+# ╔═╡ 951f6957-0ff7-4b2e-ba91-1b69122bbe47
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─4c536f7c-dc4b-4cf7-aefa-694b830a8e6a
 # ╠═b66c7efc-8fd8-4152-9b0f-9332f760b51b
@@ -158,3 +161,4 @@ end
 # ╟─62491145-48b9-4ac5-8e7b-0676e9616fe9
 # ╟─e688a9de-2dba-4fab-b4e6-9803c5361a62
 # ╟─34beb7d6-fba9-11eb-15b8-e34afccc9f88
+# ╟─951f6957-0ff7-4b2e-ba91-1b69122bbe47

@@ -355,6 +355,9 @@ Hint: do not forget that we fit without intercept (`fit_intercept = false`).
 set, e.g. 10^6 samples.
 "
 
+# ╔═╡ 8459f86e-bce7-4839-9c51-57335ac6353c
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─9f18f610-79e2-403a-a792-fe2dafd2054a
 # ╠═fcbac567-36db-40c5-9436-6315c0caa40a
@@ -390,3 +393,4 @@ set, e.g. 10^6 samples.
 # ╟─e0cc188c-9c8f-47f1-b1fe-afc2a578973d
 # ╟─cb9f858a-f60a-11eb-3f0e-a9b68cf33921
 # ╟─7aa547f8-25d4-488d-9fc3-f633f7f03f57
+# ╟─8459f86e-bce7-4839-9c51-57335ac6353c

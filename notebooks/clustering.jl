@@ -191,6 +191,9 @@ you get similar results as with K-means clustering with ``K = 2, 3, 4``?
 
 "
 
+# ╔═╡ 35ac2056-ab72-44b0-9972-723a0887a622
+MLCourse.footer()
+
 # ╔═╡ Cell order:
 # ╟─da8f8ce7-c3ad-4e1a-bb9e-c7be15646d72
 # ╠═49a1493b-ba68-4e7a-8c3d-47423f7a8204
@@ -208,3 +211,4 @@ you get similar results as with K-means clustering with ``K = 2, 3, 4``?
 # ╟─85d574c2-b823-4dcf-b711-efc755e724b7
 # ╟─15830699-57c5-4bc2-bc92-54105597ab26
 # ╟─7b013132-0ee2-11ec-1dd2-25a9f16f0568
+# ╟─35ac2056-ab72-44b0-9972-723a0887a622
