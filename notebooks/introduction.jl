@@ -176,6 +176,15 @@ s1 ^ 3 * s2
 # ╔═╡ 034f7cec-eacd-11eb-27da-9bb861643df2
 split(s2)
 
+# ╔═╡ 832ce046-ab34-4623-9d02-793dc5748208
+md"Sometimes we want to paste something computed into a string. This is called [interpolation](https://docs.julialang.org/en/v1/manual/strings/#string-interpolation)."
+
+# ╔═╡ 91b0de0c-221c-468e-9077-5233aedeb4ca
+answer = 42
+
+# ╔═╡ 0c7ae3ec-a40f-4e3e-85d8-3f79f091e3b4
+"The answer is $answer." # we interpolate with the dollar sign
+
 # ╔═╡ 732ae082-b90f-4108-9872-36077fb2c54c
 md"Whenever you see just text here, it is actually the output of a markdown cell.
 Markdown cells can be written in two ways: either as a markdown string `md\"this is a markdown string\"` (note the trailing `md`) or as `Markdown.parse(\"this is a markdown string\")`.
@@ -297,6 +306,33 @@ v' * v # inner product
 
 # ╔═╡ 034f7cd6-eacd-11eb-37bb-f1930f2f2772
 eigvals(m) # compute the Eigen values
+
+# ╔═╡ c997a07f-bc89-4c29-9945-62046b6889d2
+md"To concatenate vectors and matrices we have the following syntax (see also [here](https://docs.julialang.org/en/v1/manual/arrays/#man-array-concatenation))."
+
+# ╔═╡ 07fd5baf-ae0b-4e74-97a6-5a6e14644122
+[[1, 2, 3]; [77, 88, 99]] # the semicolon concatenates the two vectors
+
+# ╔═╡ 11422ca4-c096-4167-aa53-de312615348e
+md"The same can be achieved with"
+
+# ╔═╡ 0ace8c81-e481-4323-9b20-116de412330a
+vcat([1, 2, 3], [77, 88, 99])
+
+# ╔═╡ 5d09ccbf-5a51-41f7-a7ef-84cf2cc5fa1f
+[[1, 2, 3] [77, 88, 99]] # alternatively you can use hcat([1, 2, 3], [77, 88, 99])
+
+# ╔═╡ 9fd6e8c1-7b84-4d76-abef-9e3da4a56dc7
+md"Sometimes it is easier to construct a vector or matrix with [comprehension](https://docs.julialang.org/en/v1/manual/arrays/#man-comprehensions)."
+
+# ╔═╡ e33c0eea-4f5c-4fc8-800d-fa16335eedd0
+[i^2 for i in [3, 4, 9, 7]]
+
+# ╔═╡ 315e5a3b-dc28-4c3b-8fc2-3442cb7590be
+[i^2 for i in [3, 4, 9, 7] if isodd(i)]
+
+# ╔═╡ 45deab46-9a8c-4d22-9460-980a3900396f
+["$i, $j" for i in 1:5, j in 1:5] # see string interpolation above for the $
 
 # ╔═╡ b91eda3c-95cb-4372-9c6b-03fa6a6b02b2
 md"# Ranges
@@ -478,6 +514,39 @@ with_terminal(plotattr, :Series, "label")
 # ╔═╡ 034f7d58-eacd-11eb-123f-9b563a7ae27e
 scatter(rand(100), rand(100), label = "my data", xlabel = "X1", ylabel = "X2")
 
+# ╔═╡ 4ca1cd98-a24b-491f-b9ac-28a7daf96d50
+md"To compose figures with multiple elements, you can use the `!` version of the plotting functions"
+
+# ╔═╡ 65e73d27-3709-4894-87ab-432343d314c6
+begin # we use begin to write a cell with multiple lines
+	scatter(1:50, sqrt.(1:50) .+ randn(50), label = "data points")
+	plot!(sqrt, color = :red, label = "square root function")
+end
+
+# ╔═╡ 9f69c2ab-2940-40ce-b164-07bfa6cc1697
+md"Instead of `begin`-`end`-blocks we will also use `let`-`end`-blocks. Variables computed in `let`-blocks are local to that cell, whereas variables defined in `begin`-blocks are global and can be accessed by other cells. (With the `;` at the end of the cell we suppress the output)."
+
+# ╔═╡ e7ed9e83-7f17-4d9a-a49b-e87bc0747035
+begin
+	a_global_variable = 17
+	another_global_variable = "Hi"
+end;
+
+# ╔═╡ 0d66592a-d098-4ab5-9323-503db8fc73f6
+a_global_variable * 3
+
+# ╔═╡ a9a3f29e-4931-4464-9bc5-af6598815f24
+"$another_global_variable there!"
+
+# ╔═╡ 6e65247f-b285-49e5-a16e-31b4541225bf
+let
+	a_local_variable = 17
+	another_local_variable = "Hi"
+end;
+
+# ╔═╡ fcd77620-f18a-499b-87c4-fffaa876e59f
+a_local_variable * 3
+
 # ╔═╡ 034f7d62-eacd-11eb-3840-51c0622eb8a0
 md"# Distributions
 
@@ -517,15 +586,22 @@ Here are some other popular Julia packages. They are not relevant for this cours
 "
 
 # ╔═╡ 4a03cfae-9876-4cf0-a498-d750853191cb
-md"# Exercises
+md"""# Exercises
 
 1. Create a data frame with 3 columns named A, B and C.
    1. Column A contains 5 random numbers sampled from a Bernoulli distribution with rate 0.3, column B contains 5 random numbers from the uniform distribution over the interval [0, 1), and column C contains 5 samples from the set `(:hip, :hop)`.
    2. Create a vector whose i'th element contains the sum of the i'th entries of columns A and B of the data frame created in 1.
    3. Select all rows with `:hop` in column C and display the resulting data frame.
-2. Write a function that returns the smallest entry of a vector.
-3. Plot the `cos` function on the interval 0 to 4π. Hint: type `\pi + [Tab]` to enter the symbol π. To learn how to place custom tick labels on the x-axis, type `xticks` in a cell and open the \"Live docs\" at the bottom-right.
-"
+1. 
+   1. Use comprehension (see "Vectors, Matrices, Arrays") to create a vector where with all numbers of the form ``x^y`` with ``x=1, \ldots, 10``, ``y = 2, \ldots, 7`` and ``y > x``.
+   2. Compute the sum of the square root of this numbers.
+2. 
+   1. Write a function that returns the smallest entry of a vector (without using the built-in function `minimum`, `argmin` or `findmin`).
+   2. Test your function on a vector of 10 randomly sampled integers in the range 1 to 100.
+3. 
+   1. Plot the `cos` function on the interval 0 to 4π. Hint: type `\pi + [Tab]` to enter the symbol π. To learn how to place custom tick labels on the x-axis, type `xticks` in a cell and open the \"Live docs\" at the bottom-right.
+   2. Add a scatter plot with 100 points whose ``x`` and ``y`` coordinates are randomly sampled from the interval ``[0, 1)`` on top of the figure with the cosine.
+"""
 
 # ╔═╡ 0314376e-ff8c-4ad0-8a4b-f94f04f31f2c
 MLCourse.footer()
@@ -570,6 +646,9 @@ MLCourse.footer()
 # ╠═034f7ce0-eacd-11eb-18a1-bd2d1849b9bc
 # ╠═034f7cec-eacd-11eb-3262-bdc0f2e13a3a
 # ╠═034f7cec-eacd-11eb-27da-9bb861643df2
+# ╠═832ce046-ab34-4623-9d02-793dc5748208
+# ╠═91b0de0c-221c-468e-9077-5233aedeb4ca
+# ╠═0c7ae3ec-a40f-4e3e-85d8-3f79f091e3b4
 # ╟─732ae082-b90f-4108-9872-36077fb2c54c
 # ╠═6bfb60b4-964e-46ec-adc2-ec9e9a0f8158
 # ╟─0efb1f1a-8051-4843-aa68-1f4ad8618f92
@@ -593,6 +672,15 @@ MLCourse.footer()
 # ╠═034f7ccc-eacd-11eb-2ab4-599e0ed86304
 # ╠═034f7cc2-eacd-11eb-29e2-810a573295cf
 # ╠═034f7cd6-eacd-11eb-37bb-f1930f2f2772
+# ╠═c997a07f-bc89-4c29-9945-62046b6889d2
+# ╠═07fd5baf-ae0b-4e74-97a6-5a6e14644122
+# ╠═11422ca4-c096-4167-aa53-de312615348e
+# ╠═0ace8c81-e481-4323-9b20-116de412330a
+# ╠═5d09ccbf-5a51-41f7-a7ef-84cf2cc5fa1f
+# ╠═9fd6e8c1-7b84-4d76-abef-9e3da4a56dc7
+# ╠═e33c0eea-4f5c-4fc8-800d-fa16335eedd0
+# ╠═315e5a3b-dc28-4c3b-8fc2-3442cb7590be
+# ╠═45deab46-9a8c-4d22-9460-980a3900396f
 # ╟─b91eda3c-95cb-4372-9c6b-03fa6a6b02b2
 # ╠═034f7c16-eacd-11eb-3877-6ba06a933698
 # ╠═034f7c22-eacd-11eb-3ab7-b30813d11e94
@@ -646,6 +734,14 @@ MLCourse.footer()
 # ╠═034f7d4c-eacd-11eb-3960-d10d1c16075d
 # ╠═034f7d4c-eacd-11eb-3841-97ca37e34c9f
 # ╠═034f7d58-eacd-11eb-123f-9b563a7ae27e
+# ╠═4ca1cd98-a24b-491f-b9ac-28a7daf96d50
+# ╠═65e73d27-3709-4894-87ab-432343d314c6
+# ╠═9f69c2ab-2940-40ce-b164-07bfa6cc1697
+# ╠═e7ed9e83-7f17-4d9a-a49b-e87bc0747035
+# ╠═0d66592a-d098-4ab5-9323-503db8fc73f6
+# ╠═a9a3f29e-4931-4464-9bc5-af6598815f24
+# ╠═6e65247f-b285-49e5-a16e-31b4541225bf
+# ╠═fcd77620-f18a-499b-87c4-fffaa876e59f
 # ╟─034f7d62-eacd-11eb-3840-51c0622eb8a0
 # ╠═034f7d58-eacd-11eb-3189-bff16ec27739
 # ╠═034f7d62-eacd-11eb-3840-51c0622eb8a9
