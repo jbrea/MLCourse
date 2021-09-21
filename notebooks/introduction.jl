@@ -42,9 +42,9 @@ end
 # ╔═╡ f3508747-da29-47c9-a98e-22ea15caaf2f
 Markdown.parse("Hi and welcome to an introduction to the Julia programming language.
 
-$(haskey(ENV, "html_export") ? "" :
-"This is an interactive notebook. You can create new cells by clicking any \"+\" above or below existing cells. In these cells you can write code and run it by clicking the play button or [Shift] + [Enter] on your keyboard (or [Ctrl] + [Enter]).
-The output gets displayed above the cell.
+$(haskey(ENV, "html_export") ? "This page was created with an interactive [Pluto notebook](https://plutojl.org/). If you want to run it locally on your machine, follow the instructions [here](https://github.com/jbrea/MLCourse)." :
+"This is an interactive Pluto notebook. You can create new cells by clicking any \"+\" above or below existing cells. In these cells you can write code and run it by clicking the play button or [Shift] + [Enter] on your keyboard (or [Ctrl] + [Enter]).
+The output gets displayed above the cell. Have a look at [this website](https://plutojl.org/) if you want to learn more about Pluto notebooks.
 
 To get help, please open the Live docs at the bottom right of this page and click on the code you want to get help for. For example, click on the ÷ symbol in the 8th cell below.")
 
