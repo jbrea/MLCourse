@@ -48,7 +48,7 @@ lexicon(crps)
 small_lex = Dict(k => lexicon(crps)[k]
                  for k in findall(x -> 80 <= last(x) <= 10^2, lexicon(crps)))
 m = DocumentTermMatrix(crps, small_lex)
-spam_or_ham = coerce(spamdata.label[1:200], Binary)
+spam_or_ham = coerce(String.(spamdata.label[1:200]), Binary)
 normalized_word_counts = float.(DataFrame(tf(m), :auto))
 m3 = fit!(machine(LinearBinaryClassifier(),
                   normalized_word_counts,
@@ -102,7 +102,7 @@ m14 = machine(KNNClassifier(K = 4),
              classification_data.y) |> fit!;
 
 path = tempname()
-original = joinpath(@__DIR__, "..", "notebooks", "welcome.jl")
+original = joinpath(@__DIR__, "..", "index.jl")
 # so that we don't overwrite the file:
 Pluto.readwrite(original, path)
 
