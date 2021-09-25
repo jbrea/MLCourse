@@ -114,6 +114,11 @@ git-tree-sha1 = "f53ca8d41e4753c41cdafa6ec5f7ce914b34be54"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 version = "0.10.13"
 
+[[CircularArrayBuffers]]
+git-tree-sha1 = "b097d863df6c40491b7553a1eb235fbb86d37d0e"
+uuid = "9de3a189-e0c0-4e15-ba3b-b14b9fb0aec1"
+version = "0.1.3"
+
 [[Clustering]]
 deps = ["Distances", "LinearAlgebra", "NearestNeighbors", "Printf", "SparseArrays", "Statistics", "StatsBase"]
 git-tree-sha1 = "75479b7df4167267d75294d14b58244695beb2ac"
@@ -144,6 +149,12 @@ git-tree-sha1 = "417b0ed7b8b838aa6ca0a87aadf1bb9eb111ce40"
 uuid = "5ae59095-9a9b-59fe-a467-6f913c188581"
 version = "0.12.8"
 
+[[CommonRLInterface]]
+deps = ["MacroTools"]
+git-tree-sha1 = "21de56ebf28c262651e682f7fe614d44623dc087"
+uuid = "d842c3ba-07a1-494f-bbec-f5741b0a3e98"
+version = "0.3.1"
+
 [[CommonSubexpressions]]
 deps = ["MacroTools", "Test"]
 git-tree-sha1 = "7b8a93dba8af7e3b42fecabf646260105ac373f7"
@@ -170,6 +181,12 @@ deps = ["Crayons", "ExproniconLite", "OrderedCollections", "TOML"]
 git-tree-sha1 = "b8486a417456d2fbbe2af13e24cef459c9f42429"
 uuid = "5218b696-f38b-4ac9-8b61-a12ec717816d"
 version = "0.15.4"
+
+[[ConstructionBase]]
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "f74e9d5388b8620b4cee35d4c5a618dd4dc547f4"
+uuid = "187b0558-2788-49d3-abe0-74a17ed4e7c9"
+version = "1.3.0"
 
 [[Contour]]
 deps = ["StaticArrays"]
@@ -279,6 +296,18 @@ deps = ["Dates", "Statistics"]
 git-tree-sha1 = "9427bc7a6c186d892f71b1c36ee7619e440c9e06"
 uuid = "792122b4-ca99-40de-a6bc-6742525f08b6"
 version = "0.1.8"
+
+[[ElasticArrays]]
+deps = ["Adapt"]
+git-tree-sha1 = "a0fcc1bb3c9ceaf07e1d0529c9806ce94be6adf9"
+uuid = "fdbdab4c-e67f-52f5-8c3f-e7b388dad3d4"
+version = "1.2.9"
+
+[[EllipsisNotation]]
+deps = ["ArrayInterface"]
+git-tree-sha1 = "8041575f021cba5a099a456b4163c9a08b566a02"
+uuid = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
+version = "1.1.0"
 
 [[Expat_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -508,6 +537,12 @@ deps = ["AxisAlgorithms", "ChainRulesCore", "LinearAlgebra", "OffsetArrays", "Ra
 git-tree-sha1 = "1470c80592cf1f0a35566ee5e93c5f8221ebc33a"
 uuid = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 version = "0.13.3"
+
+[[IntervalSets]]
+deps = ["Dates", "EllipsisNotation", "Statistics"]
+git-tree-sha1 = "3cc368af3f110a767ac786560045dceddfc16758"
+uuid = "8197267c-284f-5f27-9208-e0e47529a953"
+version = "0.5.3"
 
 [[Intervals]]
 deps = ["Dates", "Printf", "RecipesBase", "Serialization", "TimeZones"]
@@ -747,9 +782,9 @@ version = "0.7.2"
 
 [[MKL_jll]]
 deps = ["Artifacts", "IntelOpenMP_jll", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
-git-tree-sha1 = "c253236b0ed414624b083e6b72bfe891fbd2c7af"
+git-tree-sha1 = "5455aef09b40e5020e1520f551fa3135040d4ed0"
 uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
-version = "2021.1.1+1"
+version = "2021.1.1+2"
 
 [[MLBase]]
 deps = ["IterTools", "Random", "Reexport", "StatsBase", "Test"]
@@ -1184,6 +1219,36 @@ git-tree-sha1 = "7b1d07f411bc8ddb7977ec7f377b97b158514fe0"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "0.2.0"
 
+[[ReinforcementLearning]]
+deps = ["Reexport", "ReinforcementLearningBase", "ReinforcementLearningCore", "ReinforcementLearningEnvironments", "ReinforcementLearningZoo"]
+git-tree-sha1 = "670332c2342d2104b3147876d90d39c21012dde5"
+uuid = "158674fc-8238-5cab-b5ba-03dfc80d1318"
+version = "0.9.0"
+
+[[ReinforcementLearningBase]]
+deps = ["AbstractTrees", "CommonRLInterface", "Markdown", "Random", "Test"]
+git-tree-sha1 = "1827f00111ea7731d632b8382031610dc98d8747"
+uuid = "e575027e-6cd6-5018-9292-cdc6200d2b44"
+version = "0.9.7"
+
+[[ReinforcementLearningCore]]
+deps = ["AbstractTrees", "Adapt", "ArrayInterface", "CUDA", "CircularArrayBuffers", "Compat", "Dates", "Distributions", "ElasticArrays", "FillArrays", "Flux", "Functors", "GPUArrays", "LinearAlgebra", "MacroTools", "Markdown", "ProgressMeter", "Random", "ReinforcementLearningBase", "Setfield", "Statistics", "StatsBase", "UnicodePlots", "Zygote"]
+git-tree-sha1 = "9db88e038268dbf1c7f5c2bf2b91b332a0682ebe"
+uuid = "de1b191a-4ae0-4afa-a27b-92d07f46b2d6"
+version = "0.8.3"
+
+[[ReinforcementLearningEnvironments]]
+deps = ["DelimitedFiles", "IntervalSets", "LinearAlgebra", "MacroTools", "Markdown", "Pkg", "Random", "ReinforcementLearningBase", "Requires", "StatsBase"]
+git-tree-sha1 = "38d53be26a5a56d10fe8b952cdd048d3480cf111"
+uuid = "25e41dd2-4622-11e9-1641-f1adca772921"
+version = "0.6.3"
+
+[[ReinforcementLearningZoo]]
+deps = ["AbstractTrees", "CUDA", "CircularArrayBuffers", "DataStructures", "Dates", "Distributions", "Flux", "IntervalSets", "LinearAlgebra", "Logging", "MacroTools", "Random", "ReinforcementLearningBase", "ReinforcementLearningCore", "Setfield", "Statistics", "StatsBase", "StructArrays", "Zygote"]
+git-tree-sha1 = "35e933c102db55741f9efcb5c1f3db2cf576a74e"
+uuid = "d607f57d-ee1e-4ba7-bcf2-7734c1e31854"
+version = "0.4.1"
+
 [[Requires]]
 deps = ["UUIDs"]
 git-tree-sha1 = "4036a3bd08ac7e968e27c203d45f5fff15020621"
@@ -1230,6 +1295,12 @@ version = "1.3.5"
 
 [[Serialization]]
 uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+
+[[Setfield]]
+deps = ["ConstructionBase", "Future", "MacroTools", "Requires"]
+git-tree-sha1 = "fca29e68c5062722b5b4435594c3d1ba557072a3"
+uuid = "efcf1570-3423-57d1-acb7-fd33fddbac46"
+version = "0.7.1"
 
 [[SharedArrays]]
 deps = ["Distributed", "Mmap", "Random", "Serialization"]
@@ -1448,6 +1519,12 @@ version = "1.0.2"
 
 [[Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+
+[[UnicodePlots]]
+deps = ["Crayons", "Dates", "SparseArrays", "StatsBase"]
+git-tree-sha1 = "dc9c7086d41783f14d215ea0ddcca8037a8691e9"
+uuid = "b8865327-cd53-5732-bb35-84acbb429228"
+version = "1.4.0"
 
 [[Wayland_jll]]
 deps = ["Artifacts", "Expat_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg", "XML2_jll"]

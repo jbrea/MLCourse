@@ -11,6 +11,7 @@ const NOTEBOOKS = [("Introduction", "introduction.jl"),
                    ("Recurrent Neural Networks", "rnn.jl"),
                    ("Clustering", "clustering.jl"),
                    ("Principal Component Analysis", "pca.jl"),
+                   ("Reinforcement Learning", "rl.jl")
                   ]
 
 function _linkname(path, nb)
