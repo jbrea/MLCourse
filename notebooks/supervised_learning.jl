@@ -370,14 +370,13 @@ predict_mode(mach3, DataFrame(x = -1:.5:2))
 md"""# Exercises
 
 ## Conceptual
-1. We have some training data ``((x_1, y_1), (x_2, y_2), \ldots,
-   (x_n, y_n))`` and a family of probability densities
+1. We have some training data ``((x_1 = 0, y_1 = -1), (x_2 = 2, y_2 = 4),
+   (x_3 = 2, y_3 = 3))`` and a family of probability densities
    ``p(y|x) = \frac1{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(y - \theta_0 - \theta_1 x)^2}{2\sigma^2}\right)``.
    - Write the log-likelihood function of the parameters ``\theta_0`` and ``\theta_1``
      for this data and model.
-   - Find the optimum of this log-likelihood function. Hint: compare your
-     likelihood-function with the loss function of our blackboard example of
-     linear regression as a loss minimizing machine.
+   - Find the parameters ``\hat\theta_0`` and ``\hat\theta_1`` that maximize the log-likelihood function and compare your result to the solution we found in our blackboard example of linear regression as a loss minimizing machine.
+   - Show for general training data ``((x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n))`` that the log-likelihood function is maximized by the same ``\hat\theta`` that minimizes the loss function of linear regression.
 1. Explain whether each scenario is a classification or regression problem, and
    indicate whether we are most interested in inference/interpretation or prediction.
    Finally, provide ``n`` and ``p``.
