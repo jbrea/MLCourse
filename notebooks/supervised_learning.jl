@@ -402,11 +402,15 @@ md"""# Exercises
    - a distribution that could be used to model Y|X
 
 ## Applied
-1. Change the noise level σ, the size of the training data n and the seed with the sliders of the section "Linear Regression" and observe the training and the test losses. Write down your observations.
+1. Change the noise level ``\sigma``, the size of the training data ``n`` and the seed with the sliders of the section "Linear Regression" and observe the training and the test losses. Write down your observations when
+    - ``n`` is small.
+    - ``n`` is large.
+    - Compare training loss and test loss when ``n`` is large for different seed values.
+    - Compare for large ``n`` the test error to ``\sigma^2`` for different values of ``\sigma``.
 1. Write a data generator function that samples inputs ``x`` normally distributed
    with mean 2 and standard deviation 3. The response ``y\in\{\mbox{true, false}\}``
    should be sampled from a Bernoulli distribution with rate of ``\mbox{true}``
-   equal to ``\sigma(0.5x - 2.7)``.
+   equal to ``\sigma(0.5x - 2.7)`` where ``\sigma(x) = 1/(1 + e^{-x})`` is the sigmoid function.
    - Create a training set of size ``n = 50``.
    - Fit the data with logistic regression and look at the fitted parameters.
    - Repeat the 2 steps above with a training set of size ``n = 10^4``.
