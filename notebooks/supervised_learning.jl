@@ -44,7 +44,7 @@ begin
 end
 
 # ╔═╡ f63c04dc-eefe-11eb-1e24-1d02a686920a
-md"In this notebook we have a first look at some data sets and the [MLJ machine learning package](https://alan-turing-institute.github.io/MLJ.jl).
+md"In this notebook we have a first look at some data sets and the [MLJ machine learning package](https://alan-turing-institute.github.io/MLJ.jl/dev).
 
 # Data Sets for Supervised Learning
 
