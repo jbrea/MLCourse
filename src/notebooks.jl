@@ -1,7 +1,7 @@
 const NOTEBOOKS = [("Week 1: Introduction to Julia", "introduction.jl"),
                    ("Week 2: Supervised Learning", "supervised_learning.jl"),
                    ("Week 3: Generalized Linear Regression", "generalized_linear_regression.jl"),
-#                    ("Week 4: Flexibility and Bias-Variance-Decomposition", "flexibility.jl"),
+                   ("Week 4: Flexibility and Bias-Variance-Decomposition", "flexibility.jl"),
 #                    ("Week 4: Model Assessment", "model_evaluation.jl"),
 #                    ("Week 5: Regularization", "regularization.jl"),
 #                    ("Week 5: Transformations of Input or Output", "transformations.jl"),
