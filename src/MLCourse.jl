@@ -5,7 +5,7 @@ import Pkg
 project_relative_path(xs...) = normpath(joinpath(dirname(dirname(pathof(MLCourse))), xs...))
 
 include("notebooks.jl")
-include_dependency(joinpath("..", "Project.toml"))
+include_dependency("../Project.toml")
 const _VERSION = VersionNumber(Pkg.TOML.parsefile(project_relative_path("Project.toml"))["version"])
 
 using Zygote, Plots, MLJ, MLJLinearModels, MLJGLMInterface, Markdown, DataFrames, Base64
@@ -51,18 +51,29 @@ function grid(x, y; names = (:X, :Y), output_format = NamedTuple)
 end
 
 polysymbol(x, d) = Symbol(d == 0 ? "" : d == 1 ? "$x" : "$x^$d")
+
+colnames(df::AbstractDataFrame) = names(df)
+colnames(d::NamedTuple) = keys(d)
 function poly(data, degree)
-    res = DataFrame([data.x .^ k for k in 1:degree],
-                    [polysymbol("x", k) for k in 1:degree])
+    cn = colnames(data)
+    col = first(cn)
+    if length(cn) > 1
+        @warn "Multiple columns detected. Taking $col to expand as polynomial."
+    end
+    res = DataFrame([getproperty(data, col) .^ k for k in 1:degree],
+                    [polysymbol(col, k) for k in 1:degree])
     if hasproperty(data, :y)
         res.y = data.y
     end
     res
 end
 function poly2(data, degree)
-    res = DataFrame([data.X1 .^ d1 .* data.X2 .^ d2
+    cn = colnames(data)
+    col1 = cn[1]
+    col2 = cn[2]
+    res = DataFrame([getproperty(data, col1) .^ d1 .* getproperty(data, col2) .^ d2
                      for d1 in 0:degree, d2 in 0:degree if 0 < d1 + d2 ≤ degree],
-                    [Symbol(polysymbol("x₁", d1), polysymbol("x₂", d2))
+                    [Symbol(polysymbol(col1, d1), polysymbol(col2, d2))
                      for d1 in 0:degree, d2 in 0:degree if 0 < d1 + d2 ≤ degree])
     if hasproperty(data, :y)
         res.y = data.y
@@ -72,7 +83,7 @@ end
 
 Base.@kwdef mutable struct PolynomialRegressor{T <: Deterministic} <: Deterministic
     degree::Int = 3
-    regressor::T = LinearRegressor()
+    regressor::T = MLJLinearModels.LinearRegressor()
 end
 function MLJ.MLJBase.fit(model::PolynomialRegressor, verbosity, X, y)
     Xpoly = poly(X, model.degree)
@@ -129,7 +140,7 @@ function start()
     script = :(using Pkg;
                Pkg.activate($root);
                using Pluto;
-               Pluto.run(notebook = $(joinpath(root, "index.jl"))))
+               Pluto.run(notebook = $(joinpath(root, "notebooks", "welcome.jl"))))
     if isfile(sysimg)
         run(`$exe -J$sysimg -e $script`)
     else
