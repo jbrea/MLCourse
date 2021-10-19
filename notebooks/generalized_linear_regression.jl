@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.15.1
+# v0.16.1
 
 using Markdown
 using InteractiveUtils
@@ -17,11 +17,11 @@ end
 begin
 	using Pkg
     Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-	using PlutoUI, Plots, DataFrames, Random, CSV, MLJ, MLJGLMInterface
-    import MLJLinearModels
-    gr()
-	PlutoUI.TableOfContents()
+	using Plots, DataFrames, Random, CSV, MLJ, MLJLinearModels
 end
+
+# ╔═╡ 12d5824c-0873-49a8-a5d8-f93c73b633ae
+using PlutoUI; PlutoUI.TableOfContents()
 
 # ╔═╡ 20c5c7bc-664f-4c04-8215-8f3a9a2095c9
 begin
@@ -37,18 +37,6 @@ md"# Linear Regression
 
 # ╔═╡ 9f84bcc5-e5ab-4935-9076-c19e9bd668e8
 weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), DataFrame);
-
-# ╔═╡ 12d5824c-0873-49a8-a5d8-f93c73b633ae
-md"The julia machine learning framework `MLJ` supports different implementations
-of linear regression. In the previous lesson we used the `LinearRegressor` from
-`MLJLinearModels`. Here we will use the `LinearRegressor` from
-`MLJGLMInterface`. The difference between those two linear regressors is that
-the one from `MLJLinearModels` returns just the predicted mean when used in the
-`predict` function, whereas the one from `MLJGLMInterface` returns the
-conditional Normal distribution when used in the `predict` function. To get
-the mean for the `MLJGLMInterface.LinearRegressor` we will have to use
-the function `predict_mean`.
-"
 
 # ╔═╡ 34e527f2-ef80-4cb6-be3a-bee055eca125
 begin
@@ -75,7 +63,7 @@ and the wind speed 5 hours later in Luzern.
 fitted_params(m1)
 
 # ╔═╡ f4f890b6-0ad4-4155-9321-15d673e15489
-md"Next we predict for different pressure values the distribution of
+md"Next we predict the mean for different pressure values the distribution of
     wind speeds. In the probabilistic interpretation of supervised learning,
     standard linear regression finds conditional normal distributions with
     input-dependent mean ``\mu = \hat y = \theta_0 + \theta_1 x`` and
@@ -90,7 +78,7 @@ md"We use the root-mean-squared-error (`rmse`) = ``\sqrt{\frac1n\sum_{i=1}^n(y_i
 "
 
 # ╔═╡ 57f352dc-55ee-4e14-b68d-698938a97d92
-rmse(predict_mean(m1, training_set1.X), training_set1.y)
+rmse(predict(m1, training_set1.X), training_set1.y)
 
 # ╔═╡ b0de002f-3f39-4378-8d68-5c4606e488b7
 begin
@@ -100,7 +88,7 @@ begin
 end
 
 # ╔═╡ ce536f60-68b3-4901-bd6a-c96378054b12
-rmse(predict_mean(m1, test_set1.X), test_set1.y)
+rmse(predict(m1, test_set1.X), test_set1.y)
 
 # ╔═╡ c65b81bd-395f-4461-a73b-3535903cb2d7
 md"## Multiple Linear Regression
@@ -159,14 +147,14 @@ m2 = machine(LinearRegressor(), select(weather[1:end-5,:], Not([:LUZ_wind_peak, 
 
 # ╔═╡ 618ef3c7-0fda-4970-88e8-1dac195545de
 sort!(DataFrame(predictor = names(select(weather, Not([:LUZ_wind_peak, :time]))),
-                value = fitted_params(m2).coef), :value)
+                value = fitted_params(m2).coefs), :value)
 
 # ╔═╡ 2d25fbb6-dc9b-40ad-bdce-4c952cdad077
-rmse(predict_mean(m2, select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
+rmse(predict(m2, select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
      weather.LUZ_wind_peak[6:end])
 
 # ╔═╡ c9f10ace-3299-45fb-b98d-023a35dd405a
-rmse(predict_mean(m2, select(weather_test[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
+rmse(predict(m2, select(weather_test[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
      weather_test.LUZ_wind_peak[6:end])
 
 # ╔═╡ 99a371b2-5158-4c42-8f50-329352b6c1f2
@@ -369,7 +357,7 @@ end
 md"## Multiple Logistic Regression on the spam data"
 
 # ╔═╡ 29e1d9ff-4375-455a-a69b-8dd0c2cac57d
-m3 = fit!(machine(LinearBinaryClassifier(),
+m3 = fit!(machine(LogisticClassifier(penalty = :none),
                   normalized_word_counts,
                   spam_or_ham));
 
@@ -462,9 +450,10 @@ md"""# Exercises
 MLCourse.footer()
 
 # ╔═╡ Cell order:
+# ╟─12d5824c-0873-49a8-a5d8-f93c73b633ae
+# ╠═94f8e29e-ef91-11eb-1ae9-29bc46fa505a
 # ╟─8217895b-b120-4b08-b18f-d921dfdddf10
 # ╠═9f84bcc5-e5ab-4935-9076-c19e9bd668e8
-# ╟─12d5824c-0873-49a8-a5d8-f93c73b633ae
 # ╠═34e527f2-ef80-4cb6-be3a-bee055eca125
 # ╠═006fc1eb-50d5-4206-8c87-53e873f158f4
 # ╟─e4712ebe-f395-418b-abcc-e10ada4b05c2
@@ -525,5 +514,4 @@ MLCourse.footer()
 # ╠═935adbcd-48ab-4a6f-907c-b04137ca3abe
 # ╟─8b0451bf-59b0-4e71-be84-549e23b5bfe7
 # ╟─20c5c7bc-664f-4c04-8215-8f3a9a2095c9
-# ╟─94f8e29e-ef91-11eb-1ae9-29bc46fa505a
 # ╟─7f08fcaa-000d-422d-80b4-e58a2f489d74

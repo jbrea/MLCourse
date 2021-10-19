@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.15.1
+# v0.16.1
 
 using Markdown
 using InteractiveUtils
@@ -503,13 +503,19 @@ plot(1:4, rand(4))
 scatter(rand(100), rand(100))
 
 # ╔═╡ 034f7d44-eacd-11eb-0ab2-2f0d2caed9d6
-with_terminal(plotattr) # get some help on plotting attributes
+with_terminal() do
+    plotattr()
+end # get some help on plotting attributes
 
 # ╔═╡ 034f7d4c-eacd-11eb-3960-d10d1c16075d
-with_terminal(plotattr, :Series)
+with_terminal() do
+    plotattr(:Series)
+end
 
 # ╔═╡ 034f7d4c-eacd-11eb-3841-97ca37e34c9f
-with_terminal(plotattr, :Series, "label")
+with_terminal() do
+    plotattr(:Series, "label")
+end
 
 # ╔═╡ 034f7d58-eacd-11eb-123f-9b563a7ae27e
 scatter(rand(100), rand(100), label = "my data", xlabel = "X1", ylabel = "X2")
