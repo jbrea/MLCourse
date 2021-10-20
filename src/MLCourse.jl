@@ -5,7 +5,7 @@ import Pkg
 project_relative_path(xs...) = normpath(joinpath(dirname(dirname(pathof(MLCourse))), xs...))
 
 include("notebooks.jl")
-include_dependency("../Project.toml")
+include_dependency(joinpath("..", "Project.toml"))
 const _VERSION = VersionNumber(Pkg.TOML.parsefile(project_relative_path("Project.toml"))["version"])
 
 using Zygote, Plots, MLJ, MLJLinearModels, MLJGLMInterface, Markdown, DataFrames, Base64
@@ -140,7 +140,7 @@ function start()
     script = :(using Pkg;
                Pkg.activate($root);
                using Pluto;
-               Pluto.run(notebook = $(joinpath(root, "notebooks", "welcome.jl"))))
+               Pluto.run(notebook = $(joinpath(root, "index.jl"))))
     if isfile(sysimg)
         run(`$exe -J$sysimg -e $script`)
     else
