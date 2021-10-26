@@ -379,7 +379,7 @@ and ``Y = X_1 + \epsilon`` with ``\mathrm{Var}(\epsilon) = 0.1^2``.
 1. Find with cross-validation and the lasso the best model.
 2. Find with cross-validation and the ridge regression the best model.
 3. Which of the two best models has the lowest reducible error?
-4. Repeat the above 3 steps on an artificial data set with 10 points and 4 predictors with ``Y = 10X_1 + X_2 + .1 * X_3 + .01 * X_4 + \epsilon``.
+4. Repeat the above 3 steps on an artificial data set with 20 points and 4 predictors with ``Y = 10X_1 + X_2 + .1 * X_3 + .01 * X_4 + \epsilon``.
 "
 
 # ╔═╡ e04c5e8a-15f8-44a8-845d-60acaf795813
