@@ -1163,9 +1163,9 @@ version = "1.22.6"
 
 [[Pluto]]
 deps = ["Base64", "Configurations", "Dates", "Distributed", "FileWatching", "FuzzyCompletions", "HTTP", "InteractiveUtils", "Logging", "Markdown", "MsgPack", "Pkg", "REPL", "Sockets", "TableIOInterface", "Tables", "UUIDs"]
-git-tree-sha1 = "d4955d6b5267ed826d03e3f05cc23426492b23c9"
+git-tree-sha1 = "7b4eb6b87276b7ee6604cd9ababf68ba659cfacb"
 uuid = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
-version = "0.16.1"
+version = "0.16.4"
 
 [[PlutoSliderServer]]
 deps = ["Base64", "Configurations", "Distributed", "FromFile", "GitHubActions", "HTTP", "Logging", "Pkg", "Pluto", "SHA", "Sockets", "TOML", "UUIDs"]
