@@ -54,7 +54,7 @@ md"β₀⁽⁰⁾ = $(@bind b0 Slider(-3.:.1:3., show_value = true, default = 0.
 
 β₁⁽⁰⁾ = $(@bind b1 Slider(-3.:.1:3., show_value = true, default = -3.))
 
-η = $(@bind η Slider(.01:.01:.1, show_value = true))
+η = $(@bind η Slider(.01:.01:2, show_value = true))
 
 step t = $(@bind t Slider(0:100, show_value = true))
 "
@@ -400,7 +400,7 @@ MLCourse.footer()
 # ╟─166472c5-c0f4-4261-a476-4c9b0f82abd6
 # ╟─08a9418f-786e-4992-b1a5-04cf9060f8fe
 # ╠═dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
-# ╟─c72dc506-fb1d-42ee-83cf-cc49753ecd4f
+# ╠═c72dc506-fb1d-42ee-83cf-cc49753ecd4f
 # ╟─075f35cf-4271-4676-b9f3-e2bcf610c2d1
 # ╟─0d431c00-9eef-4ce4-9542-9571728d1501
 # ╟─e0cc188c-9c8f-47f1-b1fe-afc2a578973d
