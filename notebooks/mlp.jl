@@ -17,20 +17,22 @@ end
 begin
     using Pkg
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using PlutoUI, Plots, MLJ, DataFrames, Random, CSV, Flux, Distributions,
+    using MLCourse, Plots, MLJ, DataFrames, Random, CSV, Flux, Distributions,
           StatsPlots, MLJFlux, OpenML, Random
-    gr()
-    PlutoUI.TableOfContents()
 end
 
 # ╔═╡ 83e2c454-042f-11ec-32f7-d9b38eeb7769
 begin
-    using MLCourse
+    using PlutoUI
     MLCourse.list_notebooks(@__FILE__)
+    PlutoUI.TableOfContents()
 end
 
 # ╔═╡ c95ad296-5191-4f72-a7d7-87ddebc43a65
-md"# Solving the XOR Problem with Learned Feature Vectors"
+md"# Solving the XOR Problem with Learned Feature Vectors
+
+In the following example we define a loss function that learns the features (weights of the hidden neurons) and the \"regression coefficients\" (output weights) with gradient descent.
+"
 
 # ╔═╡ fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
 function xor_generator(; n = 200)
@@ -75,6 +77,9 @@ begin
                               callback = x -> push!(path, copy(x)))
 end;
 
+# ╔═╡ 9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
+md"The green arrows in the figure above are the weights w₁, …, w₄ of the four (hidden) neurons. The coloring of the dots is based on classification at decision threshold 0.5, i.e. if the activation of the output neuron is above 0.5 for a given input point, this point is classified as red (green, otherwise). Note that the initial configuration of the green vectors depends on the initialization of gradient descent and therefore on the seed. For some seeds the optimal solution to the xor-problem is not found by gradient descent."
+
 # ╔═╡ b650ddb4-5854-4862-ba26-0bf92f77c3df
 begin
     idxs = min.(max.(1:100, floor.(Int, 1.097.^(1:100))), 10^4)
@@ -93,8 +98,8 @@ let idx = idxs[t]
     end
     hline!([0], c = :black)
     vline!([0], c = :black)
-    p2 = plot(idxs, losses, ylim = (0, 1), xscale = :log10, xlabel = "t",
-              ylabel = "loss")
+    p2 = plot(idxs, losses, ylim = (0, 1), xscale = :log10, xlabel = "gradient descent step t",
+              ylabel = "loss", title = "learning curve")
     scatter!([idxs[t]], [losses[t]], c = :red)
     plot(p1, p2, layout = (1, 2), size = (700, 400), legend = false)
 end
@@ -534,6 +539,7 @@ md"# Exercises
 MLCourse.footer()
 
 # ╔═╡ Cell order:
+# ╠═87f59dc7-5149-4eb6-9d81-440ee8cecd72
 # ╟─c95ad296-5191-4f72-a7d7-87ddebc43a65
 # ╠═fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
 # ╠═ea7fc5b6-79cc-4cc5-820e-5c55da83207e
@@ -541,6 +547,7 @@ MLCourse.footer()
 # ╠═49c2b3a1-50c0-4fb9-a06b-2de7be216702
 # ╟─258a3459-3fef-4655-830c-3bdf11eb282d
 # ╟─16d0808e-4094-46ff-8f92-1ed21aa6191b
+# ╟─9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
 # ╟─b650ddb4-5854-4862-ba26-0bf92f77c3df
 # ╟─8c54bfb2-54c5-4777-ad53-97926da97f7e
 # ╟─5c2154ef-2a35-4d91-959d-f72100049894
@@ -557,5 +564,4 @@ MLCourse.footer()
 # ╟─14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
 # ╟─2f034d19-1c00-4a10-a880-99436ab00957
 # ╟─83e2c454-042f-11ec-32f7-d9b38eeb7769
-# ╟─87f59dc7-5149-4eb6-9d81-440ee8cecd72
 # ╟─8c72c4b5-452d-4ba3-903b-866cac1c799d
