@@ -11,7 +11,7 @@ session.options.security.require_secret_for_access = false
 #     Base.include(Module(), joinpath(@__DIR__, "..", "notebooks", file))
 # end
 using CSV, DataFrames, MLJ, MLJLinearModels, NearestNeighborModels,
-      Random, Distributions, MLJGLMInterface, Plots, StatsPlots, Statistics,
+      Random, Distributions, Plots, StatsPlots, Statistics,
       LinearAlgebra
 
 weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), DataFrame)
@@ -23,10 +23,6 @@ y = weather.LUZ_wind_peak[1:1000]
 
 m = fit!(machine(MLJLinearModels.LinearRegressor(), X, y))
 predict(m, X)
-
-m = fit!(machine(MLJGLMInterface.LinearRegressor(), X, y))
-predict(m, X)
-predict_mean(m, X)
 
 pdf(Normal(0., 1.), 2.)
 pdf(Bernoulli(.3), 1)
@@ -48,9 +44,9 @@ lexicon(crps)
 small_lex = Dict(k => lexicon(crps)[k]
                  for k in findall(x -> 80 <= last(x) <= 10^2, lexicon(crps)))
 m = DocumentTermMatrix(crps, small_lex)
-spam_or_ham = coerce(String.(spamdata.label[1:200]), Binary)
+spam_or_ham = coerce(spamdata.label[1:200], Binary)
 normalized_word_counts = float.(DataFrame(tf(m), :auto))
-m3 = fit!(machine(LinearBinaryClassifier(),
+m3 = fit!(machine(LogisticClassifier(),
                   normalized_word_counts,
                   spam_or_ham));
 confusion_matrix(predict_mode(m3, normalized_word_counts), spam_or_ham)
@@ -119,7 +115,7 @@ Pluto.update_save_run!(session, nb, nb.cells; run_async=false, prerender_text=tr
 # next, we'll run the HTTP server which needs a bit of nasty code
 t = @async Pluto.run(session)
 
-sleep(15)
+sleep(60)
 download("http://localhost:40404/")
 
 # this is async because it blocks for some reason
