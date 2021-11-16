@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.0
+# v0.17.1
 
 using Markdown
 using InteractiveUtils
@@ -7,8 +7,9 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
@@ -24,7 +25,6 @@ end
 # ╔═╡ 83e2c454-042f-11ec-32f7-d9b38eeb7769
 begin
     using PlutoUI
-    MLCourse.list_notebooks(@__FILE__)
     PlutoUI.TableOfContents()
 end
 
@@ -55,7 +55,7 @@ begin
                               β[3] * relu.(x * w₃) .+
                               β[4] * relu.(x * w₄) .+
                               β[5]
-    f(x, θ) = f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:14])
+    f(x, θ) = f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
     function log_reg_loss(θ)
         p = σ.(f(xor_input, θ))
         -mean(@. xor_target * log(p) + (1 - xor_target) * log(1 - p))
@@ -71,7 +71,7 @@ t = $(@bind t Slider(1:10^2))
 # ╔═╡ 49c2b3a1-50c0-4fb9-a06b-2de7be216702
 begin
     Random.seed!(Meta.parse(seed))
-    θ₀ = .1 * randn(14)
+    θ₀ = .1 * randn(13)
     path = [copy(θ₀)]
     MLCourse.gradient_descent(log_reg_loss, θ₀, .05, 10^4,
                               callback = x -> push!(path, copy(x)))
@@ -532,8 +532,10 @@ md"# Exercises
     - Fit some multiple linear regression models (with e.g. regularization constants tuned with cross-valdiation), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content.
     - Fit some neural network model (with 2 hyper-paramters of your choice tuned by cross-validation; warning: it may take quite some time to fit if you use a high number for `nfolds`), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content. *Hint 1:* standardization of input and output matters. *Hint 2:* If you want to tune some neural network parameters in a pipeline you can usually access them in the `range` function as `:(neural_network_regressor.builder.dropout)`, for example.
 "
-# 1. In this exercise our goal is to find a good machine learning model to classify images of Zalando's articles. You can load a description of the so-called Fashion-MNIST data set with `OpenML.describe_dataset(40996)` and load the data set with `OpenML.load(40996)`. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline. Hints: cleaning is not necessary, but plotting some examples is advisable; linear classification is a good starting point for a first benchmark, but you should also explore other models and tune their hyper-parameters; if you are impatient: choose smaller training sets.
 
+
+# ╔═╡ 7c6951e8-726a-4181-b15f-b629a2835d03
+MLCourse.list_notebooks(@__FILE__)
 
 # ╔═╡ 8c72c4b5-452d-4ba3-903b-866cac1c799d
 MLCourse.footer()
@@ -563,5 +565,6 @@ MLCourse.footer()
 # ╟─4bd63efb-0aef-41cd-a9b7-9fa78db107a0
 # ╟─14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
 # ╟─2f034d19-1c00-4a10-a880-99436ab00957
+# ╟─7c6951e8-726a-4181-b15f-b629a2835d03
 # ╟─83e2c454-042f-11ec-32f7-d9b38eeb7769
 # ╟─8c72c4b5-452d-4ba3-903b-866cac1c799d
