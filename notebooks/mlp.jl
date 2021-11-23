@@ -20,6 +20,7 @@ begin
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using MLCourse, Plots, MLJ, DataFrames, Random, CSV, Flux, Distributions,
           StatsPlots, MLJFlux, OpenML, Random
+    Core.eval(Main, :(using MLJ)) # hack to make @pipeline work in notebooks
 end
 
 # ╔═╡ 83e2c454-042f-11ec-32f7-d9b38eeb7769
@@ -328,24 +329,23 @@ weather_test_x = float.(select(weather_test, Not([:LUZ_wind_peak, :time]))[1:end
 weather_test_y = weather_test.LUZ_wind_peak[6:end]
 
 Random.seed!(31)
-mach = machine(@pipeline(Standardizer(),
-                         NeuralNetworkRegressor(
-                             builder = MLJFlux.Short(n_hidden = 128,
-                                                     dropout = .5,
-                                                     σ = relu),
-                             optimiser = ADAMW(),
-                             batch_size = 128,
-                             epochs = 150),
-                         target = Standardizer()),
-               weather_x, weather_y) |> x -> fit!(x, verbosity = 2)
+nn = NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
+                                                    dropout = .5,
+                                                    σ = relu),
+                            optimiser = ADAMW(),
+                            batch_size = 128,
+                            epochs = 150)
+mach = machine(@pipeline(Standardizer(), nn),
+               weather_x, weather_y)
+fit!(mach, verbosity = 2)
 ```
 
 !!! note
 
-    We use here an `MLJ.@pipeline` that standardizes with a `Standardizer`
-    the input first to mean zero and standard deviation one. The same standardization
-    is applied to the target values with the keyword argument `target = Standardizer()`. We do this, because the usual initializations
-    of neural networks work best with standardized input and output.
+    We use here a `@pipeline` that standardizes with a `Standardizer`
+    the input first to mean zero and standard deviation one.
+    We do this, because the usual initializations
+    of neural networks work best with standardized input.
 
     To learn more about the usual initializations you can have a look at this [blog post](https://towardsdatascience.com/weight-initialization-in-neural-networks-a-journey-from-the-basics-to-kaiming-954fb9b47c79) (optional).
 
@@ -361,7 +361,7 @@ Let us evalute the learned machine.
 (training_error = rmse(predict(mach, weather_x), weather_y),
  test_error = rmse(predict(mach, weather_test_x), weather_test_y))
 ```
-We find a training error of 7.20 and a test error of 8.66.
+We find a training error of 7.38 and a test error of 8.65.
 Both errors are lower than what we found with multiple linear regression
 (training error ≈ 8.09, test_error ≈ 8.91). However, comparing the predictions
 to the ground truth we see that a lot of the variability is still uncaptured
