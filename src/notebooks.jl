@@ -10,7 +10,7 @@ const NOTEBOOKS = [("Week 1: Introduction to Julia", "introduction.jl"),
                    ("Week 9: Other Nonlinear Methods", "other_nonlinear.jl"),
 #                    ("Week 9: Recurrent Neural Networks", "rnn.jl"),
 #                    ("Week 9: Tree-Based Methods", "trees.jl"),
-#                    ("Week 9: Clustering", "clustering.jl"),
+                   ("Week 10: Clustering", "clustering.jl"),
 #                    ("Week 9 & 10: Principal Component Analysis", "pca.jl"),
 #                    ("Week 11 & 12: Reinforcement Learning", "rl.jl")
                   ]
