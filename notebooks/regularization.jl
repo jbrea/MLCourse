@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.4
+# v0.17.2
 
 using Markdown
 using InteractiveUtils
@@ -7,8 +7,9 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
@@ -18,7 +19,7 @@ begin
     using Pkg
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using MLJ, MLJLinearModels, Plots, LinearAlgebra, Random, DataFrames, CSV, MLCourse
-    import MLCourse: PolynomialRegressor, poly
+    import MLCourse: Polynomial, poly
 end
 
 
@@ -208,13 +209,13 @@ end
 
 # ╔═╡ fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
 begin
-    model = PolynomialRegressor(regressor = RidgeRegressor())
+    model = @pipeline(Polynomial(), RidgeRegressor())
     self_tuning_model = TunedModel(model = model,
                                    tuning =  Grid(goal = 500),
                                    resampling = CV(nfolds = 5),
-                                   range = [range(model, :degree,
+                                   range = [range(model, :(polynomial.degree),
                                                   lower = 1, upper = 20),
-                                            range(model, :(regressor.lambda),
+                                            range(model, :(ridge_regressor.lambda),
                                                   lower = 1e-12, upper = 1e-3,
                                                   scale = :log)],
                                    measure = rmse)

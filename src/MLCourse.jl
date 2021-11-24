@@ -9,7 +9,7 @@ include_dependency(joinpath("..", "Project.toml"))
 const _VERSION = VersionNumber(Pkg.TOML.parsefile(project_relative_path("Project.toml"))["version"])
 
 using Zygote, Plots, MLJ, MLJLinearModels, MLJGLMInterface, Markdown, DataFrames, Base64
-export plot_residuals!, fitted_linear_func, grid, biplot
+export plot_residuals!, fitted_linear_func, grid, biplot, Polynomial
 
 function plot_residuals!(x, y, f; kwargs...)
     for (xi, yi) in zip(x, y)
@@ -54,12 +54,10 @@ polysymbol(x, d) = Symbol(d == 0 ? "" : d == 1 ? "$x" : "$x^$d")
 
 colnames(df::AbstractDataFrame) = names(df)
 colnames(d::NamedTuple) = keys(d)
-function poly(data, degree)
-    cn = colnames(data)
-    col = first(cn)
-    if length(cn) > 1
-        @warn "Multiple columns detected. Taking $col to expand as polynomial."
-    end
+colname(names, predictor::Int) = names[predictor]
+colname(names, predictor::Symbol) = string(predictor) ∈ names ? Symbol(predictor) : error("Predictor $predictor not found in $names.")
+function poly(data, degree, predictors::NTuple{1})
+    col = colname(colnames(data), predictors[1])
     res = DataFrame([getproperty(data, col) .^ k for k in 1:degree],
                     [polysymbol(col, k) for k in 1:degree])
     if hasproperty(data, :y)
@@ -67,10 +65,10 @@ function poly(data, degree)
     end
     res
 end
-function poly2(data, degree)
+function poly(data, degree, predictors::NTuple{2})
     cn = colnames(data)
-    col1 = cn[1]
-    col2 = cn[2]
+    col1 = colname(cn, predictors[1])
+    col2 = colname(cn, predictors[2])
     res = DataFrame([getproperty(data, col1) .^ d1 .* getproperty(data, col2) .^ d2
                      for d1 in 0:degree, d2 in 0:degree if 0 < d1 + d2 ≤ degree],
                     [Symbol(polysymbol(col1, d1), polysymbol(col2, d2))
@@ -80,19 +78,14 @@ function poly2(data, degree)
     end
     res
 end
+poly(_, _, _) = error("Polynomials in more than 2 predictors are not implemented.")
 
-Base.@kwdef mutable struct PolynomialRegressor{T <: Deterministic} <: Deterministic
+Base.@kwdef mutable struct Polynomial{T} <: Static
     degree::Int = 3
-    regressor::T = MLJLinearModels.LinearRegressor()
+    predictors::T = (1,)
 end
-function MLJ.MLJBase.fit(model::PolynomialRegressor, verbosity, X, y)
-    Xpoly = poly(X, model.degree)
-    MLJ.MLJBase.fit(model.regressor, verbosity, Xpoly, y)
-end
-function MLJ.MLJBase.predict(model::PolynomialRegressor, fitresult, Xnew)
-    Xpoly = poly(Xnew, model.degree)
-    MLJ.MLJBase.predict(model.regressor, fitresult, Xpoly)
-end
+MLJ.transform(p::Polynomial, _, X) = poly(X, p.degree, p.predictors)
+PolynomialRegressor(; kwargs...) = error("`PolynomialRegressor(degree, regressor) is deprecated. Use e.g. `@pipeline(Polynomial(degree), LinearRegressor())` instead.")
 
 function biplot(m; pc = 1:2)
     scores = MLJ.transform(m, m.data[1])
