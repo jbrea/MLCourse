@@ -94,6 +94,16 @@ function MLJ.MLJBase.predict(model::PolynomialRegressor, fitresult, Xnew)
     MLJ.MLJBase.predict(model.regressor, fitresult, Xpoly)
 end
 
+"""
+    biplot(pca; pc = (1, 2))
+
+Show a biplot for a fitted machine `pca` and components `pc` (by default the first two components are shown.
+
+### Example
+using MLJ, MLJMultivariateStatsInterface, DataFrames, Plots
+mach = fit!(machine(PCA(), DataFrame(randn(10, 4) * randn(4, 6), :auto)))
+biplot(mach, pc = (1, 3))
+"""
 function biplot(m; pc = 1:2)
     scores = MLJ.transform(m, m.data[1])
     p = scatter(getproperty(scores, Symbol(:x, pc[1])),
