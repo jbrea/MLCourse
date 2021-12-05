@@ -91,6 +91,7 @@ begin
          s ∈ (3, 5)] # 1 if guard present
     end
     function get_action(counter, buttons)
+        @show counter buttons
         for i in eachindex(counter)
             if isa(buttons[i], Int) && buttons[i] > counter[i]
                 counter[i] = buttons[i]
@@ -465,6 +466,7 @@ let
         scatter!(x, y, markerstrokewidth = 3, c = :yellow, markersize = 28)
     end
     if room == 5
+        scatter!([0], [0], c = :black, legend = false, markerstrokewidth = 0) # dummy
         annotate!([(.5, .5, "K.O.", :red)])
     end
     rs = length(chasse.episode_recorder) == 0 ? [0] : getindex.(chasse.episode_recorder, 3)
