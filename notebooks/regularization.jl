@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.4
+# v0.17.2
 
 using Markdown
 using InteractiveUtils
@@ -7,8 +7,9 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
@@ -393,10 +394,10 @@ MLCourse.footer()
 # ╠═150d58e7-0e73-4b36-836c-d81eef531a9c
 # ╟─78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
 # ╠═9e1e8284-a8c1-47a9-83d0-2d8fbd8ce005
-# ╟─1009e251-59af-4f1a-9d0a-e96f4b696cad
 # ╠═50ac0b07-ffee-40c3-843e-984b3c628282
 # ╟─64b9cfa0-99f7-439b-b70e-f9266754ff74
 # ╠═8bd483cc-f490-11eb-38a1-b342dd2551fd
+# ╟─1009e251-59af-4f1a-9d0a-e96f4b696cad
 # ╟─58746554-ca5a-4e8e-97e5-587a9c2aa44c
 # ╟─f43a82e2-1145-426d-8e0e-5363d1c38ccf
 # ╟─ff7cc2bf-2a38-46d2-8d11-529159b08c82

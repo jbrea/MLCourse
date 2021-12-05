@@ -18,18 +18,14 @@ end
 begin
     using Pkg
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using PlutoUI, StatsBase, DataFrames
-    PlutoUI.TableOfContents()
+    using StatsBase, DataFrames, MLCourse, Plots
 end
+
+# ╔═╡ d88c1d9b-3396-42a2-8ebd-81851f778602
+using PlutoUI; PlutoUI.TableOfContents()
 
 # ╔═╡ 1a17e9b2-a439-4521-842c-96ebe0378919
 using ReinforcementLearning
-
-# ╔═╡ 8bd459cb-20bb-483e-a849-e18caae3beef
-begin
-    using MLCourse, Plots
-    MLCourse.list_notebooks(@__FILE__)
-end
 
 # ╔═╡ ce405f97-6d60-4ae4-b183-79e6c88d9811
 md"# Chasse au trésor"
@@ -86,7 +82,14 @@ begin
         env.reward = 0
         empty!(env.episode_recorder)
     end
-    chasse = ChasseAuTresorEnv()
+    function distributed_representation(s)
+        [s == 1; # 1 if in room 1
+         s ∈ (2, 3); # 1 if in room 2
+         s ∈ (4, 5); # 1 if in room 3
+         s == 6; # 1 if in treasure room
+         s == 7; # 1 if KO
+         s ∈ (3, 5)] # 1 if guard present
+    end
     function get_action(counter, buttons)
         for i in eachindex(counter)
             if isa(buttons[i], Int) && buttons[i] > counter[i]
@@ -94,7 +97,8 @@ begin
                 return i
             end
         end
-    end;
+    end
+    chasse = ChasseAuTresorEnv()
 end;
 
 # ╔═╡ 7cf26d6c-5a67-4bd6-8ef2-34559b53685b
@@ -243,9 +247,6 @@ md"To perform an action we can simply call the environment with an integer from 
 # ╔═╡ 4b90f08e-0183-4f8b-a6cd-e66b6938f4c8
 legal_action_space(tictactoe) # now action 5 is no longer available
 
-# ╔═╡ 86a78734-2b31-4ee5-8560-8a9388672b45
-ReinforcementLearning.reset!(tictactoe);
-
 # ╔═╡ 59029032-1c91-4da1-a61b-6a56449dcd2c
 md"Let us now actually play the game. You can choose different modes below to play against yourself (or another human player), against the computer (trained in self-play with our `MCLearner`; see below) or computer against computer. To advance the game when the computer plays against itself you have to use the `step` button."
 
@@ -262,17 +263,6 @@ md"""Player Cross: $(@bind player1 Select(["human", "machine"])) Player Nought: 
 
 # ╔═╡ d99a218a-56e8-4081-bd1a-ba7729f529cf
 md"The computer player is using a greedy policy with Q-values learned in self-play with the code below."
-
-# ╔═╡ 0b145605-f75f-47ee-ab64-ab77eb812b67
-
-
-# ╔═╡ 7f3e31e5-5f5e-4188-aeb4-01d30a6dc26f
-begin
-    a = parse(Int, tact)
-    if a in legal_action_space(tictactoe)
-        tictactoe(a)
-    end
-end;
 
 # ╔═╡ e61c6d43-a097-4f44-a343-05371b4932ef
 begin
@@ -356,7 +346,7 @@ Run ``10^5`` episodes with this random resetting of the environment and plot aga
 
 # ╔═╡ 8c0a5e46-c790-4cec-ac57-1b2813b81358
 begin
-    clickcounter2 = zeros(Int, 4)
+    clickcounter2 = zeros(Int, 5)
     cw_reward = Ref(0)
     cw_cumulative_reward = Ref(0)
     md"""
@@ -420,39 +410,29 @@ begin
     cwenv = CliffWalkingEnv();
 end;
 
-
 # ╔═╡ e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
 let
-    _learner = if learner == "mclearner"
-        if length(chasse.episode_recorder) == 2
-            update!(mclearner, chasse.episode_recorder)
-        end
-        mclearner
-    else
-        if length(chasse.episode_recorder) > 0
-            update!(qlearner, last(chasse.episode_recorder)...)
-        end
-        qlearner
-    end
     chasse.action = get_action(clickcounter,
                                [open_left, open_right, reset_episode, reset_learner])
-    if chasse.action == 3
-        reset!(chasse)
-    elseif chasse.action == 1
-        act!(chasse, 1)
-    elseif chasse.action == 2
-        act!(chasse, 2)
-    end
-    if chasse.action == 4
-        reset!(_learner)
-    end
-    function distributed_representation(s)
-        [s == 1; # 1 if in room 1
-         s ∈ (2, 3); # 1 if in room 2
-         s ∈ (4, 5); # 1 if in room 3
-         s == 6; # 1 if in treasure room
-         s == 7; # 1 if KO
-         s ∈ (3, 5)] # 1 if guard present
+    if chasse.state ≤ 5 || (isa(chasse.action, Int) && chasse.action > 2)
+        _learner = if learner == "mclearner"
+            if length(chasse.episode_recorder) > 0
+                update!(mclearner, chasse.episode_recorder)
+            end
+            mclearner
+        else
+            if length(chasse.episode_recorder) > 0
+                update!(qlearner, last(chasse.episode_recorder)...)
+            end
+            qlearner
+        end
+        if chasse.action == 3
+            reset!(chasse)
+        elseif chasse.action == 4
+            reset!(_learner)
+        elseif isa(chasse.action, Int)
+            act!(chasse, chasse.action)
+        end
     end
     d = distributed_representation(chasse.state)
     room = findfirst(d)
@@ -460,7 +440,7 @@ let
     guard_door = room > 2
     gold = d[4]
     room_colors = [:red, :blue, :green, :orange, :black]
-    plot(xlim = (0, 1), ylim = (0, 1),
+    plot(xlim = (0, 1), ylim = (0, 1), size = (600, 400),
          bg = room_colors[room], framestyle = :none, legend = false)
     if room < 4
         plot!([.1, .1, .4, .4], [0, .7, .7, 0], w = 5, c = :black)
@@ -537,6 +517,9 @@ let
 	Text(RLBase.state(tictactoe)) # diplay the state nicely
 end
 
+# ╔═╡ 86a78734-2b31-4ee5-8560-8a9388672b45
+reset!(tictactoe);
+
 # ╔═╡ 6a96c33a-b6b3-4a0a-83c8-a0df113887d0
 mcl = let
     mcl = MCLearner(na = 9, ns = 5478) # total number of actions and states
@@ -576,8 +559,6 @@ end;
 # ╔═╡ c692cc6e-dbb5-40e9-aeaa-486b098c3af1
 begin
     import ReinforcementLearning.ReinforcementLearningEnvironments: Cross, Nought
-    tres, a, tstep
-    a2 = nothing
     function autoplaying(player1, player2, tictactoe)
         is_terminated(tictactoe) && return false
         player1 == "machine" && player2 == "machine" && return true
@@ -585,16 +566,21 @@ begin
         player2 == "machine" && current_player(tictactoe) == Nought() && return true
         false
     end
-    if autoplaying(player1, player2, tictactoe)
-        legal_a = legal_action_space(tictactoe)
-        a2 = legal_a[argmax(mcl.Q[legal_a, state(tictactoe)])]
-        tictactoe(a2)
-    end
 end;
 
 
 # ╔═╡ ebebd97a-9dc2-4b39-a998-9279d52c57e5
-let a, a2
+let
+    tstep
+    a = parse(Int, tact)
+    if a in legal_action_space(tictactoe)
+        act!(tictactoe, a)
+    end
+    if autoplaying(player1, player2, tictactoe)
+        legal_a = legal_action_space(tictactoe)
+        a2 = legal_a[argmax(mcl.Q[legal_a, state(tictactoe)])]
+        act!(tictactoe, a2)
+    end
     if isa(tres, Int) && tres > trescounter[]
         trescounter[] = tres
         reset!(tictactoe)
@@ -616,32 +602,32 @@ let a, a2
     Text(s)
 end
 
-# ╔═╡ c7492b4d-1984-4978-9aec-222e5f0132e4
-if !is_terminated(cwenv)
-    act!(cwenv, get_action(clickcounter2, [left, right, up, down]))
-    cw_reward[] = reward(cwenv)
-    cw_cumulative_reward[] += cw_reward[]
-end;
-
-# ╔═╡ 7f56c186-17d0-4c90-bf6a-9e0c79f0eb07
-let cwreset
-    cw_reward[] = 0
-    cw_cumulative_reward[] = 0
-    reset!(cwenv)
-end;
-
 # ╔═╡ 61b3c6ca-c680-41d1-9eb5-6ec2f799f0d1
-let up, down, left, right, cwreset
+let a = get_action(clickcounter2, [left, right, up, down, cwreset])
+    if a == 5
+        cw_reward[] = 0
+        cw_cumulative_reward[] = 0
+        reset!(cwenv)
+    elseif !is_terminated(cwenv)
+        act!(cwenv, a)
+        cw_reward[] = reward(cwenv)
+        cw_cumulative_reward[] += cw_reward[]
+    end;
     plot(cwenv)
     plot!(size = (700, 400))
     annotate!([(cwenv.params.ny ÷ 2, -1, "reward = $(cw_reward[])"),
                (cwenv.params.ny ÷ 2, -.2, "cumulative reward = $(cw_cumulative_reward[])")])
 end
 
+# ╔═╡ 8bd459cb-20bb-483e-a849-e18caae3beef
+MLCourse.list_notebooks(@__FILE__)
+
 # ╔═╡ 412d8fcb-8f98-43b6-9235-a4c228317427
 MLCourse.footer()
 
 # ╔═╡ Cell order:
+# ╠═b97724e4-d7b0-4085-b88e-eb3c5bcbe441
+# ╟─d88c1d9b-3396-42a2-8ebd-81851f778602
 # ╟─ce405f97-6d60-4ae4-b183-79e6c88d9811
 # ╟─761d690d-5c73-40dd-b38c-5af67ee837c0
 # ╟─e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
@@ -672,16 +658,11 @@ MLCourse.footer()
 # ╟─4a9fb8a0-81fb-4e59-8208-61df1dbd8255
 # ╟─d99a218a-56e8-4081-bd1a-ba7729f529cf
 # ╠═6a96c33a-b6b3-4a0a-83c8-a0df113887d0
-# ╟─0b145605-f75f-47ee-ab64-ab77eb812b67
-# ╟─7f3e31e5-5f5e-4188-aeb4-01d30a6dc26f
 # ╟─e61c6d43-a097-4f44-a343-05371b4932ef
 # ╟─c692cc6e-dbb5-40e9-aeaa-486b098c3af1
 # ╟─b6b835d1-8f84-4148-8d5b-c7aea6b0c312
-# ╟─c7492b4d-1984-4978-9aec-222e5f0132e4
-# ╟─7f56c186-17d0-4c90-bf6a-9e0c79f0eb07
-# ╟─8c0a5e46-c790-4cec-ac57-1b2813b81358
 # ╟─61b3c6ca-c680-41d1-9eb5-6ec2f799f0d1
+# ╟─8c0a5e46-c790-4cec-ac57-1b2813b81358
 # ╟─7c4a9aff-c3c1-48ef-8e83-9d5aa7e75b03
 # ╟─8bd459cb-20bb-483e-a849-e18caae3beef
-# ╟─b97724e4-d7b0-4085-b88e-eb3c5bcbe441
 # ╟─412d8fcb-8f98-43b6-9235-a4c228317427
