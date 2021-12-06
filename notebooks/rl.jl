@@ -21,11 +21,52 @@ begin
     using StatsBase, DataFrames, MLCourse, Plots
 end
 
-# ╔═╡ d88c1d9b-3396-42a2-8ebd-81851f778602
-using PlutoUI; PlutoUI.TableOfContents()
+# ╔═╡ b3793299-c916-40d3-bd87-31153fc3781a
+using PlutoUI, PlutoUI.BuiltinsNotebook.HypertextLiteral; PlutoUI.TableOfContents()
 
 # ╔═╡ 1a17e9b2-a439-4521-842c-96ebe0378919
 using ReinforcementLearning
+
+# ╔═╡ d88c1d9b-3396-42a2-8ebd-81851f778602
+begin
+    local result = begin
+        struct CounterButtons
+            labels::Vector{String}
+        end
+    end
+
+	function Base.show(io::IO, m::MIME"text/html", button::CounterButtons)
+		buttons = [@htl("""<input type="button" value="$label">""")
+                   for label in button.labels]
+		show(io, m, @htl("""
+		<span>
+        $buttons
+		<script>
+		let count = 0
+		const span = currentScript.parentElement
+		span.value = [count, 0]
+		Array.prototype.forEach.call(span.children, function(child, index){
+			child.addEventListener("click", (e) => {
+				count += 1
+				span.value = [count, index + 1]
+				span.dispatchEvent(new CustomEvent("input"))
+				e.stopPropagation()
+			})
+		});
+		</script>
+		</span>
+		"""))
+	end
+
+	Base.get(button::CounterButtons) = button.labels
+	PlutoUI.BuiltinsNotebook.Bonds.initial_value(::CounterButtons) = [0, 0]
+	PlutoUI.BuiltinsNotebook.Bonds.possible_values(::CounterButtons) = PlutoUI.BuiltinsNotebook.Bonds.InfinitePossibilities()
+	function PlutoUI.BuiltinsNotebook.Bonds.validate_value(::CounterButtons, val)
+		val isa Vector{Int} && val[1] >= 0 && val[2] >= 0
+	end
+
+	result
+end
 
 # ╔═╡ ce405f97-6d60-4ae4-b183-79e6c88d9811
 md"# Chasse au trésor"
@@ -90,57 +131,12 @@ begin
          s == 7; # 1 if KO
          s ∈ (3, 5)] # 1 if guard present
     end
-    function get_action(counter, buttons)
-        @show counter buttons
-        for i in eachindex(counter)
-            if isa(buttons[i], Int) && buttons[i] > counter[i]
-                counter[i] = buttons[i]
-                return i
-            end
-        end
-    end
     chasse = ChasseAuTresorEnv()
 end;
 
 # ╔═╡ 7cf26d6c-5a67-4bd6-8ef2-34559b53685b
-begin
-#     clickcounter = zeros(Int, 4)
-    chasse_action = Ref(0)
-    md"""
-    $(@bind(open_left, CounterButton("open left door")))
-    $(@bind(open_right, CounterButton("open right door")))\
-    $(@bind(reset_episode, CounterButton("reset episode")))
-    $(@bind(reset_learner, CounterButton("reset learner")))
-    """
-end
-
-# ╔═╡ 15a366af-e032-4a62-aa9a-305c118ebfcd
-_ol = let
-    open_left
-    chasse_action[] = 1
-    rand()
-end;
-
-# ╔═╡ fd919262-7d6e-4f32-8093-304949653a2a
-_or = let
-    open_right
-    chasse_action[] = 2
-    rand()
-end;
-
-# ╔═╡ 07d17055-db41-485e-923e-189e111d7cb3
-_re = let
-    reset_episode
-    chasse_action[] = 3
-    rand()
-end;
-
-# ╔═╡ e5e3a6f3-d3f9-4005-b2f3-4b387b9c540e
-_rl = let
-    reset_learner
-    chasse_action[] = 4
-    rand()
-end;
+@bind chasse_actions CounterButtons(["open left door", "open right door",
+                                     "reset episode", "reset learner"])
 
 # ╔═╡ b0b89b30-38f1-45c1-8c7a-796ea2f41e8d
 md"## Learning Q-Values with Monte Carlo Estimation
@@ -252,8 +248,7 @@ md"Below you see the Q-values of the \`$learner\`."
 
 # ╔═╡ e876c526-30f9-458d-abf5-e20e6aa0268e
 let
-    _ol, _or, _re, _rl
-#     [open_left, open_right, reset_episode, reset_learner]
+    chasse_actions
     if learner == "mclearner"
         showQ(mclearner.Q)
     else
@@ -281,13 +276,8 @@ legal_action_space(tictactoe) # now action 5 is no longer available
 # ╔═╡ 59029032-1c91-4da1-a61b-6a56449dcd2c
 md"Let us now actually play the game. You can choose different modes below to play against yourself (or another human player), against the computer (trained in self-play with our `MCLearner`; see below) or computer against computer. To advance the game when the computer plays against itself you have to use the `step` button."
 
-# ╔═╡ b257795e-d0d6-495a-ae11-dca090ff786a
-begin
-    trescounter = Ref(0);
-    md"""
-
-    action $(@bind(tact, Select(string.(1:9)))) $(@bind(tres, CounterButton("reset game"))) $(@bind(tstep, CounterButton("step")))"""
-end
+# ╔═╡ 94c0859f-f2d4-4b00-9793-14c823bbc705
+@bind tictactoe_action CounterButtons([string.(1:9); "reset game"; "step"])
 
 # ╔═╡ 4a9fb8a0-81fb-4e59-8208-61df1dbd8255
 md"""Player Cross: $(@bind player1 Select(["human", "machine"])) Player Nought: $(@bind player2 Select(["human", "machine"]))"""
@@ -376,56 +366,7 @@ Run ``10^5`` episodes with this random resetting of the environment and plot aga
 # 3. Show for infinite-horizon problems with discount factor ``0 < \\gamma < 1`` the Bellman equations for a determinstic policy ``\\pi`` are given by ``Q_\\pi(s, a) = \\bar r(s, a) + \\gamma \\sum_{s'}P(s'|s, a)Q_\\pi(s', \\pi(s'))``. Start with the definition ``Q_\\pi(S_t, A_t) = \\mathrm{E}\\left[R_{t+1} + \\gamma R_{t+2} + \\gamma^2 R_{t+3} + \\gamma^3R_{t+4} + \\cdots \\right]`` and show all the intermediate steps that lead to the result.
 
 # ╔═╡ 8c0a5e46-c790-4cec-ac57-1b2813b81358
-begin
-#     clickcounter2 = zeros(Int, 5)
-    cwa = Ref(0)
-    cw_reward = Ref(0)
-    cw_cumulative_reward = Ref(0)
-    md"""
-    $(@bind(up, CounterButton("up")))
-    $(@bind(down, CounterButton("down")))\
-    $(@bind(left, CounterButton("left")))
-    $(@bind(right, CounterButton("right")))
-
-
-    $(@bind(cwreset, CounterButton("reset")))
-    """
-end
-
-# ╔═╡ 7d0a34e1-407f-46c1-af0a-3da729be56f4
-_l = let
-    left
-    cwa[] = 1
-    rand()
-end;
-
-# ╔═╡ 444197fd-32a7-430d-9d78-461c81628eb7
-_r = let
-    right
-    cwa[] = 2
-    rand()
-end;
-
-# ╔═╡ 0f1249cf-66b9-4293-9e2f-b4e41fcd9b95
-_u = let
-    up
-    cwa[] = 3
-    rand()
-end;
-
-# ╔═╡ 7a3cf6c0-ae20-4efb-b3e1-dbd037edc801
-_d = let
-    down
-    cwa[] = 4
-    rand()
-end;
-
-# ╔═╡ e1d2e858-fa8a-4d35-9eee-2fa192767d6c
-_cwr = let
-    cwreset
-    cwa[] = 5
-    rand()
-end;
+@bind cw_action CounterButtons(["left", "right", "up", "down", "reset"])
 
 # ╔═╡ 7c4a9aff-c3c1-48ef-8e83-9d5aa7e75b03
 begin
@@ -444,6 +385,7 @@ begin
     Base.@kwdef mutable struct CliffWalkingEnv <: AbstractEnv
         params::CliffWalkingParams = CliffWalkingParams()
 		position::CartesianIndex{2} = params.start
+        cumulative_reward::Int = 0
 	end
     iscliff(p, nx, ny) = p[1] == nx && p[2] > 1 && p[2] < ny
     iscliff(env::CliffWalkingEnv) = iscliff(env.position, env.params.nx, env.params.ny)
@@ -479,10 +421,7 @@ end;
 
 # ╔═╡ e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
 let
-#     chasse.action = get_action(clickcounter,
-#                                [open_left, open_right, reset_episode, reset_learner])
-    _ol, _or, _re, _rl
-    chasse.action = chasse_action[]
+    chasse.action = chasse_actions[1] == 0 ? 3 : chasse_actions[2]
     if chasse.state ≤ 5 || (isa(chasse.action, Int) && chasse.action > 2)
         _learner = if learner == "mclearner"
             if length(chasse.episode_recorder) > 0 && chasse.action == 3
@@ -590,13 +529,6 @@ end
 # ╔═╡ 86a78734-2b31-4ee5-8560-8a9388672b45
 reset!(tictactoe);
 
-# ╔═╡ f25a3b53-f491-4ba6-b802-d1f169083264
-_tres = let
-    tres
-    reset!(tictactoe)
-    rand()
-end;
-
 # ╔═╡ 6a96c33a-b6b3-4a0a-83c8-a0df113887d0
 mcl = let
     mcl = MCLearner(na = 9, ns = 5478) # total number of actions and states
@@ -648,10 +580,11 @@ end;
 
 # ╔═╡ ebebd97a-9dc2-4b39-a998-9279d52c57e5
 let
-    tstep, _tres
-    a = parse(Int, tact)
+    a = last(tictactoe_action)
     if a in legal_action_space(tictactoe)
         act!(tictactoe, a)
+    elseif a == 10
+        reset!(tictactoe)
     end
     if autoplaying(player1, player2, tictactoe)
         legal_a = legal_action_space(tictactoe)
@@ -676,21 +609,23 @@ let
 end
 
 # ╔═╡ 61b3c6ca-c680-41d1-9eb5-6ec2f799f0d1
-let a = cwa[] #get_action(clickcounter2, [left, right, up, down, cwreset])
-    _l, _r, _u, _d, _cwr
+let
+    a = last(cw_action)
     if a == 5
-        cw_reward[] = 0
-        cw_cumulative_reward[] = 0
+        r = 0
+        cwenv.cumulative_reward = 0
         reset!(cwenv)
+    elseif a == 0
+        r = 0
     elseif !is_terminated(cwenv)
         act!(cwenv, a)
-        cw_reward[] = reward(cwenv)
-        cw_cumulative_reward[] += cw_reward[]
+        r::Int = reward(cwenv)
+        cwenv.cumulative_reward += r
     end;
     plot(cwenv)
     plot!(size = (700, 400))
-    annotate!([(cwenv.params.ny ÷ 2, -1, "reward = $(cw_reward[])"),
-               (cwenv.params.ny ÷ 2, -.2, "cumulative reward = $(cw_cumulative_reward[])")])
+    annotate!([(cwenv.params.ny ÷ 2, -1, "reward = $r"),
+               (cwenv.params.ny ÷ 2, -.2, "cumulative reward = $(cwenv.cumulative_reward)")])
 end
 
 # ╔═╡ 8bd459cb-20bb-483e-a849-e18caae3beef
@@ -701,13 +636,10 @@ MLCourse.footer()
 
 # ╔═╡ Cell order:
 # ╠═b97724e4-d7b0-4085-b88e-eb3c5bcbe441
+# ╟─b3793299-c916-40d3-bd87-31153fc3781a
 # ╟─d88c1d9b-3396-42a2-8ebd-81851f778602
 # ╟─ce405f97-6d60-4ae4-b183-79e6c88d9811
 # ╟─761d690d-5c73-40dd-b38c-5af67ee837c0
-# ╟─15a366af-e032-4a62-aa9a-305c118ebfcd
-# ╟─fd919262-7d6e-4f32-8093-304949653a2a
-# ╟─07d17055-db41-485e-923e-189e111d7cb3
-# ╟─e5e3a6f3-d3f9-4005-b2f3-4b387b9c540e
 # ╟─e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
 # ╟─7cf26d6c-5a67-4bd6-8ef2-34559b53685b
 # ╟─5a705ba7-dd9c-411c-a910-659fb1ec9f82
@@ -731,22 +663,16 @@ MLCourse.footer()
 # ╠═4b90f08e-0183-4f8b-a6cd-e66b6938f4c8
 # ╠═86a78734-2b31-4ee5-8560-8a9388672b45
 # ╟─59029032-1c91-4da1-a61b-6a56449dcd2c
-# ╟─f25a3b53-f491-4ba6-b802-d1f169083264
-# ╟─b257795e-d0d6-495a-ae11-dca090ff786a
-# ╟─ebebd97a-9dc2-4b39-a998-9279d52c57e5
+# ╟─94c0859f-f2d4-4b00-9793-14c823bbc705
 # ╟─4a9fb8a0-81fb-4e59-8208-61df1dbd8255
+# ╟─ebebd97a-9dc2-4b39-a998-9279d52c57e5
 # ╟─d99a218a-56e8-4081-bd1a-ba7729f529cf
 # ╠═6a96c33a-b6b3-4a0a-83c8-a0df113887d0
 # ╟─e61c6d43-a097-4f44-a343-05371b4932ef
 # ╟─c692cc6e-dbb5-40e9-aeaa-486b098c3af1
 # ╟─b6b835d1-8f84-4148-8d5b-c7aea6b0c312
-# ╟─61b3c6ca-c680-41d1-9eb5-6ec2f799f0d1
 # ╟─8c0a5e46-c790-4cec-ac57-1b2813b81358
-# ╟─7d0a34e1-407f-46c1-af0a-3da729be56f4
-# ╟─444197fd-32a7-430d-9d78-461c81628eb7
-# ╟─0f1249cf-66b9-4293-9e2f-b4e41fcd9b95
-# ╟─7a3cf6c0-ae20-4efb-b3e1-dbd037edc801
-# ╟─e1d2e858-fa8a-4d35-9eee-2fa192767d6c
+# ╟─61b3c6ca-c680-41d1-9eb5-6ec2f799f0d1
 # ╟─7c4a9aff-c3c1-48ef-8e83-9d5aa7e75b03
 # ╟─8bd459cb-20bb-483e-a849-e18caae3beef
 # ╟─412d8fcb-8f98-43b6-9235-a4c228317427
