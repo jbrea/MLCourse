@@ -27,116 +27,8 @@ using PlutoUI, PlutoUI.BuiltinsNotebook.HypertextLiteral; PlutoUI.TableOfContent
 # ╔═╡ 1a17e9b2-a439-4521-842c-96ebe0378919
 using ReinforcementLearning
 
-# ╔═╡ d88c1d9b-3396-42a2-8ebd-81851f778602
-begin
-    local result = begin
-        struct CounterButtons
-            labels::Vector{String}
-        end
-    end
-
-	function Base.show(io::IO, m::MIME"text/html", button::CounterButtons)
-		buttons = [@htl("""<input type="button" value="$label">""")
-                   for label in button.labels]
-		show(io, m, @htl("""
-		<span>
-        $buttons
-		<script>
-		let count = 0
-		const span = currentScript.parentElement
-		span.value = [count, 0]
-		Array.prototype.forEach.call(span.children, function(child, index){
-			child.addEventListener("click", (e) => {
-				count += 1
-				span.value = [count, index + 1]
-				span.dispatchEvent(new CustomEvent("input"))
-				e.stopPropagation()
-			})
-		});
-		</script>
-		</span>
-		"""))
-	end
-
-	Base.get(button::CounterButtons) = button.labels
-	PlutoUI.BuiltinsNotebook.Bonds.initial_value(::CounterButtons) = [0, 0]
-	PlutoUI.BuiltinsNotebook.Bonds.possible_values(::CounterButtons) = PlutoUI.BuiltinsNotebook.Bonds.InfinitePossibilities()
-	function PlutoUI.BuiltinsNotebook.Bonds.validate_value(::CounterButtons, val)
-		val isa Vector{Int} && val[1] >= 0 && val[2] >= 0
-	end
-
-	result
-end
-
 # ╔═╡ ce405f97-6d60-4ae4-b183-79e6c88d9811
 md"# Chasse au trésor"
-
-# ╔═╡ 761d690d-5c73-40dd-b38c-5af67ee837c0
-begin
-    function onehot(i)
-        x = zeros(7)
-        x[i] = 1
-        x
-    end
-    act(state, action) = wsample(1:7, T[action, state])
-    _reward(r::Number) = r
-    _reward(r::AbstractArray) = rand(r)
-    reward(state, action) = _reward(R[state, action])
-    T = reshape([[0, .7, .3, 0, 0, 0, 0], [0, 0, 0, .3, .7, 0, 0],
-                  onehot(6), onehot(6),
-                  onehot(7), onehot(6),
-                  onehot(6), onehot(6),
-                  onehot(6), onehot(7),
-                  onehot(6), onehot(6),
-                  onehot(7), onehot(7)], 2, :)
-    R = [-.5 -.3
-         [1:4] 1
-         -5  1
-         1 [3:6]
-         1 -5
-         0 0
-         0 0]
-    function showQ(Q; states = ["red room", "blue without guard", "blue with guard", "green without guard", "green with guard", "treasure room", "K.O."], actions = ["left", "right"])
-        df = DataFrame(Q, states)
-        df.action = actions
-        df
-    end
-    Base.@kwdef mutable struct ChasseAuTresorEnv
-        state::Int = 1
-        reward::Float64 = 0
-        episode_recorder = Tuple{Int, Int, Float64, Int}[]
-        action::Union{Int,Nothing} = nothing
-    end
-    function act!(env::ChasseAuTresorEnv, a)
-        length(env.episode_recorder) == 2 && return
-        s = env.state
-        r = reward(s, a)
-        env.reward = r
-        s′ = act(env.state, a)
-        env.state = s′
-        push!(env.episode_recorder, (s, a, r, s′))
-    end
-    reward(env::ChasseAuTresorEnv) = env.reward
-    state(env::ChasseAuTresorEnv) = env.state
-    function reset!(env::ChasseAuTresorEnv)
-        env.state = 1
-        env.reward = 0
-        empty!(env.episode_recorder)
-    end
-    function distributed_representation(s)
-        [s == 1; # 1 if in room 1
-         s ∈ (2, 3); # 1 if in room 2
-         s ∈ (4, 5); # 1 if in room 3
-         s == 6; # 1 if in treasure room
-         s == 7; # 1 if KO
-         s ∈ (3, 5)] # 1 if guard present
-    end
-    chasse = ChasseAuTresorEnv()
-end;
-
-# ╔═╡ 7cf26d6c-5a67-4bd6-8ef2-34559b53685b
-@bind chasse_actions CounterButtons(["open left door", "open right door",
-                                     "reset episode", "reset learner"])
 
 # ╔═╡ b0b89b30-38f1-45c1-8c7a-796ea2f41e8d
 md"## Learning Q-Values with Monte Carlo Estimation
@@ -181,7 +73,6 @@ begin
         learner
     end
     reset!(learner::MCLearner) = learner.Q .= learner.N .= 0
-    mclearner = MCLearner() # create an object of type MCLearner
 end;
 
 # ╔═╡ 6dced47e-cc0f-4ae5-bdd0-a551c6d5a5b3
@@ -229,32 +120,7 @@ begin
         learner
     end
     reset!(learner::QLearner) = learner.Q .= 0
-    qlearner = QLearner()
 end;
-
-# ╔═╡ bf600a9b-484e-4a7b-bf3b-409ebad51cd0
-md"""
-If you want to see Q-learning in action, choose "qlearner" below and play our
-chasse au trésor. The displayed Q-values will then be for the `qlearner`.
-
-Learner $(@bind learner Select(["mclearner", "qlearner"]))
-
-Below you see the Q-values of an epsilon-greedy policy played for ``10^6`` steps.
-Note that is comes close to the optimal solution. This is different than what we found with the Monte Carlo Learner. The reason is that the Monte Carlo Learner estimates the Q-values for the epsilon-greedy policy, whereas the Q-Learner estimates the Q-values for the greedy policy, even though the actions are choosen according to the epsilon-greedy policy. The Monte Carlo Learner is called *on-policy* because it evaluates the policy used for action selection. The Q-Learner is called *off-policy*, because it evaluates the greedy policy, while selecting actions with the epsilon-greedy policy.
-"""
-
-# ╔═╡ 5a705ba7-dd9c-411c-a910-659fb1ec9f82
-md"Below you see the Q-values of the \`$learner\`."
-
-# ╔═╡ e876c526-30f9-458d-abf5-e20e6aa0268e
-let
-    chasse_actions
-    if learner == "mclearner"
-        showQ(mclearner.Q)
-    else
-        showQ(qlearner.Q)
-    end
-end
 
 # ╔═╡ aff5b0d2-c5e5-4fda-a93c-54a8bca5187f
 md"# Learning to Play Tic-Tac-Toe
@@ -275,12 +141,6 @@ legal_action_space(tictactoe) # now action 5 is no longer available
 
 # ╔═╡ 59029032-1c91-4da1-a61b-6a56449dcd2c
 md"Let us now actually play the game. You can choose different modes below to play against yourself (or another human player), against the computer (trained in self-play with our `MCLearner`; see below) or computer against computer. To advance the game when the computer plays against itself you have to use the `step` button."
-
-# ╔═╡ 94c0859f-f2d4-4b00-9793-14c823bbc705
-@bind tictactoe_action CounterButtons([string.(1:9); "reset game"; "step"])
-
-# ╔═╡ 4a9fb8a0-81fb-4e59-8208-61df1dbd8255
-md"""Player Cross: $(@bind player1 Select(["human", "machine"])) Player Nought: $(@bind player2 Select(["human", "machine"]))"""
 
 # ╔═╡ d99a218a-56e8-4081-bd1a-ba7729f529cf
 md"The computer player is using a greedy policy with Q-values learned in self-play with the code below."
@@ -365,9 +225,6 @@ Run ``10^5`` episodes with this random resetting of the environment and plot aga
 # 2. Devise three example tasks of your own that fit into the MDP framework, identifying for each its states, actions, and rewards. Make the three examples as different from each other as possible. The framework is abstract and flexible and can be applied in many different ways. Stretch its limits in some way in at least one of your examples.
 # 3. Show for infinite-horizon problems with discount factor ``0 < \\gamma < 1`` the Bellman equations for a determinstic policy ``\\pi`` are given by ``Q_\\pi(s, a) = \\bar r(s, a) + \\gamma \\sum_{s'}P(s'|s, a)Q_\\pi(s', \\pi(s'))``. Start with the definition ``Q_\\pi(S_t, A_t) = \\mathrm{E}\\left[R_{t+1} + \\gamma R_{t+2} + \\gamma^2 R_{t+3} + \\gamma^3R_{t+4} + \\cdots \\right]`` and show all the intermediate steps that lead to the result.
 
-# ╔═╡ 8c0a5e46-c790-4cec-ac57-1b2813b81358
-@bind cw_action CounterButtons(["left", "right", "up", "down", "reset"])
-
 # ╔═╡ 7c4a9aff-c3c1-48ef-8e83-9d5aa7e75b03
 begin
     Base.@kwdef struct CliffWalkingParams
@@ -416,71 +273,153 @@ begin
         scatter!([env.position[2]], [env.position[1]],
                  markersize = 10, c = :red)
     end
-    cwenv = CliffWalkingEnv();
 end;
 
-# ╔═╡ e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
-let
-    chasse.action = chasse_actions[1] == 0 ? 3 : chasse_actions[2]
-    if chasse.state ≤ 5 || (isa(chasse.action, Int) && chasse.action > 2)
-        _learner = if learner == "mclearner"
-            if length(chasse.episode_recorder) > 0 && chasse.action == 3
-                update!(mclearner, chasse.episode_recorder)
-            end
-            mclearner
-        else
-            if length(chasse.episode_recorder) > 0
-                update!(qlearner, last(chasse.episode_recorder)...)
-            end
-            qlearner
-        end
-        if chasse.action == 3
-            reset!(chasse)
-        elseif chasse.action == 4
-            reset!(_learner)
-        elseif isa(chasse.action, Int)
-            act!(chasse, chasse.action)
-        end
+# ╔═╡ c692cc6e-dbb5-40e9-aeaa-486b098c3af1
+begin
+    import ReinforcementLearning.ReinforcementLearningEnvironments: Cross, Nought
+    function autoplaying(player1, player2, tictactoe)
+        is_terminated(tictactoe) && return false
+        player1 == "machine" && player2 == "machine" && return true
+        player1 == "machine" && current_player(tictactoe) == Cross() && return true
+        player2 == "machine" && current_player(tictactoe) == Nought() && return true
+        false
     end
-    d = distributed_representation(chasse.state)
-    room = findfirst(d)
-    guard = d[6]
-    guard_door = room > 2
-    gold = d[4]
-    room_colors = [:red, :blue, :green, :orange, :black]
-    plot(xlim = (0, 1), ylim = (0, 1), size = (600, 400),
-         bg = room_colors[room], framestyle = :none, legend = false)
-    if room < 4
-        plot!([.1, .1, .4, .4], [0, .7, .7, 0], w = 5, c = :black)
-        plot!([.14, .12, .17], [.37, .35, .35], w = 4, c = :black)
-        plot!(.5 .+ [.1, .1, .4, .4], [0, .7, .7, 0], w = 5, c = :black)
-        plot!(.5 .+ [.14, .12, .17], [.37, .35, .35], w = 4, c = :black)
+end;
+
+
+# ╔═╡ 8bd459cb-20bb-483e-a849-e18caae3beef
+MLCourse.list_notebooks(@__FILE__)
+
+# ╔═╡ 412d8fcb-8f98-43b6-9235-a4c228317427
+MLCourse.footer()
+
+# ╔═╡ d88c1d9b-3396-42a2-8ebd-81851f778602
+begin
+    struct CounterButtons
+        labels
     end
-    if guard
-        xshift = guard_door * .5
-        plot!(xshift .+ [.14, .17, .25, .33, .37], [0, 0, .3, 0, 0], w = 5, c = :black)
-        plot!(xshift .+ [.25, .25], [.3, .52], w = 5, c = :black)
-        scatter!(xshift .+ [.25], [.58], markersize = 25, markerstrokewidth = 0, c = :black)
-        plot!(xshift .+ [.33, .33, .18, .18], [.23, .47, .47, .23],
-              w = 5, c = :black)
-    end
-    if gold
-        x = [.25, .15, .2, .3, .35, .25] .+ .25
-        y = [.3, .1, .2, .2, .1, .1]
-        r = floor(Int, chasse.reward)
-        x = x[1:r]
-        y = y[1:r]
-        scatter!(x, y, markerstrokewidth = 3, c = :yellow, markersize = 28)
-    end
-    if room == 5
-        scatter!([0], [0], c = :black, legend = false, markerstrokewidth = 0) # dummy
-        annotate!([(.5, .5, "K.O.", :red)])
-    end
-    rs = length(chasse.episode_recorder) == 0 ? [0] : getindex.(chasse.episode_recorder, 3)
-    annotate!([(.5, .9, "reward = $(chasse.reward)", :white),
-               (.5, .8, "cumulative reward = $(join(rs, " + ")) = $(sum(rs))", :white)
-              ])
+
+	function Base.show(io::IO, m::MIME"text/html", button::CounterButtons)
+		buttons = [@htl("""<input type="button" value="$label"> """)
+                   for label in button.labels]
+		show(io, m, @htl("""
+		<span>
+        $buttons
+		<script>
+		let count = 0
+		const span = currentScript.parentElement
+		span.value = [count, 0]
+		Array.prototype.forEach.call(span.children, function(child, index){
+			child.addEventListener("click", (e) => {
+				count += 1
+				span.value = [count, index + 1]
+				span.dispatchEvent(new CustomEvent("input"))
+				e.stopPropagation()
+			})
+		});
+		</script>
+		</span>
+		"""))
+	end
+
+	Base.get(button::CounterButtons) = button.labels
+	PlutoUI.BuiltinsNotebook.Bonds.initial_value(::CounterButtons) = [0, 0]
+	PlutoUI.BuiltinsNotebook.Bonds.possible_values(::CounterButtons) = PlutoUI.BuiltinsNotebook.Bonds.InfinitePossibilities()
+	function PlutoUI.BuiltinsNotebook.Bonds.validate_value(::CounterButtons, val)
+		val isa Vector{Int} && val[1] >= 0 && val[2] >= 0
+	end
 end
+
+# ╔═╡ 7cf26d6c-5a67-4bd6-8ef2-34559b53685b
+@bind chasse_actions CounterButtons(["open left door", "open right door",
+                                     "reset episode", "reset learner"])
+
+# ╔═╡ bf600a9b-484e-4a7b-bf3b-409ebad51cd0
+md"""
+If you want to see Q-learning in action, choose "qlearner" below and play our
+chasse au trésor. The displayed Q-values will then be for the `qlearner`.
+
+Learner $(@bind learner Select(["mclearner", "qlearner"]))
+
+Below you see the Q-values of an epsilon-greedy policy played for ``10^6`` steps.
+Note that is comes close to the optimal solution. This is different than what we found with the Monte Carlo Learner. The reason is that the Monte Carlo Learner estimates the Q-values for the epsilon-greedy policy, whereas the Q-Learner estimates the Q-values for the greedy policy, even though the actions are choosen according to the epsilon-greedy policy. The Monte Carlo Learner is called *on-policy* because it evaluates the policy used for action selection. The Q-Learner is called *off-policy*, because it evaluates the greedy policy, while selecting actions with the epsilon-greedy policy.
+"""
+
+# ╔═╡ 5a705ba7-dd9c-411c-a910-659fb1ec9f82
+md"Below you see the Q-values of the \`$learner\`."
+
+# ╔═╡ 94c0859f-f2d4-4b00-9793-14c823bbc705
+@bind tictactoe_action CounterButtons([string.(1:9); "reset game"; "step"])
+
+# ╔═╡ 4a9fb8a0-81fb-4e59-8208-61df1dbd8255
+md"""Player Cross: $(@bind player1 Select(["human", "machine"])) Player Nought: $(@bind player2 Select(["human", "machine"]))"""
+
+# ╔═╡ 8c0a5e46-c790-4cec-ac57-1b2813b81358
+@bind cw_action CounterButtons(["left", "right", "up", "down", "reset"])
+
+# ╔═╡ 761d690d-5c73-40dd-b38c-5af67ee837c0
+begin
+    function onehot(i)
+        x = zeros(7)
+        x[i] = 1
+        x
+    end
+    act(state, action) = wsample(1:7, T[action, state])
+    _reward(r::Number) = r
+    _reward(r::AbstractArray) = rand(r)
+    reward(state, action) = _reward(R[state, action])
+    T = reshape([[0, .7, .3, 0, 0, 0, 0], [0, 0, 0, .3, .7, 0, 0],
+                  onehot(6), onehot(6),
+                  onehot(7), onehot(6),
+                  onehot(6), onehot(6),
+                  onehot(6), onehot(7),
+                  onehot(6), onehot(6),
+                  onehot(7), onehot(7)], 2, :)
+    R = [-.5 -.3
+         [1:4] 1
+         -5  1
+         1 [3:6]
+         1 -5
+         0 0
+         0 0]
+    function showQ(Q; states = ["red room", "blue without guard", "blue with guard", "green without guard", "green with guard", "treasure room", "K.O."], actions = ["left", "right"])
+        df = DataFrame(Q, states)
+        df.action = actions
+        df
+    end
+    Base.@kwdef mutable struct ChasseAuTresorEnv
+        state::Int = 1
+        reward::Float64 = 0
+        episode_recorder = Tuple{Int, Int, Float64, Int}[]
+        action::Union{Int,Nothing} = nothing
+    end
+    function act!(env::ChasseAuTresorEnv, a)
+        length(env.episode_recorder) == 2 && return
+        s = env.state
+        r = reward(s, a)
+        env.reward = r
+        s′ = act(env.state, a)
+        env.state = s′
+        push!(env.episode_recorder, (s, a, r, s′))
+    end
+    reward(env::ChasseAuTresorEnv) = env.reward
+    state(env::ChasseAuTresorEnv) = env.state
+    function reset!(env::ChasseAuTresorEnv)
+        env.state = 1
+        env.reward = 0
+        empty!(env.episode_recorder)
+    end
+    function distributed_representation(s)
+        [s == 1; # 1 if in room 1
+         s ∈ (2, 3); # 1 if in room 2
+         s ∈ (4, 5); # 1 if in room 3
+         s == 6; # 1 if in treasure room
+         s == 7; # 1 if KO
+         s ∈ (3, 5)] # 1 if guard present
+    end
+#     chasse = ChasseAuTresorEnv()
+end;
 
 # ╔═╡ 712c2a9e-4413-4d7a-b729-cfb219723256
 let mclearner = MCLearner(na = 2, ns = 7),
@@ -530,7 +469,7 @@ end
 reset!(tictactoe);
 
 # ╔═╡ 6a96c33a-b6b3-4a0a-83c8-a0df113887d0
-mcl = let
+mcl = let tictactoe = TicTacToeEnv()
     mcl = MCLearner(na = 9, ns = 5478) # total number of actions and states
     episode_cross = [] # buffer where we store the positions and actions of cross
     episode_nought = [] # buffer where we store the positions and actions of nought
@@ -565,21 +504,99 @@ mcl = let
     mcl
 end;
 
-# ╔═╡ c692cc6e-dbb5-40e9-aeaa-486b098c3af1
-begin
-    import ReinforcementLearning.ReinforcementLearningEnvironments: Cross, Nought
-    function autoplaying(player1, player2, tictactoe)
-        is_terminated(tictactoe) && return false
-        player1 == "machine" && player2 == "machine" && return true
-        player1 == "machine" && current_player(tictactoe) == Cross() && return true
-        player2 == "machine" && current_player(tictactoe) == Nought() && return true
-        false
-    end
-end;
+# ╔═╡ 37d0f305-3aea-4e22-ba0b-184fe880f381
+all_states = Dict();
 
+# ╔═╡ 36e0ad57-08bd-4ece-81ba-df180d9c476f
+@bind user_id html"""<script>
+	currentScript.value = Math.random()
+</script>"""
+
+# ╔═╡ 402d6e7b-fdd1-4082-a995-d78fc7d4cb69
+states = get(all_states, user_id,
+            (chasse = ChasseAuTresorEnv(),
+             tictactoe = TicTacToeEnv(),
+             qlearner = QLearner(),
+             mclearner = MCLearner(),
+             cwenv = CliffWalkingEnv()));
+
+# ╔═╡ e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
+let
+    chasse = states.chasse
+    chasse.action = chasse_actions[1] == 0 ? 3 : chasse_actions[2]
+    if chasse.state ≤ 5 || (isa(chasse.action, Int) && chasse.action > 2)
+        _learner = if learner == "mclearner"
+            if length(chasse.episode_recorder) > 0 && chasse.action == 3
+                update!(states.mclearner, chasse.episode_recorder)
+            end
+            states.mclearner
+        else
+            if length(chasse.episode_recorder) > 0
+                update!(states.qlearner, last(chasse.episode_recorder)...)
+            end
+            states.qlearner
+        end
+        if chasse.action == 3
+            reset!(chasse)
+        elseif chasse.action == 4
+            reset!(_learner)
+        elseif isa(chasse.action, Int)
+            act!(chasse, chasse.action)
+        end
+    end
+    d = distributed_representation(chasse.state)
+    room = findfirst(d)
+    guard = d[6]
+    guard_door = room > 2
+    gold = d[4]
+    room_colors = [:red, :blue, :green, :orange, :black]
+    plot(xlim = (0, 1), ylim = (0, 1), size = (600, 400),
+         bg = room_colors[room], framestyle = :none, legend = false)
+    if room < 4
+        plot!([.1, .1, .4, .4], [0, .7, .7, 0], w = 5, c = :black)
+        plot!([.14, .12, .17], [.37, .35, .35], w = 4, c = :black)
+        plot!(.5 .+ [.1, .1, .4, .4], [0, .7, .7, 0], w = 5, c = :black)
+        plot!(.5 .+ [.14, .12, .17], [.37, .35, .35], w = 4, c = :black)
+    end
+    if guard
+        xshift = guard_door * .5
+        plot!(xshift .+ [.14, .17, .25, .33, .37], [0, 0, .3, 0, 0], w = 5, c = :black)
+        plot!(xshift .+ [.25, .25], [.3, .52], w = 5, c = :black)
+        scatter!(xshift .+ [.25], [.58], markersize = 25, markerstrokewidth = 0, c = :black)
+        plot!(xshift .+ [.33, .33, .18, .18], [.23, .47, .47, .23],
+              w = 5, c = :black)
+    end
+    if gold
+        x = [.25, .15, .2, .3, .35, .25] .+ .25
+        y = [.3, .1, .2, .2, .1, .1]
+        r = floor(Int, chasse.reward)
+        x = x[1:r]
+        y = y[1:r]
+        scatter!(x, y, markerstrokewidth = 3, c = :yellow, markersize = 28)
+    end
+    if room == 5
+        scatter!([0], [0], c = :black, legend = false, markerstrokewidth = 0) # dummy
+        annotate!([(.5, .5, "K.O.", :red)])
+    end
+    rs = length(chasse.episode_recorder) == 0 ? [0] : getindex.(chasse.episode_recorder, 3)
+    annotate!([(.5, .9, "reward = $(chasse.reward)", :white),
+               (.5, .8, "cumulative reward = $(join(rs, " + ")) = $(sum(rs))", :white)
+              ])
+end
+
+# ╔═╡ e876c526-30f9-458d-abf5-e20e6aa0268e
+let
+    chasse_actions
+    if learner == "mclearner"
+        showQ(states.mclearner.Q)
+    else
+        showQ(states.qlearner.Q)
+    end
+end
 
 # ╔═╡ ebebd97a-9dc2-4b39-a998-9279d52c57e5
 let
+    tictactoe = states.tictactoe
     a = last(tictactoe_action)
     if a in legal_action_space(tictactoe)
         act!(tictactoe, a)
@@ -610,6 +627,7 @@ end
 
 # ╔═╡ 61b3c6ca-c680-41d1-9eb5-6ec2f799f0d1
 let
+    cwenv = states.cwenv
     a = last(cw_action)
     if a == 5
         r = 0
@@ -628,18 +646,10 @@ let
                (cwenv.params.ny ÷ 2, -.2, "cumulative reward = $(cwenv.cumulative_reward)")])
 end
 
-# ╔═╡ 8bd459cb-20bb-483e-a849-e18caae3beef
-MLCourse.list_notebooks(@__FILE__)
-
-# ╔═╡ 412d8fcb-8f98-43b6-9235-a4c228317427
-MLCourse.footer()
-
 # ╔═╡ Cell order:
 # ╠═b97724e4-d7b0-4085-b88e-eb3c5bcbe441
 # ╟─b3793299-c916-40d3-bd87-31153fc3781a
-# ╟─d88c1d9b-3396-42a2-8ebd-81851f778602
 # ╟─ce405f97-6d60-4ae4-b183-79e6c88d9811
-# ╟─761d690d-5c73-40dd-b38c-5af67ee837c0
 # ╟─e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
 # ╟─7cf26d6c-5a67-4bd6-8ef2-34559b53685b
 # ╟─5a705ba7-dd9c-411c-a910-659fb1ec9f82
@@ -676,3 +686,8 @@ MLCourse.footer()
 # ╟─7c4a9aff-c3c1-48ef-8e83-9d5aa7e75b03
 # ╟─8bd459cb-20bb-483e-a849-e18caae3beef
 # ╟─412d8fcb-8f98-43b6-9235-a4c228317427
+# ╟─d88c1d9b-3396-42a2-8ebd-81851f778602
+# ╟─761d690d-5c73-40dd-b38c-5af67ee837c0
+# ╟─37d0f305-3aea-4e22-ba0b-184fe880f381
+# ╟─36e0ad57-08bd-4ece-81ba-df180d9c476f
+# ╟─402d6e7b-fdd1-4082-a995-d78fc7d4cb69
