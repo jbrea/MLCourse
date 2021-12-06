@@ -104,7 +104,8 @@ end;
 
 # ╔═╡ 7cf26d6c-5a67-4bd6-8ef2-34559b53685b
 begin
-    clickcounter = zeros(Int, 4)
+#     clickcounter = zeros(Int, 4)
+    chasse_action = Ref(0)
     md"""
     $(@bind(open_left, CounterButton("open left door")))
     $(@bind(open_right, CounterButton("open right door")))\
@@ -112,6 +113,34 @@ begin
     $(@bind(reset_learner, CounterButton("reset learner")))
     """
 end
+
+# ╔═╡ 15a366af-e032-4a62-aa9a-305c118ebfcd
+_ol = let
+    open_left
+    chasse_action[] = 1
+    rand()
+end;
+
+# ╔═╡ fd919262-7d6e-4f32-8093-304949653a2a
+_or = let
+    open_right
+    chasse_action[] = 2
+    rand()
+end;
+
+# ╔═╡ 07d17055-db41-485e-923e-189e111d7cb3
+_re = let
+    reset_episode
+    chasse_action[] = 3
+    rand()
+end;
+
+# ╔═╡ e5e3a6f3-d3f9-4005-b2f3-4b387b9c540e
+_rl = let
+    reset_learner
+    chasse_action[] = 4
+    rand()
+end;
 
 # ╔═╡ b0b89b30-38f1-45c1-8c7a-796ea2f41e8d
 md"## Learning Q-Values with Monte Carlo Estimation
@@ -223,7 +252,8 @@ md"Below you see the Q-values of the \`$learner\`."
 
 # ╔═╡ e876c526-30f9-458d-abf5-e20e6aa0268e
 let
-    [open_left, open_right, reset_episode, reset_learner]
+    _ol, _or, _re, _rl
+#     [open_left, open_right, reset_episode, reset_learner]
     if learner == "mclearner"
         showQ(mclearner.Q)
     else
@@ -347,7 +377,8 @@ Run ``10^5`` episodes with this random resetting of the environment and plot aga
 
 # ╔═╡ 8c0a5e46-c790-4cec-ac57-1b2813b81358
 begin
-    clickcounter2 = zeros(Int, 5)
+#     clickcounter2 = zeros(Int, 5)
+    cwa = Ref(0)
     cw_reward = Ref(0)
     cw_cumulative_reward = Ref(0)
     md"""
@@ -360,6 +391,41 @@ begin
     $(@bind(cwreset, CounterButton("reset")))
     """
 end
+
+# ╔═╡ 7d0a34e1-407f-46c1-af0a-3da729be56f4
+_l = let
+    left
+    cwa[] = 1
+    rand()
+end;
+
+# ╔═╡ 444197fd-32a7-430d-9d78-461c81628eb7
+_r = let
+    right
+    cwa[] = 2
+    rand()
+end;
+
+# ╔═╡ 0f1249cf-66b9-4293-9e2f-b4e41fcd9b95
+_u = let
+    up
+    cwa[] = 3
+    rand()
+end;
+
+# ╔═╡ 7a3cf6c0-ae20-4efb-b3e1-dbd037edc801
+_d = let
+    down
+    cwa[] = 4
+    rand()
+end;
+
+# ╔═╡ e1d2e858-fa8a-4d35-9eee-2fa192767d6c
+_cwr = let
+    cwreset
+    cwa[] = 5
+    rand()
+end;
 
 # ╔═╡ 7c4a9aff-c3c1-48ef-8e83-9d5aa7e75b03
 begin
@@ -398,7 +464,7 @@ begin
         heatmap(m;
                 yflip = true, legend = false, aspect_ratio = 1,
                 c = palette([:black, :yellow, :green]),
-                axis = false, ticks = false)
+            axis = false, ticks = false)
         for i in 0:env.params.nx
             plot!([0.5, env.params.ny + .5], [i + .5, i + .5], c = :black)
         end
@@ -413,11 +479,13 @@ end;
 
 # ╔═╡ e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
 let
-    chasse.action = get_action(clickcounter,
-                               [open_left, open_right, reset_episode, reset_learner])
+#     chasse.action = get_action(clickcounter,
+#                                [open_left, open_right, reset_episode, reset_learner])
+    _ol, _or, _re, _rl
+    chasse.action = chasse_action[]
     if chasse.state ≤ 5 || (isa(chasse.action, Int) && chasse.action > 2)
         _learner = if learner == "mclearner"
-            if length(chasse.episode_recorder) > 0
+            if length(chasse.episode_recorder) > 0 && chasse.action == 3
                 update!(mclearner, chasse.episode_recorder)
             end
             mclearner
@@ -522,6 +590,13 @@ end
 # ╔═╡ 86a78734-2b31-4ee5-8560-8a9388672b45
 reset!(tictactoe);
 
+# ╔═╡ f25a3b53-f491-4ba6-b802-d1f169083264
+_tres = let
+    tres
+    reset!(tictactoe)
+    rand()
+end;
+
 # ╔═╡ 6a96c33a-b6b3-4a0a-83c8-a0df113887d0
 mcl = let
     mcl = MCLearner(na = 9, ns = 5478) # total number of actions and states
@@ -573,7 +648,7 @@ end;
 
 # ╔═╡ ebebd97a-9dc2-4b39-a998-9279d52c57e5
 let
-    tstep
+    tstep, _tres
     a = parse(Int, tact)
     if a in legal_action_space(tictactoe)
         act!(tictactoe, a)
@@ -582,10 +657,6 @@ let
         legal_a = legal_action_space(tictactoe)
         a2 = legal_a[argmax(mcl.Q[legal_a, state(tictactoe)])]
         act!(tictactoe, a2)
-    end
-    if isa(tres, Int) && tres > trescounter[]
-        trescounter[] = tres
-        reset!(tictactoe)
     end
     cpl = split(string(current_player(tictactoe)), ".")[end][1:end-2]
     s = if is_terminated(tictactoe)
@@ -605,7 +676,8 @@ let
 end
 
 # ╔═╡ 61b3c6ca-c680-41d1-9eb5-6ec2f799f0d1
-let a = get_action(clickcounter2, [left, right, up, down, cwreset])
+let a = cwa[] #get_action(clickcounter2, [left, right, up, down, cwreset])
+    _l, _r, _u, _d, _cwr
     if a == 5
         cw_reward[] = 0
         cw_cumulative_reward[] = 0
@@ -632,6 +704,10 @@ MLCourse.footer()
 # ╟─d88c1d9b-3396-42a2-8ebd-81851f778602
 # ╟─ce405f97-6d60-4ae4-b183-79e6c88d9811
 # ╟─761d690d-5c73-40dd-b38c-5af67ee837c0
+# ╟─15a366af-e032-4a62-aa9a-305c118ebfcd
+# ╟─fd919262-7d6e-4f32-8093-304949653a2a
+# ╟─07d17055-db41-485e-923e-189e111d7cb3
+# ╟─e5e3a6f3-d3f9-4005-b2f3-4b387b9c540e
 # ╟─e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
 # ╟─7cf26d6c-5a67-4bd6-8ef2-34559b53685b
 # ╟─5a705ba7-dd9c-411c-a910-659fb1ec9f82
@@ -655,6 +731,7 @@ MLCourse.footer()
 # ╠═4b90f08e-0183-4f8b-a6cd-e66b6938f4c8
 # ╠═86a78734-2b31-4ee5-8560-8a9388672b45
 # ╟─59029032-1c91-4da1-a61b-6a56449dcd2c
+# ╟─f25a3b53-f491-4ba6-b802-d1f169083264
 # ╟─b257795e-d0d6-495a-ae11-dca090ff786a
 # ╟─ebebd97a-9dc2-4b39-a998-9279d52c57e5
 # ╟─4a9fb8a0-81fb-4e59-8208-61df1dbd8255
@@ -665,6 +742,11 @@ MLCourse.footer()
 # ╟─b6b835d1-8f84-4148-8d5b-c7aea6b0c312
 # ╟─61b3c6ca-c680-41d1-9eb5-6ec2f799f0d1
 # ╟─8c0a5e46-c790-4cec-ac57-1b2813b81358
+# ╟─7d0a34e1-407f-46c1-af0a-3da729be56f4
+# ╟─444197fd-32a7-430d-9d78-461c81628eb7
+# ╟─0f1249cf-66b9-4293-9e2f-b4e41fcd9b95
+# ╟─7a3cf6c0-ae20-4efb-b3e1-dbd037edc801
+# ╟─e1d2e858-fa8a-4d35-9eee-2fa192767d6c
 # ╟─7c4a9aff-c3c1-48ef-8e83-9d5aa7e75b03
 # ╟─8bd459cb-20bb-483e-a849-e18caae3beef
 # ╟─412d8fcb-8f98-43b6-9235-a4c228317427
