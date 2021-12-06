@@ -521,7 +521,7 @@ create_initial_state() = (chasse = ChasseAuTresorEnv(),
 
 # ╔═╡ e98b3e4f-d17e-4fdd-af1c-a8744ce7ecc3
 let
-    states = get(all_states, user_id, create_initial_state())
+    states = get!(all_states, user_id, create_initial_state())
     chasse = states.chasse
     chasse.action = chasse_actions[1] == 0 ? 3 : chasse_actions[2]
     if chasse.state ≤ 5 || (isa(chasse.action, Int) && chasse.action > 2)
@@ -587,7 +587,7 @@ end
 # ╔═╡ e876c526-30f9-458d-abf5-e20e6aa0268e
 let
     chasse_actions
-    states = get(all_states, user_id, create_initial_state())
+    states = get!(all_states, user_id, create_initial_state())
     if learner == "mclearner"
         showQ(states.mclearner.Q)
     else
@@ -597,7 +597,7 @@ end
 
 # ╔═╡ ebebd97a-9dc2-4b39-a998-9279d52c57e5
 let
-    states = get(all_states, user_id, create_initial_state())
+    states = get!(all_states, user_id, create_initial_state())
     tictactoe = states.tictactoe
     a = last(tictactoe_action)
     if a in legal_action_space(tictactoe)
@@ -629,7 +629,7 @@ end
 
 # ╔═╡ 61b3c6ca-c680-41d1-9eb5-6ec2f799f0d1
 let
-    states = get(all_states, user_id, create_initial_state())
+    states = get!(all_states, user_id, create_initial_state())
     cwenv = states.cwenv
     a = last(cw_action)
     if a == 5
