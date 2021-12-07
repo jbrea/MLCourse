@@ -49,7 +49,7 @@ begin
 	"""
 	    update!(l::MCLearner, a, s, r)
 
-	Updates an `MLClearner` object `l` for a given
+	Updates an `MCLearner` object `l` for a given
 	action `a`, state `s` and reward `r`.
 	"""
     function update!(learner::MCLearner, a, s, r)
@@ -62,7 +62,7 @@ begin
 	"""
 	    update!(l::MCLearner, episode)
 
-	Updates an `MCLearner` oject `l` for a full episode.
+	Updates an `MCLearner` object `l` for a full episode.
 	"""
     function update!(learner::MCLearner, episode)
 		G = 0 # initialise the cumulative reward
@@ -96,7 +96,7 @@ md"Now we let this agent play the game for 10^5 episodes and learn the Q-values 
 # ╔═╡ dc7c5cb0-30b2-4427-8aeb-f312a88effd1
 md"# Q-Learning
 
-Q-learning is an alternative method for updating Q-values that relies on the idea that ``Q(s_t, a_t)`` for the optimal policy can be estimated by knowing ``r_t`` and ``\max_a Q(s_{t+1}, a``.
+Q-learning is an alternative method for updating Q-values that relies on the idea that ``Q(s_t, a_t)`` for the optimal policy can be estimated by knowing ``r_t`` and ``\max_a Q(s_{t+1}, a)``.
 "
 
 # ╔═╡ e39227c8-8148-43cb-9351-774682b65646
@@ -110,7 +110,7 @@ begin
 	"""
 	    update!(l::QLearner, a, s, r)
 
-	Updates an `MLClearner` object `l` for a given
+	Updates a `QLearner` object `l` for a given
 	state `s`, action `a`, reward `r` and next state `s′`.
 	"""
     function update!(learner::QLearner, s, a, r, s′)
@@ -428,13 +428,13 @@ let mclearner = MCLearner(na = 2, ns = 7),
 		reset!(chasse)
         episode = []
         for steps in 1:2
-            s = state(chasse)
-            a = epsilon_greedy_policy(mclearner.Q[:, s])
-            act!(chasse, a)
-            r = reward(chasse)
-            push!(episode, (s, a, r))
+            s = state(chasse) # observe the environment
+            a = epsilon_greedy_policy(mclearner.Q[:, s]) # use policy to find action
+            act!(chasse, a) # act in the environment
+            r = reward(chasse) # observe the reward
+            push!(episode, (s, a, r)) # store in the episode buffer
         end
-        update!(mclearner, episode)
+        update!(mclearner, episode) # update learner after the end of the episode
     end
     showQ(mclearner.Q)
 end
@@ -445,12 +445,12 @@ let qlearner = QLearner(na = 2, ns = 7),
     for _ in 1:10^6
         reset!(chasse)
         for steps in 1:2
-            s = state(chasse)
-            a = epsilon_greedy_policy(qlearner.Q[:, s])
-            act!(chasse, a)
-            r = reward(chasse)
-            s′ = state(chasse)
-            update!(qlearner, s, a, r, s′)
+            s = state(chasse) # observe the environment
+            a = epsilon_greedy_policy(qlearner.Q[:, s]) # use policy to find action
+            act!(chasse, a) # act in the environment
+            r = reward(chasse) # observe the reward
+            s′ = state(chasse) # observe the next state
+            update!(qlearner, s, a, r, s′) # update the learner
         end
     end
     showQ(qlearner.Q)
@@ -508,12 +508,20 @@ end;
 all_states = Dict();
 
 # ╔═╡ 36e0ad57-08bd-4ece-81ba-df180d9c476f
-@bind user_id html"""<script>
-	currentScript.value = Math.random()
-</script>"""
+begin
+    for (k, v) in all_states # housholding
+        if v.time < time() + 86400
+            pop!(all_states, k)
+        end
+    end
+    @bind(user_id, html"""<script>
+            currentScript.value = Math.random()
+        </script>""")
+end
 
 # ╔═╡ 402d6e7b-fdd1-4082-a995-d78fc7d4cb69
-create_initial_state() = (chasse = ChasseAuTresorEnv(),
+create_initial_state() = (time = time(),
+                          chasse = ChasseAuTresorEnv(),
                           tictactoe = TicTacToeEnv(),
                           qlearner = QLearner(),
                           mclearner = MCLearner(),
