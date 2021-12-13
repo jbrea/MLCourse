@@ -160,11 +160,24 @@ md"""# Exercises
 
 Consider an agent that experiences episode 1:
 
-``(S_1 = s_1, A_1 = a_1, R_2 = 2, S_2 = s_7, A_2 = a_2, R_3 = 1, S_3 = s_6, A_2 = a_2, R_4 = 4, S_4 = s_3, A_4 = a_1, R_5 = 0)``
+```math
+\begin{align*}
+S_1 &= s_1, A_1 = a_1, R_2 = 2,\\
+S_2 &= s_7, A_2 = a_2, R_3 = 1,\\
+S_3 &= s_6, A_2 = a_2, R_4 = 4,\\
+S_4 &= s_3, A_4 = a_1, R_5 = 0
+\end{align*}
+```
 
 and episode 2:
 
-``(S_1 = s_1, A_1 = a_1, R_2 = 1, S_2 = s_6, A_2 = a_1, R_3 = -1, S_3 = s_2, A_3 = a_2, R_4 = 1)``.
+```math
+\begin{align*}
+S_1 &= s_1, A_1 = a_1, R_2 = 1,\\
+S_2 &= s_6, A_2 = a_1, R_3 = -1,\\
+S_3 &= s_2, A_3 = a_2, R_4 = 1
+\end{align*}
+```.
 
 (a) Compute ``Q(s_1, a_1)`` with Monte Carlo Estimation.
 
