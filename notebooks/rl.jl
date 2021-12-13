@@ -91,7 +91,7 @@ function epsilon_greedy_policy(q; ϵ = .25)
 end
 
 # ╔═╡ 0537554c-76e4-4827-b92a-bf5b944685c7
-md"Now we let this agent play the game for 10^5 episodes and learn the Q-values with Monte Carlo estimation."
+md"Now we let this agent play the game for 10^6 episodes and learn the Q-values with Monte Carlo estimation."
 
 # ╔═╡ dc7c5cb0-30b2-4427-8aeb-f312a88effd1
 md"# Q-Learning
@@ -160,15 +160,15 @@ md"""# Exercises
 
 Consider an agent that experiences episode 1:
 
-``((S_1 = s_1, A_1 = a_1, R_1 = 2), (S_2 = s_7, A_2 = a_2, R_2 = 1), (S_3 = s_6, A_2 = a_2, R_3 = 4), (S_4 = s_3, A_4 = a_1, R_4 = 0))``
+``(S_1 = s_1, A_1 = a_1, R_2 = 2, S_2 = s_7, A_2 = a_2, R_3 = 1, S_3 = s_6, A_2 = a_2, R_4 = 4, S_4 = s_3, A_4 = a_1, R_5 = 0)``
 
 and episode 2:
 
-``((S_1 = s_1, A_1 = a_1, R_1 = 1)), (S_2 = s_6, A_2 = a_1, R_2 = -1), (S_3 = s_2, A_3 = a_2, R_3 = 1))``.
+``(S_1 = s_1, A_1 = a_1, R_2 = 1, S_2 = s_6, A_2 = a_1, R_3 = -1, S_3 = s_2, A_3 = a_2, R_4 = 1)``.
 
 (a) Compute ``Q(s_1, a_1)`` with Monte Carlo Estimation.
 
-(b) Compute ``Q(s_1, a_1)`` with Q-Learning, learning rate ``\lambda = 0.5`` and initial ``Q(s_1, a_1) = 0``.
+(b) Compute ``Q(s_1, a_1)`` with Q-Learning, learning rate ``\lambda = 0.5`` and initial ``Q(s, a) = 0`` for all ``s`` and ``a``.
 
 ## Applied
 
@@ -424,7 +424,7 @@ end;
 # ╔═╡ 712c2a9e-4413-4d7a-b729-cfb219723256
 let mclearner = MCLearner(na = 2, ns = 7),
     chasse = ChasseAuTresorEnv()
-    for _ in 1:10^5
+    for _ in 1:10^6
 		reset!(chasse)
         episode = []
         for steps in 1:2
