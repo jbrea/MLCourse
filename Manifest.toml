@@ -970,9 +970,9 @@ version = "0.1.2"
 
 [[MLJFlux]]
 deps = ["CategoricalArrays", "ColorTypes", "ComputationalResources", "Flux", "MLJModelInterface", "ProgressMeter", "Random", "Statistics", "Tables"]
-git-tree-sha1 = "0e4846efe287018f87b89d8e922bbcee0d6bc39d"
+git-tree-sha1 = "ecfc181ded92f12396886291946837328045d235"
 uuid = "094fc8d1-fd35-5302-93ea-dabda2abf845"
-version = "0.2.5"
+version = "0.2.6"
 
 [[MLJGLMInterface]]
 deps = ["Distributions", "GLM", "MLJModelInterface", "Parameters", "Tables"]
