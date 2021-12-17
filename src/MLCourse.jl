@@ -53,7 +53,7 @@ end
 polysymbol(x, d) = Symbol(d == 0 ? "" : d == 1 ? "$x" : "$x^$d")
 
 colnames(df::AbstractDataFrame) = names(df)
-colnames(d::NamedTuple) = keys(d)
+colnames(d) = keys(d)
 function poly(data, degree)
     cn = colnames(data)
     col = first(cn)
@@ -95,41 +95,68 @@ function MLJ.MLJBase.predict(model::PolynomialRegressor, fitresult, Xnew)
 end
 
 """
-    biplot(pca; pc = (1, 2))
+    biplot(pca; pc = (1, 2), score_style = :text, loading = :all)
 
-Show a biplot for a fitted machine `pca` and components `pc` (by default the first two components are shown.
+Show a biplot for a fitted machine `pca` and components `pc` (by default the
+first two components are shown. If `score_style` is `:text` the index of each
+data point (row in the input data of a `PCA` machine) is plotted at the
+coordinates that indicate the scores of that data point. If `score_style` is an
+integer the scores are plotted as points of size `score_style`. If `loadings` is
+`:all`, all loadings are shown. If `loadings` is an integer ``n``, the ``n``
+largest loadings along the PCs defined by `pc` are shown. If `loadings` is a
+vector or integers, the loadings for the input dimensions given in this list of
+integers is shown.
 
 ### Example
-using MLJ, MLJMultivariateStatsInterface, DataFrames, Plots
-mach = fit!(machine(PCA(), DataFrame(randn(10, 4) * randn(4, 6), :auto)))
-biplot(mach, pc = (1, 3))
+```
+julia> using MLJ, MLJMultivariateStatsInterface, DataFrames, Plots
+julia> mach = fit!(machine(PCA(), DataFrame(randn(10, 4) * randn(4, 6), :auto)))
+julia> biplot(mach)
+julia> biplot(mach, loadings = 3)
+julia> biplot(mach, pc = (1, 3), score_style = 4, loadings = [3, 4])
+```
 """
-function biplot(m; pc = 1:2)
+function biplot(m;
+                pc = (1, 2),
+                score_style = :text,
+                loadings = :all)
     scores = MLJ.transform(m, m.data[1])
     p = scatter(getproperty(scores, Symbol(:x, pc[1])),
                 getproperty(scores, Symbol(:x, pc[2])),
                 label = nothing, aspect_ratio = 1, size = (600, 600),
                 xlabel = "PC$(pc[1])", ylabel = "PC$(pc[2])",
-                framestyle = :axis, markeralpha = 0,
-                txt = text.(1:nrows(scores), 8, :gray), markersize = 0)
+                framestyle = :axis, markeralpha = score_style == :text ? 0 : 1,
+                c = :gray,
+                txt = score_style == :text ? text.(1:nrows(scores), 8, :gray) :
+                                             nothing,
+                markersize = score_style == :text ? 0 :
+                             isa(score_style, Int) ? score_style : 3)
     plot!(p[1], inset = (1, bbox(0, 0, 1, 1)),
           right_margin = 10Plots.mm, top_margin = 10Plots.mm)
     p2 = p[1].plt.subplots[end]
     plot!(p2, aspect_ratio = 1, mirror = true, legend = false)
     params = fitted_params(m)
-    loadings = if hasproperty(params, :pca)
+    ϕ = if hasproperty(params, :pca)
         params.pca.projection
     else
         params.projection
     end
-    n = names(m.data[1])
-    for i in 1:length(n)
-        plot!(p2, [0, .9*loadings[i, pc[1]]], [0, .9*loadings[i, pc[2]]],
+    n = colnames(m.data[1])
+    idxs = if loadings == :all
+        1:length(n)
+    elseif isa(loadings, Int)
+        l = reshape(sum(abs2.(ϕ[:, [pc...]]), dims = 2), :)
+        sortperm(l, rev = true)[1:loadings]
+    else
+        loadings
+    end
+    for i in idxs
+        plot!(p2, [0, .9*ϕ[i, pc[1]]], [0, .9*ϕ[i, pc[2]]],
               c = :red, arrow = true)
-        annotate!(p2, [(loadings[i, pc[1]], loadings[i, pc[2]],
+        annotate!(p2, [(ϕ[i, pc[1]], ϕ[i, pc[2]],
                         (n[i], :red, :center, 8))])
     end
-    scatter!(p2, 1.1*loadings[:, pc[1]], 1.1*loadings[:, pc[2]],
+    scatter!(p2, 1.1*ϕ[:, pc[1]], 1.1*ϕ[:, pc[2]],
              markersize = 0, markeralpha = 0) # dummy for sensible xlims and xlims
     plot!(p2,
           background_color_inside = RGBA{Float64}(0, 0, 0, 0),
