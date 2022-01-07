@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.1
+# v0.17.2
 
 using Markdown
 using InteractiveUtils
@@ -24,6 +24,9 @@ begin
 end
 
 
+# ╔═╡ 3902c054-a1c8-4845-8f9a-0a18d0df243b
+using CSV
+
 # ╔═╡ 7b013132-0ee2-11ec-1dd2-25a9f16f0568
 begin
     using PlutoUI
@@ -39,6 +42,9 @@ begin
     iris = rename!(iris, replace.(names(iris), "'" => ""))
     coerce!(iris, :class => Multiclass)
 end
+
+# ╔═╡ 67b8f27f-b5b5-4dc0-ab51-83ac3dcaa2f7
+iris.class
 
 # ╔═╡ 1ebd74bc-4479-41d2-aba4-934cdd2b778a
 @df iris cornerplot([:sepallength :sepalwidth :petallength :petalwidth],
@@ -217,6 +223,12 @@ CSV.read(download(\"https://www.statlearning.com/s/Ch12Ex13.csv\"),
 
 "
 
+# ╔═╡ 0562f75f-d3c6-498d-aa9d-5e9a3a78e55d
+submission = DataFrame(a = rand(10), b = rand(10))
+
+# ╔═╡ 64b1867a-283d-4408-868f-738e30f8093d
+CSV.write("/tmp/submission.csv", submission)
+
 # ╔═╡ 15830699-57c5-4bc2-bc92-54105597ab26
 MLCourse.list_notebooks(@__FILE__)
 
@@ -227,6 +239,7 @@ MLCourse.footer()
 # ╠═48d87103-4c23-4144-a121-1e33d2bb87f3
 # ╟─da8f8ce7-c3ad-4e1a-bb9e-c7be15646d72
 # ╠═49a1493b-ba68-4e7a-8c3d-47423f7a8204
+# ╠═67b8f27f-b5b5-4dc0-ab51-83ac3dcaa2f7
 # ╟─1ebd74bc-4479-41d2-aba4-934cdd2b778a
 # ╟─472f0d57-cf50-4c3d-b251-dcf2f7c121c2
 # ╠═d1c88a44-be52-4b0e-bc23-cca00d10ffb6
@@ -239,6 +252,9 @@ MLCourse.footer()
 # ╟─6a603cb6-7a1b-4a1d-9358-c4c811efa2bb
 # ╟─e266ada3-ba4d-4177-8129-f1220f293c72
 # ╟─85d574c2-b823-4dcf-b711-efc755e724b7
+# ╠═0562f75f-d3c6-498d-aa9d-5e9a3a78e55d
+# ╠═3902c054-a1c8-4845-8f9a-0a18d0df243b
+# ╠═64b1867a-283d-4408-868f-738e30f8093d
 # ╟─15830699-57c5-4bc2-bc92-54105597ab26
 # ╟─7b013132-0ee2-11ec-1dd2-25a9f16f0568
 # ╟─35ac2056-ab72-44b0-9972-723a0887a622

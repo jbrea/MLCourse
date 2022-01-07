@@ -115,7 +115,7 @@ Pluto.update_save_run!(session, nb, nb.cells; run_async=false, prerender_text=tr
 # next, we'll run the HTTP server which needs a bit of nasty code
 t = @async Pluto.run(session)
 
-sleep(60)
+sleep(120)
 download("http://localhost:40404/")
 
 # this is async because it blocks for some reason
