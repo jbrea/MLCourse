@@ -19,7 +19,7 @@ begin
     using Pkg
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using MLJ, MLJLinearModels, Plots, LinearAlgebra, Random, DataFrames, CSV, MLCourse
-    import MLCourse: PolynomialRegressor, poly
+    import MLCourse: Polynomial, poly
 end
 
 
@@ -209,13 +209,13 @@ end
 
 # ╔═╡ fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
 begin
-    model = PolynomialRegressor(regressor = RidgeRegressor())
+    model = @pipeline(Polynomial(), RidgeRegressor())
     self_tuning_model = TunedModel(model = model,
                                    tuning =  Grid(goal = 500),
                                    resampling = CV(nfolds = 5),
-                                   range = [range(model, :degree,
+                                   range = [range(model, :(polynomial.degree),
                                                   lower = 1, upper = 20),
-                                            range(model, :(regressor.lambda),
+                                            range(model, :(ridge_regressor.lambda),
                                                   lower = 1e-12, upper = 1e-3,
                                                   scale = :log)],
                                    measure = rmse)

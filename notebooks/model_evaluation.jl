@@ -14,7 +14,7 @@ end
 # ╔═╡ c693088f-7f80-4cdd-b9b5-65a50da732ac
 begin
     using MLCourse
-    import MLCourse: poly
+    import MLCourse: poly, Polynomial
     MLCourse.list_notebooks(@__FILE__)
 end
 
@@ -27,26 +27,6 @@ md"# Validation Set Approach
 
 In the following cell we define a `data_generator` that creates data sets with a polynomial relationship of degree 3 between the input x and the average output f(x). We split these data sets into a training set, a validation set and a test set. The training set will be used to find the parameters for a machine learning method with given hyper-parameters, the validation set will be used to find the hyper-parameters and the test set will be used to evaluate all our models.
 "
-
-# ╔═╡ 751880ec-1a82-4142-b875-177d436bbc72
-md"To simplify our training and test procedure we define a new type of a machine called `PolynomialRegressor` that takes as keyword argument the `degree` of the polynomial. You do not need to understand the code in the following hidden cell. But if you are interested in how one can define custom machines in the `MLJ` framework you are welcome to look at the code and the [MLJ Documentation](https://alan-turing-institute.github.io/MLJ.jl/dev/simple_user_defined_models/); it is actually quite simple to write a custom machine."
-
-# ╔═╡ da2bbb4d-d45d-4d2a-9c8a-21395bcbb851
-begin
-    # Use the Live Docs to learn more about Base.@kwdef
-    Base.@kwdef mutable struct PolynomialRegressor{T} <: Deterministic
-        degree::Int = 3
-        regressor::T = LinearRegressor()
-    end
-    function MLJ.MLJBase.fit(model::PolynomialRegressor, verbosity, X, y)
-        Xpoly = poly(X, model.degree) # here we transform the input
-        MLJ.MLJBase.fit(model.regressor, verbosity, Xpoly, y)
-    end
-    function MLJ.MLJBase.predict(model::PolynomialRegressor, fitresult, Xnew)
-        Xpoly = poly(Xnew, model.degree) # here we transform the input
-        MLJ.MLJBase.predict(model.regressor, fitresult, Xpoly)
-    end
-end
 
 # ╔═╡ 7dd7e9a7-9245-4c64-af0c-8f7d2f62b2bf
 begin
@@ -83,7 +63,8 @@ end;
 data1 = data_split(data_generator(seed = 1))
 
 # ╔═╡ 2e02ac0d-c4d0-47ba-be57-445adeb6ab8b
-losses1 = [fit_and_evaluate(PolynomialRegressor(; degree), data1) for degree in 1:10]
+losses1 = [fit_and_evaluate(Polynomial(degree) |> LinearRegressor(), data1)
+           for degree in 1:10]
 
 # ╔═╡ 91eecd2b-af18-4a63-9684-28950e604d1a
 let validlosses = getproperty.(losses1, :valid), i = argmin(validlosses)
@@ -97,7 +78,7 @@ md"For this seed of the random number generator the optimal degree (x coordinate
 Let us now look at other seeds."
 
 # ╔═╡ ac3c7e84-6c47-4dc1-b862-de4cfb05dad9
-losses = [fit_and_evaluate(PolynomialRegressor(; degree),
+losses = [fit_and_evaluate(PolynomialRegressor(degree),
                            data_split(data_generator(seed = seed)))
           for degree in 1:10, seed in 1:20]
 
@@ -150,7 +131,7 @@ end
 cross_validation_sets(1:100, 4)
 
 # ╔═╡ c14c9e49-a993-456e-9115-97da86f8e498
-losses1_cv10 = [cross_validation(PolynomialRegressor(; degree),
+losses1_cv10 = [cross_validation(PolynomialRegressor(degree),
 		                         data_generator(seed = 1),
 		                         K = 10) for degree in 1:10]
 
@@ -162,7 +143,7 @@ let validlosses = getproperty.(losses1_cv10, :valid), i = argmin(validlosses)
 end
 
 # ╔═╡ 1e584a38-2fef-4877-87f6-92237d71c4b3
-losses_cv10 = [cross_validation(PolynomialRegressor(; degree),
+losses_cv10 = [cross_validation(PolynomialRegressor(degree),
                                 data_generator(seed = seed),
                                 K = 10)
                for degree in 1:10, seed in 1:20]
@@ -194,7 +175,8 @@ md"`MLJ` has the very useful function `evaluate!`. Have a look at the Live docs 
 
 # ╔═╡ 8ae790b3-3987-4f41-8e21-adbb71081eb9
 let data = data_generator(seed = 1, n = 100)
-    evaluate!(machine(PolynomialRegressor(degree = 4), select(data, :x), data.y),
+    evaluate!(machine(PolynomialRegressor(4),
+                      select(data, :x), data.y),
               resampling = CV(nfolds = 10), measure = rmse)
 end
 
@@ -203,7 +185,7 @@ md"We can use this now to find the best degree with 10-fold cross-validation for
 
 # ╔═╡ abb71af3-8aae-4806-9d5a-d144c15d22ef
 losses_mlj_cv10 = [let data = data_generator(seed = seed)[1:100, :]
-                       evaluate!(machine(PolynomialRegressor(; degree),
+                       evaluate!(machine(PolynomialRegressor(degree),
                                          select(data, :x),
                                          data.y),
                                 resampling = CV(nfolds = 10),
@@ -222,16 +204,17 @@ end
 # ╔═╡ 29683c99-6a6a-4f65-bea2-d592895d887e
 md"# Model Tuning
 
-Finding good hyper-parameters (tuning) is such an important step in the process of finding good machine learning models that there exist some nice utility functions to tune the hyper-parameters ([tuning section in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/tuning_models/)). In the cell below you see an example where a `PolynomialRegressor` is automatically tuned on a given dataset by performing 10-fold cross-validation on all degrees on a \"grid\", i.e. of all degrees from 1 to 17 are tested."
+Finding good hyper-parameters (tuning) is such an important step in the process of finding good machine learning models that there exist some nice utility functions to tune the hyper-parameters ([tuning section in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/tuning_models/)). In the cell below you see an example where the degree of polynomial regression is automatically tuned on a given dataset by performing 10-fold cross-validation on all degrees on a \"grid\", i.e. of all degrees from 1 to 17 are tested."
 
 # ╔═╡ f93f20db-4fed-481f-b085-ca744b68fa8f
 begin
-    model = PolynomialRegressor()
+    model = Polynomial() |> LinearRegressor()
     data2 = data_generator(seed = 2, n = 100)
     self_tuning_model = TunedModel(model = model,
                                    resampling = CV(nfolds = 10),
                                    tuning = Grid(),
-                                   range = range(model, :degree, values = 1:17),
+                                   range = range(model, :(polynomial.degree),
+                                                 values = 1:17),
                                    measure = rmse)
     self_tuning_mach = machine(self_tuning_model, select(data2, :x), data2.y) |> fit!
 end
@@ -296,7 +279,7 @@ md"# Exercises
    cross-validation the optimal number ``k`` of neighbors of kNN
    classification, using the AUC measure. Hint: `MLJ` has the builtin function `auc`.
    Plot the validation AUC for ``k = 1, \ldots, 50``.
-2. In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download a dataset with `using OpenML; cars = DataFrame(OpenML.load(455))`. In the cleaning step we will remove all rows that contain missing values (you can use the function `dropmissing`). We select the machine learning methods `PolynomialRegressor` and `KNNRegressor` and we take as measure the `rmse`. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found.
+2. In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download a dataset with `using OpenML; cars = DataFrame(OpenML.load(455))`. In the cleaning step we will remove all rows that contain missing values (you can use the function `dropmissing`). We select the machine learning methods polynomial regression and k nearest neighbors regression and we take as measure the `rmse`. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found.
 "
 
 # 1. Perform k-nearest neighbors regression on data generated with our `data_generator`
@@ -312,8 +295,7 @@ MLCourse.footer()
 # ╟─7eb6a060-f948-4d85-881a-4909e74c15bd
 # ╠═7dd7e9a7-9245-4c64-af0c-8f7d2f62b2bf
 # ╠═fa9b4b9e-4e97-4e5c-865d-ad3ef288e4cf
-# ╟─751880ec-1a82-4142-b875-177d436bbc72
-# ╟─da2bbb4d-d45d-4d2a-9c8a-21395bcbb851
+# ╠═a2f2b20f-472a-4e41-8696-0b745416c853
 # ╠═2e02ac0d-c4d0-47ba-be57-445adeb6ab8b
 # ╟─91eecd2b-af18-4a63-9684-28950e604d1a
 # ╟─b45b32b1-8a65-4823-b3bb-f0b7cc57604b

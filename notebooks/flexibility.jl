@@ -14,24 +14,20 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 12942f34-efb1-11eb-3eb4-c1a38396cfb8
+# ╔═╡ 8fa836a6-1133-4a54-b996-a02083fc6bba
 begin
     using Pkg
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using PlutoUI
-    PlutoUI.TableOfContents()
+    using Random, Statistics, DataFrames, Plots, MLJ, MLJLinearModels, MLCourse
 end
-
-# ╔═╡ 8fa836a6-1133-4a54-b996-a02083fc6bba
-using Random, Statistics, DataFrames, Plots, MLJ, MLJLinearModels
 
 # ╔═╡ 269a609c-74af-4e7e-86df-e2279096a7a6
 using NearestNeighborModels
 
-# ╔═╡ efda845a-4390-40bc-bdf2-89e555d3b1b2
+# ╔═╡ 12942f34-efb1-11eb-3eb4-c1a38396cfb8
 begin
-    using MLCourse
-    MLCourse.list_notebooks(@__FILE__)
+    using PlutoUI
+    PlutoUI.TableOfContents()
 end
 
 # ╔═╡ 12942f50-efb1-11eb-01c0-055b6be166e0
@@ -115,14 +111,22 @@ begin
 end;
 
 # ╔═╡ c50ed135-68d5-43bc-9c26-9c265702a1f0
-poly(regression_data, 5)
+MLJ.transform(machine(Polynomial(degree = 5)), regression_data)
+
+# ╔═╡ f36925a8-38f9-4729-b8b2-37e5350d1e7b
+PolynomialRegressor = let model = @pipeline(Polynomial(), LinearRegressor())
+	function(degree)
+		model.polynomial.degree = degree
+		model
+	end
+end
 
 # ╔═╡ 710d3104-e197-44c1-a10b-de1098d57dd6
 md"degree = $(@bind degree Slider(1:17, default = 4, show_value = true))"
 
 # ╔═╡ ad50d244-c644-4f61-bd8b-995d0110811d
-m3 = machine(LinearRegressor(),
-             select(poly(regression_data, degree), Not(:y)),
+m3 = machine(PolynomialRegressor(degree),
+             select(regression_data, Not(:y)),
              regression_data.y) |> fit!;
 
 # ╔═╡ 0272460a-5b9f-4728-a531-2b497b26c512
@@ -179,7 +183,8 @@ function poly2(data, degree)
 end;
 
 # ╔═╡ 5ea1b31d-91e5-4c8f-93d6-5d31816fdbf5
-poly2(classification_data, 3)
+MLJ.transform(machine(Polynomial(degree = 3, predictors = (:X1, :X2))),
+	          classification_data)
 
 # ╔═╡ 59acced5-16eb-49b8-8cf2-0c43a88d838e
 md"degree = $(@bind degree2 Slider(1:17, default = 3, show_value = true))"
@@ -417,6 +422,9 @@ md"# Exercises
         * Using ``10^4`` samples from the data generator, your knowledge about the irreducible error and your estimate of the variance of linear regression.
 "
 
+# ╔═╡ efda845a-4390-40bc-bdf2-89e555d3b1b2
+MLCourse.list_notebooks(@__FILE__)
+
 # ╔═╡ 2320f424-7652-4e9f-83ef-fc011b722dcc
 MLCourse.footer()
 
@@ -434,6 +442,7 @@ MLCourse.footer()
 # ╟─d487fcd9-8b45-4237-ab2c-21f82ddf7f7c
 # ╠═48bcf292-4d5a-45e8-a495-26404d221bd9
 # ╠═c50ed135-68d5-43bc-9c26-9c265702a1f0
+# ╠═f36925a8-38f9-4729-b8b2-37e5350d1e7b
 # ╟─710d3104-e197-44c1-a10b-de1098d57dd6
 # ╠═ad50d244-c644-4f61-bd8b-995d0110811d
 # ╟─6fa9b644-d4a6-4c53-9146-9d978207bfd0
