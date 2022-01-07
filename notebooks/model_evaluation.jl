@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.15.1
+# v0.17.2
 
 using Markdown
 using InteractiveUtils
@@ -27,6 +27,26 @@ md"# Validation Set Approach
 
 In the following cell we define a `data_generator` that creates data sets with a polynomial relationship of degree 3 between the input x and the average output f(x). We split these data sets into a training set, a validation set and a test set. The training set will be used to find the parameters for a machine learning method with given hyper-parameters, the validation set will be used to find the hyper-parameters and the test set will be used to evaluate all our models.
 "
+
+# ╔═╡ 751880ec-1a82-4142-b875-177d436bbc72
+md"To simplify our training and test procedure we define a new type of a machine called `PolynomialRegressor` that takes as keyword argument the `degree` of the polynomial. You do not need to understand the code in the following hidden cell. But if you are interested in how one can define custom machines in the `MLJ` framework you are welcome to look at the code and the [MLJ Documentation](https://alan-turing-institute.github.io/MLJ.jl/dev/simple_user_defined_models/); it is actually quite simple to write a custom machine."
+
+# ╔═╡ da2bbb4d-d45d-4d2a-9c8a-21395bcbb851
+begin
+    # Use the Live Docs to learn more about Base.@kwdef
+    Base.@kwdef mutable struct PolynomialRegressor{T} <: Deterministic
+        degree::Int = 3
+        regressor::T = LinearRegressor()
+    end
+    function MLJ.MLJBase.fit(model::PolynomialRegressor, verbosity, X, y)
+        Xpoly = poly(X, model.degree) # here we transform the input
+        MLJ.MLJBase.fit(model.regressor, verbosity, Xpoly, y)
+    end
+    function MLJ.MLJBase.predict(model::PolynomialRegressor, fitresult, Xnew)
+        Xpoly = poly(Xnew, model.degree) # here we transform the input
+        MLJ.MLJBase.predict(model.regressor, fitresult, Xpoly)
+    end
+end
 
 # ╔═╡ 7dd7e9a7-9245-4c64-af0c-8f7d2f62b2bf
 begin
@@ -61,26 +81,6 @@ end;
 
 # ╔═╡ fa9b4b9e-4e97-4e5c-865d-ad3ef288e4cf
 data1 = data_split(data_generator(seed = 1))
-
-# ╔═╡ 751880ec-1a82-4142-b875-177d436bbc72
-md"To simplify our training and test procedure we define a new type of a machine called `PolynomialRegressor` that takes as keyword argument the `degree` of the polynomial. You do not need to understand the code in the following hidden cell. But if you are interested in how one can define custom machines in the `MLJ` framework you are welcome to look at the code and the [MLJ Documentation](https://alan-turing-institute.github.io/MLJ.jl/dev/simple_user_defined_models/); it is actually quite simple to write a custom machine."
-
-# ╔═╡ da2bbb4d-d45d-4d2a-9c8a-21395bcbb851
-begin
-    # Use the Live Docs to learn more about Base.@kwdef
-    Base.@kwdef mutable struct PolynomialRegressor{T} <: Deterministic
-        degree::Int = 3
-        regressor::T = LinearRegressor()
-    end
-    function MLJ.MLJBase.fit(model::PolynomialRegressor, verbosity, X, y)
-        Xpoly = poly(X, model.degree) # here we transform the input
-        MLJ.MLJBase.fit(model.regressor, verbosity, Xpoly, y)
-    end
-    function MLJ.MLJBase.predict(model::PolynomialRegressor, fitresult, Xnew)
-        Xpoly = poly(Xnew, model.degree) # here we transform the input
-        MLJ.MLJBase.predict(model.regressor, fitresult, Xpoly)
-    end
-end
 
 # ╔═╡ 2e02ac0d-c4d0-47ba-be57-445adeb6ab8b
 losses1 = [fit_and_evaluate(PolynomialRegressor(; degree), data1) for degree in 1:10]
