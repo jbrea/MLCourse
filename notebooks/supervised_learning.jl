@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.2
+# v0.17.5
 
 using Markdown
 using InteractiveUtils
@@ -30,7 +30,9 @@ using Plots, OpenML, DataFrames, CSV
 using StatsPlots
 
 # ╔═╡ f63c0592-eefe-11eb-0d69-91d4d396c540
-using MLJ, MLJLinearModels
+# using MLJ makes the functions machine, fit!, fitted_params, predict, etc. available
+# MLJLinearModel contains LinearRegressor, LogisticClassifier etc.
+using MLJ, MLJLinearModels 
 
 # ╔═╡ f63c05e4-eefe-11eb-0848-9b4eb61d920c
 using Random
@@ -452,11 +454,11 @@ MLCourse.footer()
 # ╟─f63c057e-eefe-11eb-0dd2-3333b4e2d220
 # ╟─f63c0588-eefe-11eb-0687-a7c44f9177a4
 # ╟─f63c0588-eefe-11eb-1b0b-db185fcbdc4e
-# ╠═f63c0592-eefe-11eb-0d69-91d4d396c540
 # ╟─f63c05a6-eefe-11eb-0ef4-df7e458e9ec6
 # ╠═f63c05a6-eefe-11eb-2927-b1e9dbbe032d
 # ╠═f63c05b2-eefe-11eb-03cd-ef71f9055eb3
 # ╟─f63c05b2-eefe-11eb-21dc-1f79ae779316
+# ╠═f63c0592-eefe-11eb-0d69-91d4d396c540
 # ╠═f63c05ba-eefe-11eb-18b5-7522b326ab65
 # ╠═f63c05ba-eefe-11eb-1b7a-21cbd9bbeb37
 # ╠═f63c05c4-eefe-11eb-030e-6f7484849852

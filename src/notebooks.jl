@@ -40,10 +40,6 @@ function footer()
     html"""
         <style>
 
-        #launch_binder {
-            display: none;
-        }
-
         body.disable_ui main {
                 max-width : 95%;
             }

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.2
+# v0.17.5
 
 using Markdown
 using InteractiveUtils
@@ -37,7 +37,8 @@ md"# Linear Regression
 "
 
 # ╔═╡ 9f84bcc5-e5ab-4935-9076-c19e9bd668e8
-weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), DataFrame);
+weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), 
+                   DataFrame);
 
 # ╔═╡ 34e527f2-ef80-4cb6-be3a-bee055eca125
 begin
@@ -83,7 +84,8 @@ rmse(predict(m1, training_set1.X), training_set1.y)
 
 # ╔═╡ b0de002f-3f39-4378-8d68-5c4606e488b7
 begin
-    weather_test = CSV.read(joinpath(@__DIR__, "..", "data", "weather2019-2020.csv"), DataFrame);
+    weather_test = CSV.read(joinpath(@__DIR__, "..", "data", "weather2019-2020.csv"),
+		                    DataFrame);
     test_set1 = (X = (LUZ_pressure = weather_test.LUZ_pressure[1:end-5],),
                      y = weather_test.LUZ_wind_peak[6:end])
 end

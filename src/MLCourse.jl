@@ -8,9 +8,31 @@ include("notebooks.jl")
 include_dependency(joinpath("..", "Project.toml"))
 const _VERSION = VersionNumber(Pkg.TOML.parsefile(project_relative_path("Project.toml"))["version"])
 
-using Zygote, Plots, MLJ, MLJLinearModels, MLJGLMInterface, Markdown, DataFrames, Base64
-export plot_residuals!, fitted_linear_func, grid, biplot, Polynomial
+using Requires, Git, Pluto, Distributed, PackageCompiler
+using Markdown, Base64
 
+function __init__()
+@require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin
+using Zygote
+"""
+    gradient_descent(f, x₀, η, T; callback = x -> nothing)
+
+Run gradient descent on `f` with initial condition `x₀` and learning rate `η`
+for `T` steps. The function `callback` is executed after every update of the
+of the parameters and takes the current value of the parameters as input.
+"""
+function gradient_descent(f, x₀, η, T; callback = x -> nothing)
+    x = copy(x₀) # use copy to not overwrite the input
+    for t in 1:T
+        x .-= η * gradient(f, x)[1] # update parameters in direction of -∇f
+        callback(x) # the callback will be used to save intermediate values
+    end
+    x
+end
+end # Zygote
+@require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
+using Plots
+export plot_residuals!, biplot
 function plot_residuals!(x, y, f; kwargs...)
     for (xi, yi) in zip(x, y)
         plot!(fill(xi, 2), [yi, f(xi)]; color = :red, linewidth = 2,
@@ -24,73 +46,6 @@ function plot_residuals!(x1, x2, y, f; kwargs...)
               color = :red, linewidth = 2, label = nothing, kwargs...)
     end
 end
-
-_slope(::MLJLinearModels.LinearRegressor, θ̂) = θ̂.coefs[1][2]
-_slope(::MLJGLMInterface.LinearRegressor, θ̂) = θ̂.coef[1]
-
-function fitted_linear_func(mach)
-    θ̂ = fitted_params(mach)
-    θ̂₀ = θ̂.intercept
-    θ̂₁ = _slope(mach.model, θ̂)
-    x -> θ̂₀ + θ̂₁ * x
-end;
-
-function gradient_descent(f, x₀, η, T; callback = x -> nothing)
-    x = copy(x₀) # use copy to not overwrite the input
-    for t in 1:T
-        x .-= η * gradient(f, x)[1] # update parameters in direction of -∇f
-        callback(x) # the callback will be used to save intermediate values
-    end
-    x
-end
-
-_grid(x, y) = (repeat(x, length(y)), repeat(y, inner = length(x)))
-function grid(x, y; names = (:X, :Y), output_format = NamedTuple)
-    t = NamedTuple{names}(_grid(x, y))
-    output_format(t)
-end
-
-polysymbol(x, d) = Symbol(d == 0 ? "" : d == 1 ? "$x" : "$x^$d")
-
-colnames(df::AbstractDataFrame) = names(df)
-colnames(d::NamedTuple) = keys(d)
-colname(names, predictor::Int) = names[predictor]
-colname(names, predictor::Symbol) = string(predictor) ∈ names ? Symbol(predictor) : error("Predictor $predictor not found in $names.")
-function poly(data, degree, predictors::NTuple{1})
-    cn = colnames(data)
-    col = first(cn)
-    if length(cn) > 1
-        @warn "Multiple columns detected. Taking $col to expand as polynomial."
-    end
-    res = DataFrame([getproperty(data, col) .^ k for k in 1:degree],
-                    [polysymbol(col, k) for k in 1:degree])
-    if hasproperty(data, :y)
-        res.y = data.y
-    end
-    res
-end
-function poly(data, degree, predictors::NTuple{2})
-    cn = colnames(data)
-    col1 = colname(cn, predictors[1])
-    col2 = colname(cn, predictors[2])
-    res = DataFrame([getproperty(data, col1) .^ d1 .* getproperty(data, col2) .^ d2
-                     for d1 in 0:degree, d2 in 0:degree if 0 < d1 + d2 ≤ degree],
-                    [Symbol(polysymbol(col1, d1), polysymbol(col2, d2))
-                     for d1 in 0:degree, d2 in 0:degree if 0 < d1 + d2 ≤ degree])
-    if hasproperty(data, :y)
-        res.y = data.y
-    end
-    res
-end
-poly(_, _, _) = error("Polynomials in more than 2 predictors are not implemented.")
-
-Base.@kwdef mutable struct Polynomial{T} <: Static
-    degree::Int = 3
-    predictors::T = (1,)
-end
-MLJ.transform(p::Polynomial, _, X) = poly(X, p.degree, p.predictors)
-PolynomialRegressor(; kwargs...) = error("`PolynomialRegressor(degree, regressor) is deprecated. Use e.g. `@pipeline(Polynomial(degree), LinearRegressor())` instead.")
-
 """
     biplot(pca; pc = (1, 2), score_style = :text, loading = :all)
 
@@ -160,6 +115,70 @@ function biplot(m;
           tickfontcolor = RGB(1, 0, 0))
     p
 end
+end # Plots
+@require DataFrames="a93c6f00-e57d-5684-b7b6-d8193f3e46c0" begin
+using DataFrames
+polysymbol(x, d) = Symbol(d == 0 ? "" : d == 1 ? "$x" : "$x^$d")
+
+colnames(df::AbstractDataFrame) = names(df)
+colnames(d::NamedTuple) = keys(d)
+colname(names, predictor::Int) = names[predictor]
+colname(names, predictor::Symbol) = predictor ∈ names || string(predictor) ∈ names ? Symbol(predictor) : error("Predictor $predictor not found in $names.")
+function poly(data, degree, predictors::NTuple{1})
+    cn = colnames(data)
+    col = first(cn)
+    if length(cn) > 1
+        @warn "Multiple columns detected. Taking $col to expand as polynomial."
+    end
+    res = DataFrame([getproperty(data, col) .^ k for k in 1:degree],
+                    [polysymbol(col, k) for k in 1:degree])
+    if hasproperty(data, :y)
+        res.y = data.y
+    end
+    res
+end
+function poly(data, degree, predictors::NTuple{2})
+    cn = colnames(data)
+    col1 = colname(cn, predictors[1])
+    col2 = colname(cn, predictors[2])
+    res = DataFrame([getproperty(data, col1) .^ d1 .* getproperty(data, col2) .^ d2
+                     for d1 in 0:degree, d2 in 0:degree if 0 < d1 + d2 ≤ degree],
+                    [Symbol(polysymbol(col1, d1), polysymbol(col2, d2))
+                     for d1 in 0:degree, d2 in 0:degree if 0 < d1 + d2 ≤ degree])
+    if hasproperty(data, :y)
+        res.y = data.y
+    end
+    res
+end
+poly(_, _, _) = error("Polynomials in more than 2 predictors are not implemented.")
+end # DataFrames
+@require MLJ="add582a8-e3ab-11e8-2d5e-e98b27df1bc7" begin
+using MLJ
+Base.@kwdef mutable struct Polynomial{T} <: Static
+    degree::Int = 3
+    predictors::T = (1,)
+end
+MLJ.transform(p::Polynomial, _, X) = poly(X, p.degree, p.predictors)
+export Polynomial
+PolynomialRegressor(; kwargs...) = error("`PolynomialRegressor(degree, regressor) is deprecated. Use e.g. `@pipeline(Polynomial(degree), LinearRegressor())` instead.")
+end # MLJ
+end # __init__
+
+export fitted_linear_func
+
+
+function fitted_linear_func(mach)
+    θ̂ = fitted_params(mach)
+    θ̂₀ = θ̂.intercept
+    θ̂₁ = θ̂.coefs[1][2]
+    x -> θ̂₀ + θ̂₁ * x
+end;
+
+_grid(x, y) = (repeat(x, length(y)), repeat(y, inner = length(x)))
+function grid(x, y; names = (:X, :Y), output_format = NamedTuple)
+    t = NamedTuple{names}(_grid(x, y))
+    output_format(t)
+end
 
 function embed_figure(name)
     "![](data:img/png; base64,
@@ -168,60 +187,44 @@ function embed_figure(name)
 end
 
 function start()
+    nb = joinpath(project_relative_path(), "index.jl")
+    exeflags = ["--project=$(project_relative_path())"]
     sysimg = project_relative_path("precompile", "mlcourse.so")
-    root = project_relative_path()
-    exe = joinpath(Sys.BINDIR, "julia")
-    script = :(using Pkg;
-               Pkg.activate($root);
-               using Pluto;
-               Pluto.run(notebook = $(joinpath(root, "index.jl"))))
-    if isfile(sysimg)
-        run(`$exe -J$sysimg -e $script`)
-    else
-        run(`$exe -e $script`)
-    end
+    isfile(sysimg) && push!(exeflags, "--sysimage=$sysimg")
+    pid = Distributed.addprocs(1, exeflags = exeflags) |> first
+    expr = :(using Pluto; Pluto.run(notebook = $nb,
+                                    workspace_use_distributed = false,
+                                    dismiss_update_notification = true))
+    @async Distributed.remotecall_eval(Main, [pid], expr)
+    println("Starting a Pluto notebook in your browswer.
+Please use `MLCourse.stop()` to interrupt the Pluto notebook server.")
 end
 
-function update()
+stop() = Distributed.interrupt()
+
+function update(; create_sysimage = true, kwargs...)
     @info "Performing an automatic update while keeping local changes.
     If this fails, please run manually `git pull` in the directory
     `$(project_relative_path())`."
     current_dir = pwd()
     cd(project_relative_path())
-    if !isempty(readlines(`git diff --stat`))
-        run(`git add -u`)
-        run(`git commit -m "automatic commit of local changes"`)
+    if !isempty(readlines(`$(git()) diff --stat`))
+        run(`$(git()) add -u`)
     end
-    run(`git pull -s recursive -X patience -X ours -X ignore-all-space --no-edit`)
+    if !isempty(readlines(`$(git()) diff --cached`))
+        run(`$(git()) -c user.name="student" -c user.email="student@mlcourse" commit -m "automatic commit of local changes"`)
+    end
+    run(`$(git()) pull -s recursive -X patience -X ours -X ignore-all-space --no-edit`)
     cd(current_dir)
     Pkg.activate(project_relative_path())
     Pkg.instantiate()
+    create_sysimage && MLCourse.create_sysimage(; kwargs...)
 end
 
-function create_sysimage()
-    exe = joinpath(Sys.BINDIR, "julia")
-    run(`$exe $(project_relative_path("precompile", "precompile.jl"))`)
+function create_sysimage(; sysimage_path = project_relative_path("precompile", "mlcourse.so"))
+    PackageCompiler.create_sysimage([:Pluto, :MLJ, :MLJLinearModels, ];
+                                    sysimage_path,
+                                    precompile_execution_file=project_relative_path("precompile", "warmup.jl"))
 end
-
-if isfile(project_relative_path("precompile", "mlcourse.so"))
-    @warn "You may have to create a new system image with this update."
-end
-@info """\n
-    Welcome to the Machine Learning Course v$(_VERSION)!
-
-    Get started with:
-
-    julia> MLCourse.start()
-
-    Or create a new system image for faster loading of the notebooks.
-    This might take several minutes (~30 minutes on my laptop).
-    During this process you may be asked to download data sets (answer: yes :))
-    and a browser window will open, which you can close again. Do not interrupt
-    the process. If all goes well it shows at the end for several minutes:
-    `[ Info: PackageCompiler: creating system image object file, this might take a while...`
-
-    julia> MLCourse.create_sysimage() # Be patient!
-\n"""
-
 
 end # module

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.2
+# v0.17.5
 
 using Markdown
 using InteractiveUtils
@@ -63,7 +63,7 @@ end;
 data1 = data_split(data_generator(seed = 1))
 
 # ╔═╡ 2e02ac0d-c4d0-47ba-be57-445adeb6ab8b
-losses1 = [fit_and_evaluate(Polynomial(degree) |> LinearRegressor(), data1)
+losses1 = [fit_and_evaluate(Polynomial(; degree) |> LinearRegressor(), data1)
            for degree in 1:10]
 
 # ╔═╡ 91eecd2b-af18-4a63-9684-28950e604d1a
@@ -78,7 +78,7 @@ md"For this seed of the random number generator the optimal degree (x coordinate
 Let us now look at other seeds."
 
 # ╔═╡ ac3c7e84-6c47-4dc1-b862-de4cfb05dad9
-losses = [fit_and_evaluate(PolynomialRegressor(degree),
+losses = [fit_and_evaluate(Polynomial(; degree) |> LinearRegressor(),
                            data_split(data_generator(seed = seed)))
           for degree in 1:10, seed in 1:20]
 
@@ -131,7 +131,7 @@ end
 cross_validation_sets(1:100, 4)
 
 # ╔═╡ c14c9e49-a993-456e-9115-97da86f8e498
-losses1_cv10 = [cross_validation(PolynomialRegressor(degree),
+losses1_cv10 = [cross_validation(Polynomial(; degree) |> LinearRegressor(),
 		                         data_generator(seed = 1),
 		                         K = 10) for degree in 1:10]
 
@@ -143,7 +143,7 @@ let validlosses = getproperty.(losses1_cv10, :valid), i = argmin(validlosses)
 end
 
 # ╔═╡ 1e584a38-2fef-4877-87f6-92237d71c4b3
-losses_cv10 = [cross_validation(PolynomialRegressor(degree),
+losses_cv10 = [cross_validation(Polynomial(; degree) |> LinearRegressor(),
                                 data_generator(seed = seed),
                                 K = 10)
                for degree in 1:10, seed in 1:20]
@@ -175,7 +175,7 @@ md"`MLJ` has the very useful function `evaluate!`. Have a look at the Live docs 
 
 # ╔═╡ 8ae790b3-3987-4f41-8e21-adbb71081eb9
 let data = data_generator(seed = 1, n = 100)
-    evaluate!(machine(PolynomialRegressor(4),
+    evaluate!(machine(Polynomial(degree = 4) |> LinearRegressor(),
                       select(data, :x), data.y),
               resampling = CV(nfolds = 10), measure = rmse)
 end
@@ -185,7 +185,7 @@ md"We can use this now to find the best degree with 10-fold cross-validation for
 
 # ╔═╡ abb71af3-8aae-4806-9d5a-d144c15d22ef
 losses_mlj_cv10 = [let data = data_generator(seed = seed)[1:100, :]
-                       evaluate!(machine(PolynomialRegressor(degree),
+                       evaluate!(machine(Polynomial(; degree) |> LinearRegressor(),
                                          select(data, :x),
                                          data.y),
                                 resampling = CV(nfolds = 10),
@@ -295,7 +295,6 @@ MLCourse.footer()
 # ╟─7eb6a060-f948-4d85-881a-4909e74c15bd
 # ╠═7dd7e9a7-9245-4c64-af0c-8f7d2f62b2bf
 # ╠═fa9b4b9e-4e97-4e5c-865d-ad3ef288e4cf
-# ╠═a2f2b20f-472a-4e41-8696-0b745416c853
 # ╠═2e02ac0d-c4d0-47ba-be57-445adeb6ab8b
 # ╟─91eecd2b-af18-4a63-9684-28950e604d1a
 # ╟─b45b32b1-8a65-4823-b3bb-f0b7cc57604b

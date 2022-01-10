@@ -107,9 +107,9 @@ version = "0.9.11"
 
 [[deps.CUDA]]
 deps = ["AbstractFFTs", "Adapt", "BFloat16s", "CEnum", "CompilerSupportLibraries_jll", "ExprTools", "GPUArrays", "GPUCompiler", "LLVM", "LazyArtifacts", "Libdl", "LinearAlgebra", "Logging", "Printf", "Random", "Random123", "RandomNumbers", "Reexport", "Requires", "SparseArrays", "SpecialFunctions", "TimerOutputs"]
-git-tree-sha1 = "e25f12e4266518b3f551e144ea444a4f425c09ca"
+git-tree-sha1 = "5bd05cd090588389201f7e1c703d50ace07be861"
 uuid = "052768ef-5323-5732-b1bb-66c8b64840ba"
-version = "3.6.3"
+version = "3.6.4"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -429,9 +429,9 @@ version = "0.12.7"
 
 [[deps.FiniteDiff]]
 deps = ["ArrayInterface", "LinearAlgebra", "Requires", "SparseArrays", "StaticArrays"]
-git-tree-sha1 = "8b3c09b56acaf3c0e581c66638b85c8650ee9dca"
+git-tree-sha1 = "b374f22e8565a01d6e5db1e8640c3c5e3fe7d564"
 uuid = "6a86dc24-6348-571c-b903-95158fe2bd41"
-version = "2.8.1"
+version = "2.9.0"
 
 [[deps.FixedPointNumbers]]
 deps = ["Statistics"]
@@ -781,15 +781,15 @@ version = "0.6.0"
 
 [[deps.LLVM]]
 deps = ["CEnum", "LLVMExtra_jll", "Libdl", "Printf", "Unicode"]
-git-tree-sha1 = "7cc22e69995e2329cc047a879395b2b74647ab5f"
+git-tree-sha1 = "f8dcd7adfda0dddaf944e62476d823164cccc217"
 uuid = "929cbde3-209d-540e-8aea-75f648917ca0"
-version = "4.7.0"
+version = "4.7.1"
 
 [[deps.LLVMExtra_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
-git-tree-sha1 = "c5fc4bef251ecd37685bea1c4068a9cfa41e8b9a"
+git-tree-sha1 = "62115afed394c016c2d3096c5b85c407b48be96b"
 uuid = "dad2f222-ce93-54a1-a47d-0025e8a3acab"
-version = "0.0.13+0"
+version = "0.0.13+1"
 
 [[deps.LZO_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -959,9 +959,9 @@ version = "0.17.0"
 
 [[deps.MLJBase]]
 deps = ["CategoricalArrays", "CategoricalDistributions", "ComputationalResources", "Dates", "DelimitedFiles", "Distributed", "Distributions", "InteractiveUtils", "InvertedIndices", "LinearAlgebra", "LossFunctions", "MLJModelInterface", "Missings", "OrderedCollections", "Parameters", "PrettyTables", "ProgressMeter", "Random", "ScientificTypes", "StatisticalTraits", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "54cae1f0bde7bbc72fe7ff42353b7880347bd0d5"
+git-tree-sha1 = "100d3500b1616088858eb541680c9cc954a53aa7"
 uuid = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
-version = "0.19.2"
+version = "0.19.3"
 
 [[deps.MLJClusteringInterface]]
 deps = ["Clustering", "Distances", "MLJModelInterface"]
@@ -1009,9 +1009,9 @@ version = "0.1.4"
 
 [[deps.MLJLinearModels]]
 deps = ["DocStringExtensions", "IterativeSolvers", "LinearAlgebra", "LinearMaps", "MLJModelInterface", "Optim", "Parameters"]
-git-tree-sha1 = "dfbf4a5a8454034d21b6cfd9fd5a7960c8f7fb88"
+git-tree-sha1 = "6537fd96eb429c6e11a03c5910880c6da1837488"
 uuid = "6ee0df7b-362f-4a72-a706-9e79364fb692"
-version = "0.5.7"
+version = "0.6.0"
 
 [[deps.MLJModelInterface]]
 deps = ["Random", "ScientificTypesBase", "StatisticalTraits"]
@@ -1242,10 +1242,10 @@ uuid = "90014a1f-27ba-587c-ab20-58faa44d9150"
 version = "0.11.5"
 
 [[deps.PackageCompiler]]
-deps = ["Artifacts", "LazyArtifacts", "Libdl", "Pkg", "RelocatableFolders", "UUIDs"]
-git-tree-sha1 = "a16924b37299cc7d6106fac255b44a8c79c7c21f"
+deps = ["Artifacts", "LazyArtifacts", "Libdl", "Pkg", "Printf", "RelocatableFolders", "UUIDs"]
+git-tree-sha1 = "9d979ef195d8a2dc0e3ba409d6f624439edc4d26"
 uuid = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
-version = "1.7.7"
+version = "2.0.4"
 
 [[deps.PaddedViews]]
 deps = ["OffsetArrays"]
@@ -1702,9 +1702,9 @@ version = "0.7.3"
 
 [[deps.TimerOutputs]]
 deps = ["ExprTools", "Printf"]
-git-tree-sha1 = "7cb456f358e8f9d102a8b25e8dfedf58fa5689bc"
+git-tree-sha1 = "a5aed757f65c8a1c64503bc4035f704d24c749bf"
 uuid = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
-version = "0.5.13"
+version = "0.5.14"
 
 [[deps.TranscodingStreams]]
 deps = ["Random", "Test"]

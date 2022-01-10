@@ -10,28 +10,22 @@ julia> using Pkg
        Pkg.develop(url = "https://github.com/jbrea/MLCourse")
        Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
        Pkg.instantiate()
+       using MLCourse
+       MLCourse.create_sysimage()
 ```
 
-To use the notebooks, start julia and type
+To use the notebooks, restart julia and type
 ```julia
 julia> using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
        using MLCourse
        MLCourse.start()
 ```
 
-If git is installed on your system (otherwise download it e.g.
-[here](https://git-scm.com/downloads)) you can update the course material with
+You can update the course material with
 ```julia
 julia> using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
        using MLCourse
-       MLCourse.update()
-```
-
-To reduce loading times of the pluto notebooks you can create a custom system image with
-```julia
-julia> using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-       using MLCourse
-       MLCourse.create_sysimage()
+       MLCourse.update(create_sysimage = true)
 ```
 
 ![](https://www.epfl.ch/wp/5.5/wp-content/themes/wp-theme-2018/assets/svg/epfl-logo.svg)

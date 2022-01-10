@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.2
+# v0.17.5
 
 using Markdown
 using InteractiveUtils
@@ -32,9 +32,6 @@ md"# Ridge Regression (L2 Regularization)
 
 # ╔═╡ 9e1e8284-a8c1-47a9-83d0-2d8fbd8ce005
 n = 30; x = rand(n); y = 2.2x .+ .3 .+ .2randn(n);
-
-# ╔═╡ 1009e251-59af-4f1a-9d0a-e96f4b696cad
-md"λ₂ = $(@bind λ₂ Slider(0:1:100, show_value = true))"
 
 # ╔═╡ 64b9cfa0-99f7-439b-b70e-f9266754ff74
 md"In the following cell there is some custom code to run ridge regression and the lasso for the simple example of 1-dimensional input."
@@ -73,6 +70,9 @@ begin
        (β₀ = β₀, β₁ = β₁)
     end
 end;
+
+# ╔═╡ 1009e251-59af-4f1a-9d0a-e96f4b696cad
+md"λ₂ = $(@bind λ₂ Slider(0:1:100, show_value = true))"
 
 # ╔═╡ 50ac0b07-ffee-40c3-843e-984b3c628282
 l2coefs = ridge_regression(x, y, λ₂)
@@ -195,8 +195,8 @@ $(@bind lambda Slider(-14:.1:.5, default = -4))
 md"λ = $(lambda == -14 ? 0 : 10.0^lambda)"
 
 # ╔═╡ bdbf0dfd-8da5-4e54-89c4-ef4d6b3796ce
-let X = select(poly(regression_data, degree), Not(:y)), y = regression_data.y
-    mach = fit!(machine(RidgeRegressor(lambda = lambda == -14 ? 0 : 10.0^lambda),
+let X = select(regression_data, Not(:y)), y = regression_data.y
+    mach = fit!(machine(Polynomial(; degree) |> RidgeRegressor(lambda = lambda == -14 ? 0 : 10.0^lambda),
                         X, y), verbosity = 0)
     p1 = scatter(regression_data.x, y, label = "training data", ylims = (-.1, 1.1))
     plot!(f, label = "generator", c = :green, w = 2)
@@ -209,7 +209,7 @@ end
 
 # ╔═╡ fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
 begin
-    model = @pipeline(Polynomial(), RidgeRegressor())
+    model = Polynomial() |> RidgeRegressor()
     self_tuning_model = TunedModel(model = model,
                                    tuning =  Grid(goal = 500),
                                    resampling = CV(nfolds = 5),
