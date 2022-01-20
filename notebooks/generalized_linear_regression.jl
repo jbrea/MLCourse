@@ -394,7 +394,7 @@ md"Let us evaluate the fit in terms of commonly used losses for binary classific
 
 # ╔═╡ 8ed39cdc-e99e-48ff-9973-66df41aa0f78
 function losses(machine, input, response)
-    (loglikelihood = -sum(log_loss(predict(machine, input), response)),
+    (negative_loglikelihood = sum(log_loss(predict(machine, input), response)),
      misclassification_rate = mean(predict_mode(machine, input) .!= response),
      accuracy = accuracy(predict_mode(machine, input), response),
      auc = MLJ.auc(predict(machine, input), response)

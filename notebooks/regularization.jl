@@ -141,7 +141,9 @@ end
 md"Instead of using the custom code to compute the ridge regression and the lasso we could have used some MLJ functions."
 
 # ╔═╡ c1033416-334e-4b0e-b81e-6f9137402730
-let mach = fit!(machine(RidgeRegressor(lambda = 25), DataFrame(x = x), y))
+let mach = fit!(machine(RidgeRegressor(lambda = 25,
+	                                   scale_penalty_with_samples = false),
+	                    DataFrame(x = x), y))
 	fitted_params(mach)
 end
 
@@ -156,6 +158,7 @@ let mach = fit!(machine(LassoRegressor(lambda = 25,
 	                                   # usually the intercept is not penalized,
 	                                   # but here we do penalize it.
 	                                   penalize_intercept = true,
+	                                   scale_penalty_with_samples = false,
 	                                   # usually the default optimizer is quite good,
 	                                   # but here we decrease the tolerance to get 
 	                                   # higher precision.
@@ -201,7 +204,7 @@ let X = select(regression_data, Not(:y)), y = regression_data.y
     p1 = scatter(regression_data.x, y, label = "training data", ylims = (-.1, 1.1))
     plot!(f, label = "generator", c = :green, w = 2)
     grid = 0:.01:1
-    pred = predict(mach, poly((x = grid,), degree))
+    pred = predict(mach, (x = grid,))
     plot!(grid, pred,
           label = "fit", w = 3, c = :red, legend = :topleft)
     annotate!([(.28, .6, "reducible error ≈ $(round(mean((pred .- f.(grid)).^2), sigdigits = 3))")])
@@ -265,7 +268,7 @@ end;
 md"The `LogisticClassifier` and the `MultinomialClassifier` have a `penalty` argument that can be used to enforce an L1 or L2 penalty. Look up the documentation to learn more about it."
 
 # ╔═╡ d956613e-db32-488c-8ebb-fd61dfa31e59
-spam_fit = fit!(machine(LogisticClassifier(penalty = :l2, lambda = 2e-2),
+spam_fit = fit!(machine(LogisticClassifier(penalty = :l2, lambda = 1e-5),
                         select(spam_train, Not(:spam_or_ham)),
                         spam_train.spam_or_ham));
 

@@ -31,7 +31,7 @@ function gradient_descent(f, x₀, η, T; callback = x -> nothing)
 end
 end # Zygote
 @require Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80" begin
-using Plots
+import Plots: plot!, scatter, scatter!, annotate!
 export plot_residuals!, biplot
 function plot_residuals!(x, y, f; kwargs...)
     for (xi, yi) in zip(x, y)
@@ -79,11 +79,11 @@ function biplot(m;
                 xlabel = "PC$(pc[1])", ylabel = "PC$(pc[2])",
                 framestyle = :axis, markeralpha = score_style == :text ? 0 : 1,
                 c = :gray,
-                txt = score_style == :text ? text.(1:nrows(scores), 8, :gray) :
+                txt = score_style == :text ? Plots.text.(1:nrows(scores), 8, :gray) :
                                              nothing,
                 markersize = score_style == :text ? 0 :
                              isa(score_style, Int) ? score_style : 3)
-    plot!(p[1], inset = (1, bbox(0, 0, 1, 1)),
+    plot!(p[1], inset = (1, Plots.bbox(0, 0, 1, 1)),
           right_margin = 10Plots.mm, top_margin = 10Plots.mm)
     p2 = p[1].plt.subplots[end]
     plot!(p2, aspect_ratio = 1, mirror = true, legend = false)
@@ -111,8 +111,8 @@ function biplot(m;
     scatter!(p2, 1.1*ϕ[:, pc[1]], 1.1*ϕ[:, pc[2]],
              markersize = 0, markeralpha = 0) # dummy for sensible xlims and xlims
     plot!(p2,
-          background_color_inside = RGBA{Float64}(0, 0, 0, 0),
-          tickfontcolor = RGB(1, 0, 0))
+          background_color_inside = Plots.RGBA{Float64}(0, 0, 0, 0),
+          tickfontcolor = Plots.RGB(1, 0, 0))
     p
 end
 end # Plots

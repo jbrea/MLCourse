@@ -164,7 +164,7 @@ Consider an agent that experiences episode 1:
 \begin{align*}
 S_1 &= s_1, A_1 = a_1, R_2 = 2,\\
 S_2 &= s_7, A_2 = a_2, R_3 = 1,\\
-S_3 &= s_6, A_2 = a_2, R_4 = 4,\\
+S_3 &= s_6, A_3 = a_2, R_4 = 4,\\
 S_4 &= s_3, A_4 = a_1, R_5 = 0
 \end{align*}
 ```
