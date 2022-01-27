@@ -2,7 +2,7 @@ name: bind server
 
 on:
   push:
-    branches: ['bio322fall21']
+    branches: ['gyminfspring22']
 
 env:
   REGISTRY: ghcr.io
