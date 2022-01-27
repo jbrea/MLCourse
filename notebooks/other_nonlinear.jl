@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.1
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -283,7 +283,7 @@ In this section we fit a support vector machine to some binary classification ta
 "
 
 # ╔═╡ 2d9cf0a4-6ba7-438b-8e8f-4a911a340f06
-Random.seed!(175); X, y = make_blobs(centers = 3); # generate some random data
+Random.seed!(23); X, y = make_blobs(centers = 3); # generate some random data
 
 # ╔═╡ 87a48194-fc87-414f-8d44-8bf00a87b3ec
 y[y .== 3] .= 1; # we want only two classes here
@@ -292,7 +292,7 @@ y[y .== 3] .= 1; # we want only two classes here
 m5 = machine(SVC(), X, y) |> fit!;
 
 # ╔═╡ a48c53e8-99f7-4b54-9a80-0be243b4cddb
-let grid = MLCourse.grid(-9:.5:11.5, -8:.5:8, names = (:x1, :x2))
+let grid = MLCourse.grid(-5:.5:11.5, -9:.5:12, names = (:x1, :x2))
 	pred = predict(m5, grid)
 	scatter(grid.x1, grid.x2, c = Int.(int.(pred)),
 		    markersize = 2, markerstrokewidth = 0, legend = false)

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.1
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -20,7 +20,7 @@ begin
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using MLCourse, Plots, MLJ, DataFrames, Random, CSV, Flux, Distributions,
           StatsPlots, MLJFlux, OpenML, Random
-    Core.eval(Main, :(using MLJ)) # hack to make @pipeline work in notebooks
+    import MLCourse: heaviside
 end
 
 # ╔═╡ 83e2c454-042f-11ec-32f7-d9b38eeb7769
@@ -200,18 +200,6 @@ begin
 end;
 
 
-# ╔═╡ 15cd82d3-c255-4eb5-9f0d-1e662c488027
-md"If you want to tinker more with simple neural networks there is [this nice web-application](http://playground.tensorflow.org/)."
-
-# ╔═╡ 9e6ad99f-8cd4-4372-a4a2-f280e49e21a3
-begin
-    heaviside(x) = x > 0 ? 1. : 0.;
-    function tocol(y)
-        ma, mi = maximum(y), minimum(y)
-        palette(:jet1, 101)[min.(101, max.(1, reshape(floor.(Int, (y .+ 6) * 5) .+ 1, :)))]
-    end
-end;
-
 # ╔═╡ 653ea4e8-47b2-4d9f-bc5c-583468d6e1ae
 md"## 1D to 1D
 **First Layer** activation function ``g^{(1)}`` = $(@bind g1 Select(string.([relu, selu, sigmoid, tanh, identity, heaviside])))
@@ -283,6 +271,17 @@ md"## 2D to 1D
 ``w_{14}^{(2)}`` = $(@bind w142_2d Slider(-3.:.1:3., default = floor(60*(rand()-.5))/10, show_value = true))
 "
 
+# ╔═╡ 15cd82d3-c255-4eb5-9f0d-1e662c488027
+md"If you want to tinker more with simple neural networks there is [this nice web-application](http://playground.tensorflow.org/)."
+
+# ╔═╡ 9e6ad99f-8cd4-4372-a4a2-f280e49e21a3
+begin
+    function tocol(y)
+        ma, mi = maximum(y), minimum(y)
+        palette(:jet1, 101)[min.(101, max.(1, reshape(floor.(Int, (y .+ 6) * 5) .+ 1, :)))]
+    end
+end;
+
 # ╔═╡ 66bc40f3-7710-4892-ae9f-79b9c850b0ea
 let x = -5:.1:5
     grid = MLCourse.grid(x, x, output_format = DataFrame)
@@ -306,7 +305,6 @@ let x = -5:.1:5
          py, layout = (2, 1), markersize = 2, markerstrokewidth = 0,
                  xlabel = "x₁", ylabel = "x₂", legend = false, aspect_ratio = 1)
 end
-
 
 # ╔═╡ 9d3e7643-34fd-40ee-b442-9d2a434f30e0
 Markdown.parse("# Regression with MLPs
@@ -335,14 +333,14 @@ nn = NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
                             optimiser = ADAMW(),
                             batch_size = 128,
                             epochs = 150)
-mach = machine(@pipeline(Standardizer(), nn),
+mach = machine(Standardizer() |> nn,
                weather_x, weather_y)
 fit!(mach, verbosity = 2)
 ```
 
 !!! note
 
-    We use here a `@pipeline` that standardizes with a `Standardizer`
+    We use here a `Pipeline` (`|>`) that standardizes with a `Standardizer`
     the input first to mean zero and standard deviation one.
     We do this, because the usual initializations
     of neural networks work best with standardized input.
@@ -525,6 +523,7 @@ md"# Exercises
     * How many output units should this neural network have?
     * What kind of activation function would you choose for the output layer?
     * Which loss function would you use to estimate the network parameters?
+1. (Optional) Grant Sanderson has some beautiful [videos about neural networks](https://www.3blue1brown.com/topics/neural-networks). Have a look at them, if you are interested.
 
 ## Applied
 1. In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `OpenML.describe_dataset(505)`. The first 100 columns of this data set contain measurements of near infrared absorbance at different frequencies for different pieces of meat. *Hint:* you can select all these columns based on name with `select(data, r\"absorbance\")` (The \"r\" in this command stands for Regex and it means that all columns with name containing the word \"absorbance\" should be selected). The column `:fat` contains the fat content of each piece of meat. We will use the first 172 data points for training and validation and the rest of the data points as a test set. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline.

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.5
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -19,7 +19,7 @@ begin
     using Pkg
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using MLJ, MLJLinearModels, Plots, LinearAlgebra, Random, DataFrames, CSV, MLCourse
-    import MLCourse: Polynomial, poly
+    import MLCourse: Polynomial
 end
 
 
@@ -257,11 +257,11 @@ begin
     spam_train = CSV.read(joinpath(dirname(pathof(MLCourse)), "..", "data",
                                    "spam_preprocessed.csv"), DataFrame)
 	spam_train.spam_or_ham = String.(spam_train.spam_or_ham)
-    coerce!(spam_train, :spam_or_ham => Binary)
+    coerce!(spam_train, :spam_or_ham => OrderedFactor)
     spam_test = CSV.read(joinpath(dirname(pathof(MLCourse)), "..", "data",
                                   "spam_preprocessed_test.csv"), DataFrame)
 	spam_test.spam_or_ham = String.(spam_test.spam_or_ham)
-    coerce!(spam_test, :spam_or_ham => Binary)
+    coerce!(spam_test, :spam_or_ham => OrderedFactor)
 end;
 
 # ╔═╡ c5ef5d4e-200d-46d9-86fa-50af1896a6c3

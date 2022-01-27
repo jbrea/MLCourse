@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.2
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -63,7 +63,7 @@ let
 end
 
 # ╔═╡ a0bb0a63-67e2-414e-a3f0-b76875c1295d
-m1 = fit!(machine(PCA(), x));
+m1 = fit!(machine(PCA(), DataFrame(x, :auto)));
 
 # ╔═╡ 4439f803-e70f-4231-82e9-88bb574498f4
 ĥ = MLJ.transform(m1, x);
@@ -154,7 +154,7 @@ let
 end
 
 # ╔═╡ 48528bf7-8a40-4773-944c-54d0446a5cac
-sma = fit!(machine(PCA(mean = 0), sdata));
+sma = fit!(machine(PCA(mean = 0), DataFrame(sdata, :auto)));
 
 # ╔═╡ 9a5e0976-1c0e-45fc-855e-b0fbec801e8c
 srec = MLJ.transform(sma, sdata);
@@ -217,10 +217,10 @@ fitted_params(pca) # shows the loadings as columns
 report(pca)
 
 # ╔═╡ 89406c26-7cba-4dd2-a6a3-8d572b440e01
-biplot(pca)
+gr(); biplot(pca)
 
 # ╔═╡ 743477bb-6cf0-419e-814b-e774738e8d89
-m2 = fit!(machine(PCA(maxoutdim = 2), pca_data));
+m2 = fit!(machine(PCA(maxoutdim = 2), DataFrame(pca_data, :auto)), verbosity = 0);
 
 # ╔═╡ 4a8188a0-c809-4014-9fef-cf6b5f830b1b
 begin
@@ -364,7 +364,7 @@ md"An interesting property of the scores is that their covariance matrix is diag
 
 # ╔═╡ ded0e6cd-e969-47d5-81cf-e2a967bc0a34
 let
-    mach = fit!(machine(PCA(pratio = 1), pca_data))
+    mach = fit!(machine(PCA(pratio = 1), DataFrame(pca_data, :auto)))
     Z = MLJ.matrix(MLJ.transform(mach, pca_data))
     (ZtZ = chop.(Z'*Z),) # chop sets values close to zero to zero.
 end
@@ -491,8 +491,8 @@ weather_mach = fit!(machine(@pipeline(Standardizer(), PCA()), weather));
 # ╔═╡ 24179171-3992-4253-88a5-15ccdbb26e13
 let
     gr()
-    p1 = biplot(weather_mach)
-    p2 = biplot(weather_mach, pc = (3, 4))
+    p1 = biplot(weather_mach, score_style = 2)
+    p2 = biplot(weather_mach, score_style = 2, pc = (3, 4))
     plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
 
@@ -611,7 +611,7 @@ mach1 = fit!(machine(MLJLinearModels.LinearRegressor(),
 rmse(predict(mach1, pcr_data_x[test_idx, :]), pcr_data_y[test_idx])
 
 # ╔═╡ 434f1616-e028-4043-9aef-049e490525f5
-mach2 = fit!(machine(@pipeline(PCA(), MLJLinearModels.LinearRegressor()),
+mach2 = fit!(machine(PCA() |> MLJLinearModels.LinearRegressor(),
 		             pcr_data_x[train_idx, :],
 		             pcr_data_y[train_idx]));
 
@@ -629,6 +629,7 @@ md"""# Exercises
 
 $(Random.seed!(818); let x = ([6 4] .* randn(400, 2)) * [-1 1
                                       -2 -.01]
+    gr()
     scatter(x[:, 1], x[:, 2], xlim = (-32, 32), ylim = (-16, 16),
             aspect_ratio = 1, legend = false, xlabel = "X₁", ylabel = "X₂")
   end)
@@ -636,7 +637,8 @@ $(Random.seed!(818); let x = ([6 4] .* randn(400, 2)) * [-1 1
 (b) In the figure below you see the scores of ``n = 40`` measuments and the loadings of a principal component analysis. How many features ``p`` were measured in this data set?
 
 $(Random.seed!(17); let data = DataFrame(Array(DataFrame(X1 = 6*randn(40), X2 = 4 * randn(40), X3 = randn(40)*2, X4 = randn(40)*2)) * randn(4, 4), :auto)
-    biplot(fit!(machine(PCA(), data)))
+    gr()
+    biplot(fit!(machine(PCA(), data), verbosity = 0))
 end
 )
 
@@ -646,7 +648,8 @@ end
 The figures show biplots of principal component analysis applied to 30 three-dimensional points.
 
 $(Random.seed!(123); let d = DataFrame(randn(30, 2) * randn(2, 3) .+ randn(30, 3) * 1e-6, :auto)
-    p = fit!(machine(PCA(pratio = 1, mean = 0), d))
+    p = fit!(machine(PCA(pratio = 1, mean = 0), d), verbosity = 0)
+    gr()
     plot(biplot(p), biplot(p, pc = (1, 3)), layout = (1, 2), size = (700, 350))
 end)
 
@@ -802,7 +805,7 @@ MLCourse.footer()
 # ╟─218d4c11-45a1-4d92-8b48-d08251804638
 # ╠═0943f000-a148-4470-ae5e-9d8d39cd8207
 # ╠═2e86337e-9fb8-4dd9-ac96-c1177e7ebd16
-# ╟─24179171-3992-4253-88a5-15ccdbb26e13
+# ╠═24179171-3992-4253-88a5-15ccdbb26e13
 # ╟─8bc5f5b1-cda1-4018-a215-5a1900c2a9d2
 # ╟─d44be4c6-a409-421a-8e68-39fa752db4c0
 # ╠═d3b769d7-ec71-4496-926a-e838c3b50c2a

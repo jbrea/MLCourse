@@ -1,12 +1,21 @@
 using Pkg
 Pkg.activate(joinpath(@__DIR__, ".."))
 
-using Pluto, MLCourse, MLJ, MLJLinearModels
+using Pluto, MLCourse, MLJ, MLJLinearModels, StatsPlots, DataFrames,
+      Distributions
 
 X, y = make_regression()
 
 mach = fit!(machine(LinearRegressor(), X, y), verbosity = 0)
+
 predict(mach)
+
+plot(rand(10), rand(10))
+
+df = DataFrame(a = rand(10), b = rand(10))
+@df df scatter(:a, :b)
+
+rand(Bernoulli(.4))
 
 redirect_stdout(Pipe()) do
 

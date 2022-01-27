@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.5
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -19,6 +19,7 @@ begin
     using Pkg
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using Random, Statistics, DataFrames, Plots, MLJ, MLJLinearModels, MLCourse
+	import MLCourse: fitted_linear_func
 end
 
 # ╔═╡ 269a609c-74af-4e7e-86df-e2279096a7a6
@@ -36,6 +37,8 @@ md"# When Linear Methods Are Not Flexible Enough
 We will use the function ``f(x) = 0.3 \sin(10x) + 0.7 x`` to design two artificial
 data sets: one for regression with a single predictor and one for classification
 with two predictors.
+
+In this section we will see that standard linear regression or classification is not flexible enough to fit the artifical data sets.
 "
 
 # ╔═╡ 12942f5a-efb1-11eb-399a-a1300d636217
@@ -51,8 +54,8 @@ begin
         X1 = rand(rng, n)
         X2 = rand(rng, n)
         df = DataFrame(X1 = X1, X2 = X2,
-                       y = σ.(20(f.(X1) .- X2)) .> rand(rng, n))
-        coerce!(df, :y => Multiclass)
+                       y = categorical(σ.(20(f.(X1) .- X2)) .> rand(rng, n),
+					                   levels = [false, true], ordered = true))
     end
 end;
 
@@ -95,21 +98,30 @@ and the large points are the training data."
 # ╔═╡ d487fcd9-8b45-4237-ab2c-21f82ddf7f7c
 md"## Polynomial Regression
 
+One way to increase the flexibility is to fit a polynomial. This can be achieved by running linear regression on a transformed data set. The transformation consists of computing higher powers of the original input. In this course we do this transformation with the static transformation machine `Polynomial`.
 "
 
 # ╔═╡ c50ed135-68d5-43bc-9c26-9c265702a1f0
 MLJ.transform(machine(Polynomial(degree = 5)), regression_data)
 
+# ╔═╡ 75c5471d-926d-4b05-9002-28b14e1dd428
+md"To create a machine that transforms the input to a polynomial representation and run linear regression on this transformed representation, we use an `MLJ.Pipeline`.
+Pipelines in MLJ can be written explicitely with `Pipeline(Polynomial(degree = 5), LinearRegressor())` or with the pipe operator `|>`, i.e. `Polynomial(degree = 5) |> LinearRegressor()`.
+"
+
 # ╔═╡ 710d3104-e197-44c1-a10b-de1098d57dd6
 md"degree = $(@bind degree Slider(1:17, default = 4, show_value = true))"
 
 # ╔═╡ ad50d244-c644-4f61-bd8b-995d0110811d
-m3 = machine(Polynomial(; degree) |> LinearRegressor(),
+m3 = machine(Polynomial(degree = degree) |> LinearRegressor(),
              select(regression_data, Not(:y)),
-             regression_data.y) |> fit!;
+             regression_data.y);
+
+# ╔═╡ e9b0ea86-a5f5-43fa-aa16-5a0240f298dd
+fit!(m3, verbosity = 0);
 
 # ╔═╡ 0272460a-5b9f-4728-a531-2b497b26c512
-function loss(mach, data, lossfunc; operation = predict)
+function compute_loss(mach, data, lossfunc; operation = predict)
     pred = operation(mach, select(data, Not(:y)))
     lossfunc(pred, data.y)
 end;
@@ -120,9 +132,9 @@ begin
     regression_test_data = regression_data_generator(n = 10^4)
     plosses = hcat([let m = fit!(machine(Polynomial(degree = d) |> LinearRegressor(),
                                          select(regression_data, Not(:y)),
-                                         regression_data.y))
-                        [loss(m, regression_data, mse),
-                         loss(m, regression_test_data, mse)]
+                                         regression_data.y), verbosity = 0)
+                        [compute_loss(m, regression_data, mse),
+                         compute_loss(m, regression_test_data, mse)]
                    end
                    for d in 1:17]...)
 end;
@@ -150,7 +162,7 @@ end
 md"## Polynomial Classification"
 
 # ╔═╡ 5ea1b31d-91e5-4c8f-93d6-5d31816fdbf5
-MLJ.transform(machine(Polynomial(degree = 3, predictors = (:X1, :X2))),
+MLJ.transform(machine(Polynomial(degree = 2, predictors = (:X1, :X2))),
 	          classification_data)
 
 # ╔═╡ 59acced5-16eb-49b8-8cf2-0c43a88d838e
@@ -159,21 +171,28 @@ md"degree = $(@bind degree2 Slider(1:17, default = 3, show_value = true))"
 # ╔═╡ 2fa54070-e261-462d-bd63-c225b92fa876
 m4 = machine(Polynomial(degree = degree2, predictors = (:X1, :X2)) |> LogisticClassifier(penalty = :none),
              select(classification_data, Not(:y)),
-             classification_data.y) |> fit!;
+             classification_data.y);
+
+# ╔═╡ e0acbf00-f6de-483b-902b-31db99298da7
+fit!(m4, verbosity = 0);
 
 # ╔═╡ 16f0d1b3-bd97-407d-9a79-25b0fb05bbeb
 begin
     classification_test_data = classification_data_generator(n = 10^4)
-    cplosses = hcat([let m = fit!(machine(Polynomial(degree = d, predictors = (:X1, :X2)) |> LogisticClassifier(penalty = :none),
+    cplosses = hcat([let m = fit!(machine(Polynomial(degree = d,
+                                                     predictors = (:X1, :X2)) |>
+                                          LogisticClassifier(penalty = :none),
                                           select(classification_data, Not(:y)),
-                                          classification_data.y))
-                         [mean(loss(m, classification_data, log_loss)),
-                          mean(loss(m, classification_test_data, log_loss))]
+                                          classification_data.y), verbosity = 0)
+                         [mean(compute_loss(m, classification_data, log_loss)),
+                          mean(compute_loss(m, classification_test_data, log_loss))]
                    end
                    for d in 1:17]...)
     c_irred_error = let data = classification_test_data,
                         p = σ.(20(f.(data.X1) .- data.X2))
-        mean(log_loss(UnivariateFinite([false, true], p, augment = true), data.y))
+        mean(log_loss(UnivariateFinite([false, true], p,
+			                            augment = true, pool = missing),
+			 data.y))
     end
 end;
 
@@ -203,15 +222,20 @@ K = $(@bind K Slider(1:50, show_value = true))
 "
 
 # ╔═╡ 12942f82-efb1-11eb-2827-df957759b02c
-m12 = machine(KNNRegressor(K = K), select(regression_data, :x), regression_data.y) |> fit!;
+m12 = machine(KNNRegressor(K = K),
+	          select(regression_data, :x),
+	          regression_data.y);
+
+# ╔═╡ e1477620-dc57-4e9a-b342-8798cf6aeffe
+fit!(m12);
 
 # ╔═╡ 8ba77b77-1016-4f5d-9f9e-76b2ad1f9eac
 begin
     losses = hcat([let m = fit!(machine(KNNRegressor(K = k),
                                         select(regression_data, Not(:y)),
                                         regression_data.y), verbosity = 0)
-                       [loss(m, regression_data, mse),
-                        loss(m, regression_test_data, mse)]
+                       [compute_loss(m, regression_data, mse),
+                        compute_loss(m, regression_test_data, mse)]
                    end
                    for k in 1:50]...)
 end;
@@ -241,15 +265,18 @@ K = $(@bind Kc Slider(1:100, show_value = true))"
 # ╔═╡ 12942fc8-efb1-11eb-3180-dff1921c5bf9
 m14 = machine(KNNClassifier(K = Kc),
              select(classification_data, Not(:y)),
-             classification_data.y) |> fit!;
+             classification_data.y);
+
+# ╔═╡ 87468757-49c0-474f-8bea-bd5b37d10161
+fit!(m14);
 
 # ╔═╡ 0a57f15b-c292-4c64-986d-f046260da66e
 begin
     closses = hcat([let m = fit!(machine(KNNClassifier(K = k),
                                          select(classification_data, Not(:y)),
                                          classification_data.y), verbosity = 0)
-                        [mean(loss(m, classification_data, log_loss)),
-                         mean(loss(m, classification_test_data, log_loss))]
+                        [mean(compute_loss(m, classification_data, log_loss)),
+                         mean(compute_loss(m, classification_test_data, log_loss))]
                    end
                    for k in 1:100]...)
 end;
@@ -311,8 +338,8 @@ function fit_and_evaluate(degree, training_data, test_data)
                      training_data.y), verbosity = 0)
     ŷ = predict(m, select(test_data, Not(:y)))
     DataFrame(degree = degree,
-              training_loss = loss(m, training_data, mse),
-              test_loss = loss(m, test_data, mse),
+              training_loss = compute_loss(m, training_data, mse),
+              test_loss = compute_loss(m, test_data, mse),
               prediction = Ref(ŷ)) # we use Ref to store the reference to the vector of predictions instead of inserting the predicted values as different rows into the DataFrame.
 end;
 
@@ -406,8 +433,10 @@ MLCourse.footer()
 # ╟─2ae86454-1877-4972-9cf6-24ef9350a296
 # ╟─d487fcd9-8b45-4237-ab2c-21f82ddf7f7c
 # ╠═c50ed135-68d5-43bc-9c26-9c265702a1f0
+# ╟─75c5471d-926d-4b05-9002-28b14e1dd428
 # ╟─710d3104-e197-44c1-a10b-de1098d57dd6
 # ╠═ad50d244-c644-4f61-bd8b-995d0110811d
+# ╠═e9b0ea86-a5f5-43fa-aa16-5a0240f298dd
 # ╟─6fa9b644-d4a6-4c53-9146-9d978207bfd0
 # ╠═0272460a-5b9f-4728-a531-2b497b26c512
 # ╠═cfcb8f61-af91-40dd-951a-09e8dbf17e30
@@ -415,15 +444,18 @@ MLCourse.footer()
 # ╠═5ea1b31d-91e5-4c8f-93d6-5d31816fdbf5
 # ╟─59acced5-16eb-49b8-8cf2-0c43a88d838e
 # ╠═2fa54070-e261-462d-bd63-c225b92fa876
+# ╠═e0acbf00-f6de-483b-902b-31db99298da7
 # ╟─ed62cb94-8187-4d50-a6f9-6967893dd021
 # ╠═16f0d1b3-bd97-407d-9a79-25b0fb05bbeb
 # ╟─5c984615-f123-47fc-8330-66694ab1cb9f
 # ╠═269a609c-74af-4e7e-86df-e2279096a7a6
 # ╠═12942f82-efb1-11eb-2827-df957759b02c
+# ╠═e1477620-dc57-4e9a-b342-8798cf6aeffe
 # ╟─542327e9-1599-4a14-805f-5d2a3c4eae14
 # ╟─8ba77b77-1016-4f5d-9f9e-76b2ad1f9eac
 # ╟─12942f8c-efb1-11eb-284c-393f6a694818
 # ╠═12942fc8-efb1-11eb-3180-dff1921c5bf9
+# ╠═87468757-49c0-474f-8bea-bd5b37d10161
 # ╟─12942fc8-efb1-11eb-0c02-0150ef55ae98
 # ╟─0a57f15b-c292-4c64-986d-f046260da66e
 # ╟─cc8ed1de-beab-43e5-979e-e83df23f96ae

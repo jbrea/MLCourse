@@ -124,12 +124,9 @@ colnames(df::AbstractDataFrame) = names(df)
 colnames(d::NamedTuple) = keys(d)
 colname(names, predictor::Int) = names[predictor]
 colname(names, predictor::Symbol) = predictor ∈ names || string(predictor) ∈ names ? Symbol(predictor) : error("Predictor $predictor not found in $names.")
-function poly(data, degree, predictors::NTuple{1})
+function poly(data, degree, predictors::NTuple{1} = (1,))
     cn = colnames(data)
-    col = first(cn)
-    if length(cn) > 1
-        @warn "Multiple columns detected. Taking $col to expand as polynomial."
-    end
+    col = colname(cn, predictors[1])
     res = DataFrame([getproperty(data, col) .^ k for k in 1:degree],
                     [polysymbol(col, k) for k in 1:degree])
     if hasproperty(data, :y)
@@ -164,9 +161,6 @@ PolynomialRegressor(; kwargs...) = error("`PolynomialRegressor(degree, regressor
 end # MLJ
 end # __init__
 
-export fitted_linear_func
-
-
 function fitted_linear_func(mach)
     θ̂ = fitted_params(mach)
     θ̂₀ = θ̂.intercept
@@ -186,6 +180,8 @@ function embed_figure(name)
                 project_relative_path("notebooks", "figures", name))))"
 end
 
+heaviside(x::T) where T = ifelse(x > 0, one(T), zero(T))
+
 function start()
     nb = joinpath(project_relative_path(), "index.jl")
     exeflags = ["--project=$(project_relative_path())"]
@@ -202,7 +198,7 @@ end
 
 stop() = Distributed.interrupt()
 
-function update(; create_sysimage = true, kwargs...)
+function update(; kwargs...)
     @info "Performing an automatic update while keeping local changes.
     If this fails, please run manually `git pull` in the directory
     `$(project_relative_path())`."
@@ -215,14 +211,17 @@ function update(; create_sysimage = true, kwargs...)
         run(`$(git()) -c user.name="student" -c user.email="student@mlcourse" commit -m "automatic commit of local changes"`)
     end
     run(`$(git()) pull -s recursive -X patience -X ours -X ignore-all-space --no-edit`)
+    if !isempty(read(`$(git()) diff HEAD^ --name-only Manifest.toml`, String))
+        Pkg.instantiate()
+        MLCourse.create_sysimage(; kwargs...)
+    end
     cd(current_dir)
-    Pkg.activate(project_relative_path())
-    Pkg.instantiate()
-    create_sysimage && MLCourse.create_sysimage(; kwargs...)
 end
 
 function create_sysimage(; sysimage_path = project_relative_path("precompile", "mlcourse.so"))
-    PackageCompiler.create_sysimage([:Pluto, :MLJ, :MLJLinearModels, ];
+    PackageCompiler.create_sysimage([:Pluto, :MLJ, :MLJLinearModels,
+                                     :MLCourse, :StatsPlots, :DataFrames,
+                                     :MLJFlux, :Distributions];
                                     sysimage_path,
                                     precompile_execution_file=project_relative_path("precompile", "warmup.jl"))
 end

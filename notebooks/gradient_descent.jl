@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.16.4
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -7,8 +7,9 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
@@ -239,7 +240,9 @@ end
 # ╔═╡ 913cf5ee-ca1e-4063-bd34-6cccd0cc548b
 md"# Improved Versions of (S)GD
 
-There are many tricks to improve over standard (stochastic) gradient descent. We do not discuss them here, but you should know that `ADAM()` and `ADAMW()` are particularly popular (and successful) improvements of standard (S)GD. These methods usually require no (or very little) tuning of the learning rate."
+There are many tricks to improve over standard (stochastic) gradient descent.
+One popular idea is to use [momentum](https://distill.pub/2017/momentum/).
+We do not discuss these ideas further here, but you should know that `ADAM()` and `ADAMW()` are particularly popular (and successful) improvements of standard (S)GD. These methods usually require no (or very little) tuning of the learning rate."
 
 # ╔═╡ eb289254-7167-4183-a4d0-52f68be66b04
 begin
@@ -314,7 +317,7 @@ let
           label = "fit", w = 3, c = :red, legend = :topleft)
     losses = poly_regression_loss.(poly_path, Ref(h_training), Ref(regression_data.y))
     losses_v = poly_regression_loss.(poly_path, Ref(h_valid), Ref(regression_valid.y))
-    p2 = plot(0:length(poly_path)-1, losses, yscale = :log,
+    p2 = plot(0:length(poly_path)-1, losses, yscale = :log10,
               c = :blue, label = "training loss")
     scatter!([t4], [losses[t4 + 1]], c = :blue, label = nothing)
     plot!(0:length(poly_path)-1, losses_v, c = :red, label = "validation loss")

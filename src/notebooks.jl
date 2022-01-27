@@ -38,20 +38,6 @@ end
 
 function footer()
     html"""
-        <style>
-
-        body.disable_ui main {
-                max-width : 95%;
-            }
-
-        @media screen and (min-width: 1081px) {
-            body.disable_ui main {
-                margin-left : 12%;
-                max-width : 700px;
-                align-self: flex-start;
-            }
-        }
-        </style>
         <p> This page is part of an <a href="https://github.com/jbrea/MLCourse">introductory machine learning course</a> taught by Johanni Brea.<br>The course is strongly inspired by <a href="https://www.statlearning.com/">"An Introduction to Statistical Learning"</a>.</p> <a href="https://www.epfl.ch"><img src="https://www.epfl.ch/wp/5.5/wp-content/themes/wp-theme-2018/assets/svg/epfl-logo.svg"></img></a>
     """
 end

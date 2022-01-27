@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.5
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -18,17 +18,13 @@ end
 begin
 	using Pkg
     Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-	using Plots, DataFrames, Random, CSV, MLJ, MLJLinearModels
+	using Plots, DataFrames, Random, CSV, MLJ, MLJLinearModels, MLCourse
+	import Distributions: Poisson
+    import MLCourse: fitted_linear_func
 end
 
 # ╔═╡ 12d5824c-0873-49a8-a5d8-f93c73b633ae
 using PlutoUI; PlutoUI.TableOfContents()
-
-# ╔═╡ 20c5c7bc-664f-4c04-8215-8f3a9a2095c9
-begin
-    using MLCourse
-    MLCourse.list_notebooks(@__FILE__)
-end
 
 # ╔═╡ 8217895b-b120-4b08-b18f-d921dfdddf10
 md"# Linear Regression
@@ -40,17 +36,22 @@ md"# Linear Regression
 weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), 
                    DataFrame);
 
+# ╔═╡ d14244d4-b54e-42cf-b812-b149d9fa59e0
+training_set1 = DataFrame(LUZ_pressure = weather.LUZ_pressure[1:end-5],
+                          wind_peak_in5h = weather.LUZ_wind_peak[6:end])
+
 # ╔═╡ 34e527f2-ef80-4cb6-be3a-bee055eca125
-begin
-    training_set1 = (X = (LUZ_pressure = weather.LUZ_pressure[1:end-5],),
-                     y = weather.LUZ_wind_peak[6:end])
-    m1 = machine(LinearRegressor(), training_set1.X, training_set1.y) |> fit!
-end;
+m1 = machine(LinearRegressor(),
+			 select(training_set1, :LUZ_pressure),
+	         training_set1.wind_peak_in5h);
+
+# ╔═╡ dbe563b8-2d0d-40b7-8ccf-7efa40f640f2
+fit!(m1);
 
 # ╔═╡ 006fc1eb-50d5-4206-8c87-53e873f158f4
 begin
-    scatter(training_set1.X.LUZ_pressure[1:10:end],
-            training_set1.y[1:10:end], label = "data")
+    scatter(training_set1.LUZ_pressure,
+            training_set1.wind_peak_in5h, label = "data")
     plot!(fitted_linear_func(m1), label = "linear fit", w = 3)
 end
 
@@ -65,12 +66,7 @@ and the wind speed 5 hours later in Luzern.
 fitted_params(m1)
 
 # ╔═╡ f4f890b6-0ad4-4155-9321-15d673e15489
-md"Next we predict the mean for different pressure values the distribution of
-    wind speeds. In the probabilistic interpretation of supervised learning,
-    standard linear regression finds conditional normal distributions with
-    input-dependent mean ``\mu = \hat y = \theta_0 + \theta_1 x`` and
-    constant standard deviation σ.
-"
+md"Next we predict the expected wind peak for different pressure values."
 
 # ╔═╡ 9b62c374-c26e-4990-8ffc-790928e62e88
 predict(m1, (LUZ_pressure = [930., 960., 990.],))
@@ -80,18 +76,18 @@ md"We use the root-mean-squared-error (`rmse`) = ``\sqrt{\frac1n\sum_{i=1}^n(y_i
 "
 
 # ╔═╡ 57f352dc-55ee-4e14-b68d-698938a97d92
-rmse(predict(m1, training_set1.X), training_set1.y)
+rmse(predict(m1), training_set1.wind_peak_in5h)
 
 # ╔═╡ b0de002f-3f39-4378-8d68-5c4606e488b7
 begin
     weather_test = CSV.read(joinpath(@__DIR__, "..", "data", "weather2019-2020.csv"),
 		                    DataFrame);
-    test_set1 = (X = (LUZ_pressure = weather_test.LUZ_pressure[1:end-5],),
-                     y = weather_test.LUZ_wind_peak[6:end])
-end
+    test_set1 = DataFrame(LUZ_pressure = weather_test.LUZ_pressure[1:end-5],
+                          wind_peak_in5h = weather_test.LUZ_wind_peak[6:end])
+end;
 
 # ╔═╡ ce536f60-68b3-4901-bd6a-c96378054b12
-rmse(predict(m1, test_set1.X), test_set1.y)
+rmse(predict(m1, select(test_set1, :LUZ_pressure)), test_set1.wind_peak_in5h)
 
 # ╔═╡ c65b81bd-395f-4461-a73b-3535903cb2d7
 md"## Multiple Linear Regression
@@ -142,15 +138,41 @@ begin
 end
 
 # ╔═╡ da6462d8-3343-41d8-82dd-48770176d4ba
-md"## Wind speed prediction with multiple predictors"
+md"## Wind speed prediction with multiple predictors
+
+Our weather data set contains multiple measurements.
+With `names(weather)` we see all the columns of the the weather data frame.
+Try it in a new cell!
+
+With `DataFrame(schema(weather))` we get additionally information about the type of data. `MLJ` distinguished between the [scientific type](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types) and the number type of a column. This distinction is useful, because e.g. categorical variables (class 1, class 2, class 3, ...) can be represented as an integer but also count variables (e.g. number of items) can be represented as an integer, but suitability of a given machine learning method depends more on the scientific type than on the number type.
+"
+
+# ╔═╡ 25e1f89f-a5b2-4d5c-a6e8-a990b3bebddb
+DataFrame(schema(weather))
+
+# ╔═╡ 8307e205-3bcd-4e68-914e-621fd8d29e43
+md"When loading data one should check if the scientific type is correctly detected by the data loader. For the weather data the wind direction is automatically detected as a count variable, because the angle of the wind is measured in integer degrees. But it makes more sense to interpret the angle as a continuous variable. Therefore we use the `MLJ` function `coerce!` to transform all `Count` columns to `Continuous`."
+
+# ╔═╡ eeb9db2b-1ba3-4cc4-ac6f-b3249e9f1146
+coerce!(weather, Count => Continuous);
+
+# ╔═╡ 48a329d3-19ef-4883-b25f-71b44e824ab6
+md"Now we will try to predict the wind peak based on all measurements, except the response variable and the time variable."
 
 # ╔═╡ 753ec309-1363-485d-a2bd-b9fa100d9058
-m2 = machine(LinearRegressor(), select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time])),
-             weather.LUZ_wind_peak[6:end]) |> fit!;
+m2 = machine(LinearRegressor(),
+	         select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time])),
+             weather.LUZ_wind_peak[6:end]);
+
+# ╔═╡ 93c39214-1498-4ebd-a7a6-cdb0438da14d
+fit!(m2);
+
+# ╔═╡ fac51c63-f227-49ac-89f9-205bf03e7c08
+md"Let us have a look at the fitted parameters. For example, we can conclude that an increase of pressure in Luzern by 1hPa correlates with a decrease of almost 3km/h of the expected wind peaks - everything else being the same. This result is consistent with our expectation that high pressure locally is usually accompanied by good weather without strong winds. On the other hand, an increase of pressure in Genève by 1hPa correlates with an increase of more than 3km/h of the expected wind peaks. This result is also consistent with our expectations, given that stormy west wind weather occurs usually when there is a pressure gradient from south west to north east of Switzerland. Note also that the parameter for pressure in Pully (50 km north east from Genève) is -2km/h⋅hPa, i.e. when the pressure in Pully is the same as in Genève these two contributions to the prediction almost compensate each other."
 
 # ╔═╡ 618ef3c7-0fda-4970-88e8-1dac195545de
 sort!(DataFrame(predictor = names(select(weather, Not([:LUZ_wind_peak, :time]))),
-                value = fitted_params(m2).coefs), :value)
+                value = last.(fitted_params(m2).coefs)), :value)
 
 # ╔═╡ 2d25fbb6-dc9b-40ad-bdce-4c952cdad077
 rmse(predict(m2, select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
@@ -160,9 +182,13 @@ rmse(predict(m2, select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
 rmse(predict(m2, select(weather_test[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
      weather_test.LUZ_wind_peak[6:end])
 
+# ╔═╡ 2724c9b7-8caa-4ba7-be5c-2a9095281cfd
+md"We see that both the training and the test error is lower, when using multiple predictors instead of just one."
+
 # ╔═╡ 99a371b2-5158-4c42-8f50-329352b6c1f2
 md"# Error Decomposition
 
+In the following cells we look at error decomposition discussed in the slides.
 "
 
 # ╔═╡ f10b7cad-eda3-4ec9-99ee-d43ed013a057
@@ -174,17 +200,23 @@ end;
 # ╔═╡ 05354df5-a803-422f-87a3-1c56a34e8a48
 f̂(x) = 0.1 + x
 
+# ╔═╡ 3d77d753-b247-4ead-a385-7cbbcfc3190b
+md"The expected error of a function `f` at point `x` for our `conditional_generator` can be estimated by computing the mean squared error for many samples obtained from this generator."
+
 # ╔═╡ 9e61b4c3-1a9f-41a7-9882-25ed797a7b8d
 expected_error(f, x) = mean((conditional_generator(x, n = 10^6) .- f(x)).^2);
 
 # ╔═╡ c6a59b85-d031-4ad4-9e24-691494d08cde
-expected_error(f̂, .1)
+expected_error(f̂, .1) # estimated total expected error
 
 # ╔═╡ e50b8196-e804-473a-b3b5-e22fdb9d2f45
-(f(.1) - f̂(.1))^2
+(f(.1) - f̂(.1))^2 # reducible error
 
 # ╔═╡ f413ea94-36ca-4afc-8ca8-9a7e88101980
-expected_error(f, .1)
+expected_error(f, .1) # estimated irreducible error
+
+# ╔═╡ 2bfa1a57-b171-44c3-b0d7-b8dda48d26d7
+md"Instead of using estimates for the irreducible error we could just compute it in this simple example: it is ``\sigma^2 = 0.04``. In the figure below we look at the expected, reducible and irreducible errors as a function of ``x``."
 
 # ╔═╡ dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
 let x = rand(100), grid = 0:.05:1
@@ -197,6 +229,9 @@ let x = rand(100), grid = 0:.05:1
     hline!([.2^2], label = "irreducible error", ylims = (0, .15), w = 3, xlabel = "x")
     plot(p1, p2, layout = (2, 1), legend = :right, ylabel = "y")
 end
+
+# ╔═╡ db2c6bd4-ee6f-4ba9-b6ec-e7cf94389f93
+md"With machine learning we cannot remove the irreducible error. But in cases where accurate prediction is the goal, we should try to minimize the reducible error for all inputs ``x`` we care about."
 
 # ╔═╡ ad5b293d-c0f4-4693-84f4-88308639a501
 md"# Logistic Regression
@@ -251,7 +286,7 @@ end
 
 # ╔═╡ 534681d5-71d8-402a-b455-f491cfbb353e
 begin
-    spam_or_ham = coerce(String.(spamdata.label[1:2000]), Binary)
+    spam_or_ham = coerce(String.(spamdata.label[1:2000]), OrderedFactor)
     normalized_word_counts = float.(DataFrame(tf(m), :auto))
 end
 
@@ -302,7 +337,7 @@ begin
     function error_rates(x, y, t)
         P = sum(y)
         N = length(y) - P
-        pos_pred = y[(logistic.(x) .> t)]
+        pos_pred = y[x .> t]
         TP = sum(pos_pred)
         FP = sum(1 .- pos_pred)
         FP/N, TP/P
@@ -334,27 +369,30 @@ end;
 # ╔═╡ c98524b5-d6b3-469c-82a1-7d231cc792d6
 begin
     auc_samples_y = logistic.(2.0^s * auc_samples_x) .> rand(200)
-    auc = [error_rates(2.0^s * auc_samples_x, auc_samples_y, t)
+    errs = [error_rates(auc_samples_x, auc_samples_y, 1/(2.0^s) * logodds(t))
            for t in .01:.01:.99]
-    push!(auc, (0., 0.))
-    prepend!(auc, [(1., 1.)])
+    push!(errs, (0., 0.))
+    prepend!(errs, [(1., 1.)])
 end;
 
 # ╔═╡ 3336ab15-9e9b-44af-a7d5-1d6472241e62
 let
-    gr()
+	gr()
     p1 = scatter(auc_samples_x, auc_samples_y, markershape = :vline, label = nothing, color = :black)
     plot!(x -> logistic(2.0^s * x), color = :blue, label = nothing, xlims = (-8, 8))
     vline!([1/(2.0^s) * logodds(threshold)], w = 3, color = :red,
            label = nothing, xlabel = "x", ylabel = "y")
-    p2 = plot(first.(auc), last.(auc), title = "ROC", label = nothing)
-    fp, tp = auc[floor(Int, threshold * 100)]
+    p2 = plot(first.(errs), last.(errs), title = "ROC", label = nothing)
+    fp, tp = errs[floor(Int, threshold * 100)]
     scatter!([fp], [tp], color = :red, xlims = (-.01, 1.01), ylims = (-.01, 1.01),
             labels = nothing, ylabel = "true positive rate",
             xlabel = "false positive rate")
     plot(p1, p2, size = (700, 400))
 end
 
+# ╔═╡ f1a48773-2971-4069-a240-fd1e10aeb1ed
+confusion_matrix(auc_samples_x .> 1/(2.0^s) * logodds(threshold), 
+                 categorical(auc_samples_y, levels = [false, true], ordered = true))
 
 # ╔═╡ 62ad57e5-1366-4635-859b-ccdab2efd3b8
 md"## Multiple Logistic Regression on the spam data"
@@ -365,10 +403,13 @@ m3 = fit!(machine(LogisticClassifier(penalty = :none),
                   spam_or_ham));
 
 # ╔═╡ 1d1a24c6-c166-49a2-aa21-7acf50b55a66
-predict(m3, normalized_word_counts)
+predict(m3)
+
+# ╔═╡ 21b66582-3fda-401c-9421-73ae2f455a75
+predict_mode(m3)
 
 # ╔═╡ 32bafa9e-a35e-4f54-9857-d269b47f95c3
-confusion_matrix(predict_mode(m3, normalized_word_counts), spam_or_ham)
+confusion_matrix(predict_mode(m3), spam_or_ham)
 
 # ╔═╡ 4e4f4adf-364f-49b9-9391-5050a4c1286a
 md"With our simple features, logistic regression can classify the training data
@@ -379,15 +420,24 @@ almost always correctly. Let us see how well this works for test data.
 begin
     test_crps = Corpus(StringDocument.(spamdata.text[2001:4000]))
     test_input = float.(DataFrame(tf(DocumentTermMatrix(test_crps, small_lex)), :auto))
-    test_labels = coerce(String.(spamdata.label[2001:4000]), Binary)
+    test_labels = coerce(String.(spamdata.label[2001:4000]), OrderedFactor)
     confusion_matrix(predict_mode(m3, test_input), test_labels)
 end
 
-# ╔═╡ 21b66582-3fda-401c-9421-73ae2f455a75
-predict_mode(m3, normalized_word_counts)
+# ╔═╡ ef9489c3-2bff-431b-92c4-f1b9778040cf
+md"In the following we use the functions `roc_curve` and `auc` to plot the ROC curve and compute the area under the curve."
 
-# ╔═╡ ba4b5683-5932-415e-8772-8b3eef5eb63d
-md"We save also the test data for future usage."
+# ╔═╡ e7d48a13-b4e6-4633-898c-c13b3e7f68ea
+let 
+	fprs1, tprs1, _ = roc_curve(predict(m3), spam_or_ham)
+    fprs2, tprs2, _ = roc_curve(predict(m3, test_input), test_labels)
+	plot(fprs1, tprs1, label = "training ROC")
+	plot!(fprs2, tprs2, label = "test ROC", legend = :bottomright)
+end
+
+# ╔═╡ 8b851c67-0c6e-4081-a8ed-b818c2902c2f
+(training_auc = auc(predict(m3), spam_or_ham),
+ test_auc = auc(predict(m3, test_input), test_labels))
 
 # ╔═╡ a30578dd-aecb-46eb-b947-f009282cf2fc
 md"Let us evaluate the fit in terms of commonly used losses for binary classification."
@@ -397,7 +447,7 @@ function losses(machine, input, response)
     (negative_loglikelihood = sum(log_loss(predict(machine, input), response)),
      misclassification_rate = mean(predict_mode(machine, input) .!= response),
      accuracy = accuracy(predict_mode(machine, input), response),
-     auc = MLJ.auc(predict(machine, input), response)
+     auc = auc(predict(machine, input), response)
 	)
 end;
 
@@ -409,6 +459,90 @@ spam_or_ham
 
 # ╔═╡ 935adbcd-48ab-4a6f-907c-b04137ca3abe
 losses(m3, test_input, test_labels)
+
+# ╔═╡ b6689b27-e8a2-44e4-8791-ce237767ee63
+md"# Poisson Regression
+
+In this section we have a look at a regression problem where the response is a count variable. As an example we use a Bike sharing data set. In this data set, the number of rented bikes in Washington D.C. at a given time is recorded together with the weather condition. Remove the semicolon in the cell below, if you want to learn more about this dataset.
+
+In this section our goal will be to predict the number of rented bikes at a given temperature and windspeed.
+"
+
+# ╔═╡ 310999a0-f212-4e69-a4cb-346b3f49f202
+OpenML.describe_dataset(42712);
+
+# ╔═╡ 6384a36d-1dac-4d72-9d7b-84511f20e6ca
+bikesharing = OpenML.load(42712) |> DataFrame
+
+# ╔═╡ b4e180b4-5582-4491-89d3-1f730c4f2fbf
+DataFrame(schema(bikesharing))
+
+# ╔═╡ b9ba1df0-5086-4c0f-a2c9-200c2be27294
+md"Above we see that the `:count` column is detected as `Continuous`, whereas it should be `Count`. We therefore coerce it to the correct scientific type."
+
+# ╔═╡ 1bf98d4b-ffbf-4157-9496-38e2c8e92c94
+coerce!(bikesharing, :count => Count);
+
+# ╔═╡ 6acda59d-cb26-4ec0-8a91-2ec5a71bb2b7
+md"For counts, i.e. non-negative integers, it is not natural to assume a normally distributed noise. Instead, a common choice is to model a count variable ``Y`` with a Poisson distribution defined by
+```math
+P(Y = k|f(x)) = \frac{e^{-f(x)}f(x)^k}{k!}
+```
+where ``f(x)`` is the expected value of ``Y`` conditioned on ``x``.
+In the cell below you can see the distribution of counts for different values of ``f(x)``.
+"
+
+# ╔═╡ 058d6dff-d6a5-47db-bba2-756d67b873d4
+md"``f(x)`` = $(@bind λ Slider(0:.1:15, show_value = true))"
+
+# ╔═╡ 2767c63e-eea4-4227-9d54-293826091e70
+scatter(pdf.(Poisson(λ), 0:25), xlabel = "k", ylabel = "probability", legend = false)
+
+# ╔═╡ 63e5e978-3357-43db-b379-78e8dec4c224
+md"For count variables we can use Poisson regression. Following the standard recipe, we parametrize ``f(x) = \theta_0 + \theta_1 x_1 + \cdots +\theta_d x_d``, plug this into the formula of the Poisson distribution and fit the parameters ``\theta_0, \ldots, \theta_d`` by maximizing the log-likelihood. In `MLJ` this is done by the `CountRegressor()`."
+
+# ╔═╡ 81c55206-bf59-4c4e-ac5e-77a46e31bec7
+import MLJGLMInterface: LinearCountRegressor
+
+# ╔═╡ 96d0366e-dd40-4214-9fce-ec76b8496958
+m4 = machine(LinearCountRegressor(),
+	         select(bikesharing, [:temp, :humidity]),
+             bikesharing.count);
+
+# ╔═╡ 368b2d2c-393a-4b25-9a7c-0404a41e5873
+fit!(m4);
+
+# ╔═╡ d7af774f-5d58-40a4-a5cd-905fdbe460a3
+fitted_params(m4)
+
+# ╔═╡ 6ea40424-22a0-42b9-bfab-8d4903ab8d64
+md"Not suprisingly, at higher temperatures more bikes are rented than at lower temperatures, but humitidy coefficient is negative.
+
+In the next cell, we see that the predictions with this machine are Poisson distributions."
+
+# ╔═╡ f071c985-7be7-454e-8541-28416400882f
+predict(m4)
+
+# ╔═╡ aa96bbe7-49f4-4244-9c71-8d9b2b3ee065
+md"And we can obtain the mean or the mode of this conditional distribution with:"
+
+# ╔═╡ d5b394ac-b243-4825-a5c1-b30146500ef6
+predict_mean(m4)
+
+# ╔═╡ caa11dd3-577d-4692-b889-3a38d0bf61e0
+predict_mode(m4)
+
+# ╔═╡ 9ec91fbc-b756-4074-a623-1d47925c8239
+md"Side remark: `MLJ` distinguishes between models that make deterministic point predictions, like `LinearRegressor()` that predicts the expected response (which is the same as the mean of the conditional normal distribution in the probabilistic view), and models that predict probability distributions, like `LogisticClassifier()` or `LinearCountRegressor()`. If you are unsure about the prediction type of a model you can use the function `prediction_type`:"
+
+# ╔═╡ 41e5133c-db89-4407-9501-70e869616e9d
+prediction_type(LinearRegressor())
+
+# ╔═╡ b8bb7c85-0be8-4a87-96da-4e1b37aea96d
+prediction_type(LogisticClassifier())
+
+# ╔═╡ d3d7fa67-ca7d-46e1-b705-e30ec9b09f6a
+prediction_type(LinearCountRegressor())
 
 # ╔═╡ 8b0451bf-59b0-4e71-be84-549e23b5bfe7
 md"""# Exercises
@@ -449,6 +583,11 @@ md"""# Exercises
      Are they also difficult for you to classify?
 """
 
+# ╔═╡ 20c5c7bc-664f-4c04-8215-8f3a9a2095c9
+begin
+    MLCourse.list_notebooks(@__FILE__)
+end
+
 # ╔═╡ 7f08fcaa-000d-422d-80b4-e58a2f489d74
 MLCourse.footer()
 
@@ -457,11 +596,13 @@ MLCourse.footer()
 # ╠═94f8e29e-ef91-11eb-1ae9-29bc46fa505a
 # ╟─8217895b-b120-4b08-b18f-d921dfdddf10
 # ╠═9f84bcc5-e5ab-4935-9076-c19e9bd668e8
+# ╠═d14244d4-b54e-42cf-b812-b149d9fa59e0
 # ╠═34e527f2-ef80-4cb6-be3a-bee055eca125
+# ╠═dbe563b8-2d0d-40b7-8ccf-7efa40f640f2
 # ╠═006fc1eb-50d5-4206-8c87-53e873f158f4
 # ╟─e4712ebe-f395-418b-abcc-e10ada4b05c2
 # ╠═8c9ae8f7-81b2-4d60-a8eb-ded5364fe0cc
-# ╟─f4f890b6-0ad4-4155-9321-15d673e15489
+# ╠═f4f890b6-0ad4-4155-9321-15d673e15489
 # ╠═9b62c374-c26e-4990-8ffc-790928e62e88
 # ╟─7923a0a8-3033-4dde-91e8-22bf540c9866
 # ╠═57f352dc-55ee-4e14-b68d-698938a97d92
@@ -472,18 +613,28 @@ MLCourse.footer()
 # ╟─d541a8cd-5aa4-4c2d-bfdf-5e6297bb65a8
 # ╟─0f544053-1b7a-48d6-b18b-72092b124305
 # ╟─da6462d8-3343-41d8-82dd-48770176d4ba
+# ╠═25e1f89f-a5b2-4d5c-a6e8-a990b3bebddb
+# ╟─8307e205-3bcd-4e68-914e-621fd8d29e43
+# ╠═eeb9db2b-1ba3-4cc4-ac6f-b3249e9f1146
+# ╟─48a329d3-19ef-4883-b25f-71b44e824ab6
 # ╠═753ec309-1363-485d-a2bd-b9fa100d9058
+# ╠═93c39214-1498-4ebd-a7a6-cdb0438da14d
+# ╟─fac51c63-f227-49ac-89f9-205bf03e7c08
 # ╠═618ef3c7-0fda-4970-88e8-1dac195545de
 # ╠═2d25fbb6-dc9b-40ad-bdce-4c952cdad077
 # ╠═c9f10ace-3299-45fb-b98d-023a35dd405a
+# ╟─2724c9b7-8caa-4ba7-be5c-2a9095281cfd
 # ╟─99a371b2-5158-4c42-8f50-329352b6c1f2
 # ╠═f10b7cad-eda3-4ec9-99ee-d43ed013a057
 # ╠═05354df5-a803-422f-87a3-1c56a34e8a48
+# ╟─3d77d753-b247-4ead-a385-7cbbcfc3190b
 # ╠═9e61b4c3-1a9f-41a7-9882-25ed797a7b8d
 # ╠═c6a59b85-d031-4ad4-9e24-691494d08cde
 # ╠═e50b8196-e804-473a-b3b5-e22fdb9d2f45
 # ╠═f413ea94-36ca-4afc-8ca8-9a7e88101980
+# ╟─2bfa1a57-b171-44c3-b0d7-b8dda48d26d7
 # ╟─dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
+# ╟─db2c6bd4-ee6f-4ba9-b6ec-e7cf94389f93
 # ╟─ad5b293d-c0f4-4693-84f4-88308639a501
 # ╠═210b977d-7136-407f-a1c9-eeea869d0312
 # ╠═72969aca-b203-4d83-8923-74e523aa1c01
@@ -498,23 +649,49 @@ MLCourse.footer()
 # ╟─4f89ceab-297f-4c2c-9029-8d2d7fad084f
 # ╟─fd4165dc-c3e3-4c4c-9605-167b5b4416da
 # ╟─7738c156-8e1b-4723-9818-fba364822171
-# ╠═0fcfd7d2-6ea3-4c75-bad3-7d0fdd6fde11
 # ╟─3336ab15-9e9b-44af-a7d5-1d6472241e62
+# ╟─f1a48773-2971-4069-a240-fd1e10aeb1ed
+# ╟─0fcfd7d2-6ea3-4c75-bad3-7d0fdd6fde11
 # ╟─285c6bfc-5f29-46e0-a2c1-8abbec74501b
 # ╟─c98524b5-d6b3-469c-82a1-7d231cc792d6
 # ╟─62ad57e5-1366-4635-859b-ccdab2efd3b8
 # ╠═29e1d9ff-4375-455a-a69b-8dd0c2cac57d
 # ╠═1d1a24c6-c166-49a2-aa21-7acf50b55a66
+# ╠═21b66582-3fda-401c-9421-73ae2f455a75
 # ╠═32bafa9e-a35e-4f54-9857-d269b47f95c3
 # ╟─4e4f4adf-364f-49b9-9391-5050a4c1286a
 # ╠═50c035e6-b892-4157-a52f-824578366977
-# ╠═21b66582-3fda-401c-9421-73ae2f455a75
-# ╟─ba4b5683-5932-415e-8772-8b3eef5eb63d
+# ╟─ef9489c3-2bff-431b-92c4-f1b9778040cf
+# ╠═e7d48a13-b4e6-4633-898c-c13b3e7f68ea
+# ╠═8b851c67-0c6e-4081-a8ed-b818c2902c2f
 # ╟─a30578dd-aecb-46eb-b947-f009282cf2fc
 # ╠═8ed39cdc-e99e-48ff-9973-66df41aa0f78
 # ╠═dd463687-b73d-4e70-b2cf-97a56a0ad409
 # ╠═57dcadc0-2da2-4521-aeaf-6fd01f4bd82b
 # ╠═935adbcd-48ab-4a6f-907c-b04137ca3abe
+# ╟─b6689b27-e8a2-44e4-8791-ce237767ee63
+# ╠═310999a0-f212-4e69-a4cb-346b3f49f202
+# ╠═6384a36d-1dac-4d72-9d7b-84511f20e6ca
+# ╠═b4e180b4-5582-4491-89d3-1f730c4f2fbf
+# ╟─b9ba1df0-5086-4c0f-a2c9-200c2be27294
+# ╠═1bf98d4b-ffbf-4157-9496-38e2c8e92c94
+# ╟─6acda59d-cb26-4ec0-8a91-2ec5a71bb2b7
+# ╟─058d6dff-d6a5-47db-bba2-756d67b873d4
+# ╠═2767c63e-eea4-4227-9d54-293826091e70
+# ╟─63e5e978-3357-43db-b379-78e8dec4c224
+# ╠═81c55206-bf59-4c4e-ac5e-77a46e31bec7
+# ╠═96d0366e-dd40-4214-9fce-ec76b8496958
+# ╠═368b2d2c-393a-4b25-9a7c-0404a41e5873
+# ╠═d7af774f-5d58-40a4-a5cd-905fdbe460a3
+# ╟─6ea40424-22a0-42b9-bfab-8d4903ab8d64
+# ╠═f071c985-7be7-454e-8541-28416400882f
+# ╟─aa96bbe7-49f4-4244-9c71-8d9b2b3ee065
+# ╠═d5b394ac-b243-4825-a5c1-b30146500ef6
+# ╠═caa11dd3-577d-4692-b889-3a38d0bf61e0
+# ╟─9ec91fbc-b756-4074-a623-1d47925c8239
+# ╠═41e5133c-db89-4407-9501-70e869616e9d
+# ╠═b8bb7c85-0be8-4a87-96da-4e1b37aea96d
+# ╠═d3d7fa67-ca7d-46e1-b705-e30ec9b09f6a
 # ╟─8b0451bf-59b0-4e71-be84-549e23b5bfe7
 # ╟─20c5c7bc-664f-4c04-8215-8f3a9a2095c9
 # ╟─7f08fcaa-000d-422d-80b4-e58a2f489d74

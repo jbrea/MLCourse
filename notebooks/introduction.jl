@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.5
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -49,7 +49,7 @@ The output gets displayed above the cell. Have a look at [this website](https://
 To get help, please open the Live docs at the bottom right of this page and click on the code you want to get help for. For example, click on the ÷ symbol in the 8th cell below.")
 
 If you want to learn more about Julia visit [julialang.org](https://julialang.org).
-In the following sections you find links to different chapters of the [manual](https://docs.julialang.org/en/v1/). There is also this [cheat sheet](https://juliadocs.github.io/Julia-Cheat-Sheet/).")
+In the following sections you find links to different chapters of the [manual](https://docs.julialang.org/en/v1/). There is also this [cheat sheet](https://juliadocs.github.io/Julia-Cheat-Sheet/). Noteworthy differences to other programming languages can be found [here](https://docs.julialang.org/en/v1/manual/noteworthy-differences/).")
 
 # ╔═╡ d92c0729-c7ab-42cc-b713-30f00e237833
 md"# Mathematical Operations
@@ -427,6 +427,7 @@ md"# DataFrames
 
 DataFrames are tables with named columns.
 We will constantly use DataFrames to organize data.
+You can find [here](https://dataframes.juliadata.org/stable/man/comparisons/) a list with useful commands. There is also a [cheat sheet](https://www.ahsmart.com/assets/pages/data-wrangling-with-data-frames-jl-cheat-sheet/DataFramesCheatSheet_v1.x_rev1.pdf).
 See also [the documentation of the DataFrames.jl package](https://dataframes.juliadata.org/stable/)."
 
 # ╔═╡ 034f7c9a-eacd-11eb-2e85-29c5bffbc39a
