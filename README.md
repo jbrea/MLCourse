@@ -25,7 +25,7 @@ You can update the course material with
 ```julia
 julia> using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
        using MLCourse
-       MLCourse.update(create_sysimage = true)
+       MLCourse.update()
 ```
 
 ![](https://www.epfl.ch/wp/5.5/wp-content/themes/wp-theme-2018/assets/svg/epfl-logo.svg)
