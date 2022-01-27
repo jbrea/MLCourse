@@ -1,7 +1,7 @@
 name = "MLCourse"
 uuid = "bdb52a37-b1f4-4443-a4d5-f8ef0db855e0"
 authors = ["Johanni Brea <jbrea@users.noreply.github.com>"]
-version = "0.2.0"
+version = "0.3.0"
 
 [deps]
 ARFFFiles = "da404889-ca92-49ff-9e8b-0aa6b4d38dc8"

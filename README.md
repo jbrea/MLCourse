@@ -1,9 +1,9 @@
 # MLCourse
 
 This repository contains teaching material for an introductory machine learning course.
-You can find an interactive preview of the Pluto notebooks of this course [here](https://bio322.epfl.ch) and a static preview (where sliders etc. don't work)  [here](https://jbrea.github.io/MLCourse/notebooks/welcome.html).
+You can find an interactive preview of the Pluto notebooks of this course [here](https://bio322.epfl.ch).
 
-To use the code, please download [julia](https://julialang.org/downloads) (at least version 1.6.2)
+To use the code, please download [julia version 1.7.1](https://julialang.org/downloads)
 open julia and install the code in this repository with
 ```julia
 julia> using Pkg
