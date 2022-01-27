@@ -1,4 +1,4 @@
-FROM julia:1.6.4
+FROM julia:1.7.1
 
 # HTTP port
 EXPOSE 8000
