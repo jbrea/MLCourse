@@ -28,7 +28,7 @@ ENV USER_HOME_DIR /home/${NB_USER}
 ENV JULIA_PROJECT ${USER_HOME_DIR}
 ENV JULIA_DEPOT_PATH ${USER_HOME_DIR}/.julia
 ENV JULIA_PKG_DEVDIR=${USER_HOME_DIR}
-RUN julia --project=${USER_HOME_DIR}/MLCourse -e "import Pkg; Pkg.instantiate();"
+# RUN julia --project=${USER_HOME_DIR}/MLCourse -e "import Pkg; Pkg.instantiate();"
 # Pkg.precompile(); using MLCourse; MLCourse.create_sysimage()"
 
 WORKDIR ${USER_HOME_DIR}/MLCourse
