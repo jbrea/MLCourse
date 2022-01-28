@@ -1,7 +1,7 @@
 # MLCourse
 
 This repository contains teaching material for an introductory machine learning course.
-You can find an interactive preview of the Pluto notebooks of this course [here](https://bio322.epfl.ch).
+You can find an interactive preview of the Pluto notebooks of this course [here](https://bio322.epfl.ch) and you can run some notebooks on [mybinder](https://mybinder.org/v2/gh/jbrea/MLCourse/binder?urlpath=pluto/open?path%3D/home/jovyan/MLCourse/index.jl) (some notebooks will crash on mybinder when they hit the memory limit).
 
 To use the code, please download [julia version 1.7.1](https://julialang.org/downloads)
 open julia and install the code in this repository with
