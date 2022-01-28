@@ -15,7 +15,7 @@ jobs:
         uses: jupyterhub/repo2docker-action@master
         with:
           context: .
-          file: binder/Dockerfile
+          file: ./binder/Dockerfile
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           BINDER_CACHE: true
