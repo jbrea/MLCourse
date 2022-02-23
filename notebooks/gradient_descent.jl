@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -134,6 +134,7 @@ md"## Gradient Descent to Minimize a Complicated Function"
 
 # ╔═╡ c448238c-f712-4af3-aedb-cec3a2c1a73e
 begin
+	Random.seed!(5)
     f(x, θ) = θ[1] * sin.(θ[2] * x .+ θ[3]) .+ θ[4] * sin.(θ[5] * x .+ θ[6])
     f(x) = 0.3 * sin(2x) + .7 * sin(3.5x + 1)
     x3 = randn(50)
@@ -156,6 +157,9 @@ begin
     gradient_descent(special_loss, params3, .1, 10^4,
                      callback = x -> push!(special_path, copy(x)))
 end
+
+# ╔═╡ 9315fe03-2537-4920-8188-e4981c5e62f6
+gradient(special_loss, special_path[1])
 
 # ╔═╡ 01221937-b6d9-4dac-be90-1b8a1c5e9d87
 let
@@ -246,7 +250,7 @@ We do not discuss these ideas further here, but you should know that `ADAM()` an
 
 # ╔═╡ eb289254-7167-4183-a4d0-52f68be66b04
 begin
-	Random.seed!(123)
+	Random.seed!(1234)
     params4 = .1 * randn(6)
     special_path2 = [copy(params4)]
 	opt = ADAMW()
@@ -267,7 +271,7 @@ let
     losses = special_loss.(special_path)
     p2 = plot(0:10^4, losses2, label = "learning curve", c = :black, yscale = :log10)
     plot!(0:10^4, losses, label = "GD learning curve", c = :black, linestyle = :dot)
-    scatter!([t3], [losses2[t3]], label = "current loss", xlabel = "t", ylabel = "loss")
+    scatter!([t3], [losses2[t3]], label = "current loss", xlabel = "t", ylabel = "loss", legend = :bottomleft)
     plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
 
@@ -391,6 +395,7 @@ MLCourse.footer()
 # ╠═c448238c-f712-4af3-aedb-cec3a2c1a73e
 # ╠═6e38a3f6-a592-4dc1-a6c4-d0f0050c9399
 # ╠═9a61332f-cdc2-4129-b7b5-5ab54ba387a3
+# ╠═9315fe03-2537-4920-8188-e4981c5e62f6
 # ╟─4b3ac87f-39f6-4e6c-b7b3-536925e9b112
 # ╟─01221937-b6d9-4dac-be90-1b8a1c5e9d87
 # ╟─f5e27275-8751-4e80-9888-c3d22d8e80e3

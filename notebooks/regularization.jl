@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -30,19 +30,25 @@ using PlutoUI; PlutoUI.TableOfContents()
 md"# Ridge Regression (L2 Regularization)
 "
 
-# ╔═╡ 9e1e8284-a8c1-47a9-83d0-2d8fbd8ce005
-n = 30; x = rand(n); y = 2.2x .+ .3 .+ .2randn(n);
-
 # ╔═╡ 64b9cfa0-99f7-439b-b70e-f9266754ff74
-md"In the following cell there is some custom code to run ridge regression and the lasso for the simple example of 1-dimensional input."
+md"In the following cell there is some custom code to run ridge regression and the lasso for the simple example of 1-dimensional input. In this example we penalize also the intercept β₀. For ridge regression the solution is
+```math
+\begin{eqnarray*}
+\beta_1 &= \frac{\langle x y \rangle - \frac{\langle x\rangle \langle y\rangle}{1 + \lambda}}{\langle x^2\rangle - \frac{\langle x\rangle^2}{1 + \lambda} + \lambda}\\
+\beta_0 &= \frac{\langle y \rangle - \beta_1 \langle x \rangle}{1 + \lambda}
+\end{eqnarray*}
+```
+where ``\langle . \rangle`` denotes the average.
+
+For the lasso, there we run a fixed point iteration that starts at the unregularized solution of linear regression and shrinks β₁ and β₀ towards zero until there is not change anymore.
+"
 
 # ╔═╡ 8bd483cc-f490-11eb-38a1-b342dd2551fd
 begin
-    regmean(x, λ) = 1/(length(x) + λ) * sum(x)
     function ridge_regression(x, y, λ)
-       β₁ = (mean(x .* y) - mean(x) * regmean(y, λ))/
-		    (mean(x.^2) - mean(x)*regmean(x, λ) + λ/length(y))
-       β₀ = regmean(y, λ) - β₁ * regmean(x, λ)
+       β₁ = (mean(x .* y) - mean(x) * mean(y)/(1 + λ))/
+		    (mean(x.^2) - mean(x)^2/(1 + λ) + λ)
+       β₀ = (mean(y) - β₁ * mean(x))/(1 + λ)
        (β₀ = β₀, β₁ = β₁)
     end
     function updateβ₀(x̄, ȳ, β₁, l)
@@ -58,21 +64,35 @@ begin
         ȳ = mean(y)
         x2 = mean(x.^2)
         xy = mean(x .* y)
-        l = λ/length(x)
         β₁ = (x̄ * ȳ - xy)/(x̄^2 - x2)
         β₀ = ȳ - β₁ * x̄
         β₀old, β₁old = zero(β₀), zero(β₁)
         while β₀old != β₀ || β₁old != β₁
             β₀old, β₁old = β₀, β₁
-            β₁ = updateβ₁(x̄, ȳ, x2, xy, β₀, l)
-            β₀ = updateβ₀(x̄, ȳ, β₁, l)
+            β₁ = updateβ₁(x̄, ȳ, x2, xy, β₀, λ)
+            β₀ = updateβ₀(x̄, ȳ, β₁, λ)
         end
        (β₀ = β₀, β₁ = β₁)
     end
 end;
 
+# ╔═╡ 16c3780b-d30f-4db1-97ae-9ff98a9009f3
+let
+	x = randn(200); x .-= mean(x); x ./= std(x, corrected = false)
+	y = sin.(x) .+ 2x;
+	λ = (sqrt((mean(x .* y)^2 + mean(y)^2)/2) - 1)
+	β = ridge_regression(x, y, λ)
+	norm(β)^2
+end
+
+# ╔═╡ 3a71618b-0d74-4480-b87b-c6ba87363b5d
+md"We generate now some data to observe the effect of regularization when fitting this data."
+
+# ╔═╡ 9e1e8284-a8c1-47a9-83d0-2d8fbd8ce005
+n = 30; x = rand(n); y = 2.2x .+ .3 .+ .2randn(n);
+
 # ╔═╡ 1009e251-59af-4f1a-9d0a-e96f4b696cad
-md"λ₂ = $(@bind λ₂ Slider(0:1:100, show_value = true))"
+md"λ₂ = $(@bind λ₂ Slider(0:.01:5, show_value = true))"
 
 # ╔═╡ 50ac0b07-ffee-40c3-843e-984b3c628282
 l2coefs = ridge_regression(x, y, λ₂)
@@ -80,33 +100,35 @@ l2coefs = ridge_regression(x, y, λ₂)
 # ╔═╡ 58746554-ca5a-4e8e-97e5-587a9c2aa44c
 let r = λ₂ == 0 ? 6 : norm([l2coefs...]),
     ccol = plot_color(:blue, .3),
-    path = hcat([[ridge_regression(x, y, l)...] for l in 0:100]...)
-    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y")
+    path = hcat([[ridge_regression(x, y, l)...] for l in 0:.01:5]...)
+    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y",
+	             legend = :topleft)
     plot!(x -> l2coefs.β₀ + x * l2coefs.β₁, w = 3, label = "ridge regression")
     p2 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
                  label = "loss", title = "loss with constraints",
+		         legend = :bottomright,
                  levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
     plot!(t -> r * sin(t), t -> r * cos(t), 0:.001:2π,
           fill = (0, ccol), label = "constraint", color = ccol)
     plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
     scatter!([l2coefs.β₀], [l2coefs.β₁], label = "current fit", markersize = 6, color = :red)
-    p3 = plot(0:100, path[1, :], label = "β₀", xlabel = "λ₂", ylabel = "")
-    plot!(0:100, path[2, :], label = "β₁", ylims = (0, 2.4))
+    p3 = plot(0:.01:5, path[1, :], label = "β₀", xlabel = "λ₂", ylabel = "")
+    plot!(0:.01:5, path[2, :], label = "β₁", ylims = (0, 2.4))
     scatter!([λ₂], [l2coefs.β₀], label = nothing, markersize = 6, color = :red)
     scatter!([λ₂], [l2coefs.β₁], label = nothing, markersize = 6, color = :red)
-    p4 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> sum((β₀ .+ β₁*x .- y).^2) + λ₂ * (β₀^2 + β₁^2),
+    p4 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2) + λ₂ * (β₀^2 + β₁^2),
                  label = "loss", title = "regularized loss",
                  levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
     scatter!([l2coefs.β₀], [l2coefs.β₁], markersize = 6, label = nothing, color = :red)
     plot(p1, p4, p3, p2,
-         layout = (2, 2), size = (700, 600), cbar = false, legend = :right)
+         layout = (2, 2), size = (700, 600), cbar = false)
 end
 
 # ╔═╡ f43a82e2-1145-426d-8e0e-5363d1c38ccf
 md"# Lasso (L1 Regression)"
 
 # ╔═╡ ff7cc2bf-2a38-46d2-8d11-529159b08c82
-md"λ₁ = $(@bind λ₁ Slider(0:1:30, show_value = true))"
+md"λ₁ = $(@bind λ₁ Slider(0:.01:1, show_value = true))"
 
 # ╔═╡ 4841f9ba-f3d2-4c65-9225-bc8d0c0a9478
 l1coefs = lasso(x, y, λ₁)
@@ -114,26 +136,28 @@ l1coefs = lasso(x, y, λ₁)
 # ╔═╡ ed2b7969-79cd-43c8-bcdb-34dab89c2cb0
 let r = λ₁ == 0 ? 10 : norm([l1coefs...], 1),
     ccol = plot_color(:blue, .3),
-    path = hcat([[lasso(x, y, l)...] for l in 0:30]...)
-    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y")
+    path = hcat([[lasso(x, y, l)...] for l in 0:.01:1]...)
+    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y", legend = :topleft)
     plot!(x -> l1coefs.β₀ + x * l1coefs.β₁, w = 3, label = "lasso")
     p2 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
                  label = "loss", title = "loss with constraints",
+		         legend = :topright,
                  levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
     plot!([0, r, 0, -r, 0], [r, 0, -r, 0, r],
           fill = (0, ccol), label = "constraint", color = ccol)
     plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
-    scatter!([l1coefs.β₀], [l1coefs.β₁], label = nothing, markersize = 6)
-    p3 = plot(0:30, path[1, :], label = "β₀", xlabel = "λ₁", ylabel = "")
-    plot!(0:30, path[2, :], label = "β₁", ylims = (0, 2.4))
+    scatter!([l1coefs.β₀], [l1coefs.β₁], label = "current fit", markersize = 6,
+		     color = :red)
+    p3 = plot(0:.01:1, path[1, :], label = "β₀", xlabel = "λ₁", ylabel = "")
+    plot!(0:.01:1, path[2, :], label = "β₁", ylims = (0, 2.4))
     scatter!([λ₁], [l1coefs.β₀], label = nothing, markersize = 6, color = :red)
     scatter!([λ₁], [l1coefs.β₁], label = nothing, markersize = 6, color = :red)
-    p4 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> sum((β₀ .+ β₁*x .- y).^2)/2 + λ₁ * (abs(β₀) + abs(β₁)),
+    p4 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2)/2 + λ₁ * (abs(β₀) + abs(β₁)),
                  label = "loss", title = "regularized loss",
                  levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
     scatter!([l1coefs.β₀], [l1coefs.β₁], markersize = 6, label = nothing, color = :red)
     plot(p1, p4, p3, p2,
-         layout = (2, 2), size = (700, 600), cbar = false, legend = :right)
+         layout = (2, 2), size = (700, 600), cbar = false)
 end
 
 
@@ -141,9 +165,9 @@ end
 md"Instead of using the custom code to compute the ridge regression and the lasso we could have used some MLJ functions."
 
 # ╔═╡ c1033416-334e-4b0e-b81e-6f9137402730
-let mach = fit!(machine(RidgeRegressor(lambda = 25,
-	                                   scale_penalty_with_samples = false),
-	                    DataFrame(x = x), y))
+let mach = machine(RidgeRegressor(lambda = 3.82, penalize_intercept = true),
+	               DataFrame(x = x), y)
+	fit!(mach, verbosity = 0)
 	fitted_params(mach)
 end
 
@@ -151,24 +175,24 @@ end
 md"Let us check that we get indeed the same result with our custom method."
 
 # ╔═╡ 15a85810-ccbd-4aa3-98a5-fdcf68c97adb
-ridge_regression(x, y, 25)
+ridge_regression(x, y, 3.82)
 
 # ╔═╡ 0429acfe-d31e-427a-96d9-deddfa2c30f8
-let mach = fit!(machine(LassoRegressor(lambda = 25,
-	                                   # usually the intercept is not penalized,
-	                                   # but here we do penalize it.
-	                                   penalize_intercept = true,
-	                                   scale_penalty_with_samples = false,
-	                                   # usually the default optimizer is quite good,
-	                                   # but here we decrease the tolerance to get 
-	                                   # higher precision.
-                                       solver = ISTA(tol = 1e-6)),
-	            DataFrame(x = x), y))
+let mach = machine(LassoRegressor(lambda = .1,
+	                              # usually the intercept is not penalized,
+	                              # but here we do penalize it.
+	                              penalize_intercept = true,
+	                              # usually the default optimizer is quite good,
+	                              # but here we decrease the tolerance to get 
+	                              # higher precision.
+                                  solver = ISTA(tol = 1e-8)),
+	            DataFrame(x = x), y)
+	fit!(mach, verbosity = 0)
 	fitted_params(mach)
 end
 
 # ╔═╡ 2ba5b965-1dce-4773-b6eb-fd838876674d
-lasso(x, y, 25)
+lasso(x, y, .1)
 
 # ╔═╡ 6c87eb35-ddb3-44a3-b4ae-77a371e28960
 md"There is also the `ElasticNetRegressor` that allows to fit with L1 and L2 penalties of different strengths. Look up the documentation to learn more about it."
@@ -176,7 +200,9 @@ md"There is also the `ElasticNetRegressor` that allows to fit with L1 and L2 pen
 # ╔═╡ ca394b88-06dc-4188-884a-50d7c180aa33
 md"# Regularization Examples
 
-## Polynomial Ridge Regression"
+## Polynomial Ridge Regression
+
+In `MLJ` can apply ridge regression or the lasso to polynomial regression simply by replacing in the pipeline the `LinearRegressor` with a `RidgeRegressor` or a `LassoRegressor`, for example `mach = Polynomial(degree = 3) |> RidgeRegressor(lambda = 1e-3)`."
 
 # ╔═╡ b45a9739-0f81-4c0c-a93b-434a5af91490
 begin
@@ -360,7 +386,8 @@ as \"adding a regularization term to the cost function\". For example, given the
 \|\beta\|_1`` and choose a value for ``\lambda`` instead of the size ``s`` of the
 allowed area.
 
-1. Argue, why choosing ``\lambda = 0`` in the second formulation is equivalent to choosing ``s = \infty`` in the first formulation.
+1. Derive how ``\lambda`` in the second formulation depends on ``s`` in the first formulation for ridge regression with standardized one-dimensional input. *Hint:* use the analytical solution at the top of this notebook, the fact that ``\langle x \rangle = 0`` and ``\langle x^2\rangle = 0`` and note that ``\beta_0^2 + \beta_1^2 = s``, if the solution lies on the boundary.
+1. Argue, why choosing ``\lambda = 0`` in the second formulation is equivalent to choosing a sufficiently large ``s`` in the first formulation.
 2. Argue, why choosing ``\lambda = \infty`` in the second formulation is equivalent to choosing ``s = 0`` in the first formulation.
 
 #### Exercise 2.
@@ -396,11 +423,13 @@ MLCourse.footer()
 # ╟─2e9ce2a9-217e-4910-b6ce-d174f2f2668e
 # ╠═150d58e7-0e73-4b36-836c-d81eef531a9c
 # ╟─78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
-# ╠═9e1e8284-a8c1-47a9-83d0-2d8fbd8ce005
-# ╠═50ac0b07-ffee-40c3-843e-984b3c628282
+# ╠═16c3780b-d30f-4db1-97ae-9ff98a9009f3
 # ╟─64b9cfa0-99f7-439b-b70e-f9266754ff74
 # ╠═8bd483cc-f490-11eb-38a1-b342dd2551fd
+# ╟─3a71618b-0d74-4480-b87b-c6ba87363b5d
+# ╠═9e1e8284-a8c1-47a9-83d0-2d8fbd8ce005
 # ╟─1009e251-59af-4f1a-9d0a-e96f4b696cad
+# ╠═50ac0b07-ffee-40c3-843e-984b3c628282
 # ╟─58746554-ca5a-4e8e-97e5-587a9c2aa44c
 # ╟─f43a82e2-1145-426d-8e0e-5363d1c38ccf
 # ╟─ff7cc2bf-2a38-46d2-8d11-529159b08c82
