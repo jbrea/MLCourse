@@ -158,9 +158,6 @@ begin
                      callback = x -> push!(special_path, copy(x)))
 end
 
-# ╔═╡ 9315fe03-2537-4920-8188-e4981c5e62f6
-gradient(special_loss, special_path[1])
-
 # ╔═╡ 01221937-b6d9-4dac-be90-1b8a1c5e9d87
 let
     p1 = plot(f, label = "orginal function", xlabel = "x", ylabel = "y",
@@ -395,7 +392,6 @@ MLCourse.footer()
 # ╠═c448238c-f712-4af3-aedb-cec3a2c1a73e
 # ╠═6e38a3f6-a592-4dc1-a6c4-d0f0050c9399
 # ╠═9a61332f-cdc2-4129-b7b5-5ab54ba387a3
-# ╠═9315fe03-2537-4920-8188-e4981c5e62f6
 # ╟─4b3ac87f-39f6-4e6c-b7b3-536925e9b112
 # ╟─01221937-b6d9-4dac-be90-1b8a1c5e9d87
 # ╟─f5e27275-8751-4e80-9888-c3d22d8e80e3
