@@ -38,9 +38,10 @@ md"# Transformations of the Input
 # ╔═╡ 026de033-b9b2-4165-80e7-8603a386381c
 function spline_features(data, degree, knots)
 	q = length(knots) + degree
-	names = [Symbol("H", i) for i in 1:q] # create the feature names
-	features = [data.x .^ d for d in 1:degree] # compute the first features
-	append!(features, [max.(0, (data.x .- k).^degree) for k in knots]) # remaining features
+	names = [Symbol("H", i) for i in 1:q]      # create the feature names
+	features = [data[:, 1] .^ d for d in 1:degree] # compute the first features
+	append!(features, [max.(0, (data[:, 1] .- k).^degree)
+		               for k in knots])        # remaining features
 	DataFrame(features, names)
 end
 
@@ -49,6 +50,15 @@ md"We will use an OpenML dataset that was collected in 1985 in the US to determi
 
 # ╔═╡ 6532d7c4-2385-401a-9e99-8dc86655687f
 wage = OpenML.load(534) |> DataFrame
+
+# ╔═╡ 28cba8c7-c6d9-4a62-92cc-4856353a1969
+md"We can use now the `spline_features` function to compute spline features of the `AGE` predictor."
+
+# ╔═╡ 933cf81e-39e7-428c-a270-c638e6ead6fe
+spline_features(DataFrame(x = wage.AGE), 3, [30, 40, 60])
+
+# ╔═╡ 75a2d9fa-2edd-4506-bb10-ee8e9c780626
+md"Similarly to polynomial regression, we will use now the `spline_features` function to compute spline features as a first step in a pipeline and then perform linear regression on these spline features."
 
 # ╔═╡ 001c88b3-c0db-4ad4-9c0f-04a2ea7b090d
 md"spline degree = $(@bind spline_degree Slider(1:5, show_value = true))
@@ -61,30 +71,27 @@ knot 3 = $(@bind knot3 Slider(30:70, default = 50, show_value = true))
 
 knot 4 = $(@bind knot4 Slider(40:80, default = 60, show_value = true))"
 
-# ╔═╡ 2e1c3fa4-e424-4844-82c1-53d02271e7a6
-begin
-	# Here we compute the spline representation of the AGE.
-	# the values knot1, knot2, knot3, knot4 and spline_degree
-	# are defined by the sliders below.
-	knots = [knot1, knot2, knot3, knot4]
-    spline_input = spline_features(DataFrame(x = wage.AGE), spline_degree, knots)
-end
+# ╔═╡ cc65c9c0-cd8d-432c-b697-8f90a7b831f9
+spline_mod = Pipeline(x -> spline_features(x,
+	                                       spline_degree,
+				                           [knot1, knot2, knot3, knot4]),
+			          LinearRegressor());
 
 # ╔═╡ d35acc45-7404-4b47-98fe-6e13db8b657e
-spline_fit = fit!(machine(LinearRegressor(), spline_input, wage.WAGE));
+spline_fit = machine(spline_mod, select(wage, :AGE), wage.WAGE);
+
+# ╔═╡ 836afa27-9e57-4717-9850-dbd1a470ee17
+fit!(spline_fit, verbosity = 0);
+
+# ╔═╡ 0815ba19-5c7d-40d6-b948-8edccfb5c386
+begin grid = minimum(wage.AGE):maximum(wage.AGE)
+	scatter(wage.AGE, wage.WAGE)
+	plot!(grid, predict(spline_fit, DataFrame(x = grid)), w = 3)
+	vline!([knot1, knot2, knot3, knot4], linestyle = :dash, legend = false)
+end
 
 # ╔═╡ 5774b82f-a09e-46f8-a458-0f85fc4c53d8
 fitted_params(spline_fit)
-
-# ╔═╡ 0815ba19-5c7d-40d6-b948-8edccfb5c386
-begin
-	scatter(wage.AGE, wage.WAGE)
-	test_data = spline_features(DataFrame(x = minimum(wage.AGE):maximum(wage.AGE)),
-		                        spline_degree, knots)
-	predicted_avg_wage = predict(spline_fit, test_data)
-	plot!(minimum(wage.AGE):maximum(wage.AGE), predicted_avg_wage, w = 3)
-	vline!(knots, linestyle = :dash, legend = false)
-end
 
 # ╔═╡ 004958cf-0abb-4d8e-90b1-5966412cba91
 md"## Categorical Predictors"
@@ -103,11 +110,12 @@ MLJ.transform(fit!(machine(OneHotEncoder(), cdata)), cdata)
 MLJ.transform(fit!(machine(OneHotEncoder(drop_last = true), cdata)), cdata)
 
 # ╔═╡ e928e4f7-0ebc-4db5-b83e-0c5d22c0ff3c
-md"We will now apply this transformation to fit the wage data."
+md"We will now apply this transformation to fit the wage data with linear regression."
 
 # ╔═╡ 1bf42b12-5fd1-4b4c-94c6-14a52317b15f
 begin
-	preprocessor = machine(OneHotEncoder(drop_last = true), select(wage, Not(:WAGE))) |> fit!
+	preprocessor = machine(OneHotEncoder(drop_last = true), select(wage, Not(:WAGE)))
+	fit!(preprocessor, verbosity = 0)
 	wage_input = MLJ.transform(preprocessor, select(wage, Not(:WAGE)))
 end
 
@@ -120,8 +128,42 @@ fitted_params(wage_mach)
 # ╔═╡ 85c9650d-037a-4e9f-a15c-464ad479ff44
 md"From the fitted parameters we can see, for example, that years of education correlate positively with wage, women earn on average ≈2 USD per hour less than men (keeping all other factors fixed) or persons in a management position earn ≈4 USD per hour more than those in a sales position (keeping all other factors fixed)."
 
+# ╔═╡ a10b3fa1-358b-4a94-b927-5e0f71edd1f3
+md"## Vector Features
+
+In this section we look at a version of the famous xor problem. It is a binary classification problem with 2-dimensional input. It is called xor problem, because the class label is true if and only if the ``X_1`` and ``X_2`` coordinate of a point have different sign, which is reminiscent of the [logical exclusive or operation](https://en.wikipedia.org/wiki/Exclusive_or). The decision boundary is non-linear. By taking the scalar product with 4 different 2-dimensional vectors and setting to 0 all scalar product that would be negative, we find a 4-dimensional feature representation for which linear logistic regression can classify each point correctly."
+
+# ╔═╡ b66c7efc-8fd8-4152-9b0f-9332f760b51b
+function xor_generator(; n = 200)
+	x = 2 * rand(n, 2) .- 1
+	DataFrame(X1 = x[:, 1], X2 = x[:, 2],
+		      y = coerce((x[:, 1] .> 0) .⊻ (x[:, 2] .> 0), Binary))
+end
+
+# ╔═╡ ebe38042-5160-469b-8c07-484b7c019063
+xor_data = xor_generator()
+
+# ╔═╡ fa7cf2ae-9777-4ba9-9fe0-df545b94c5d8
+begin
+	scatter(xor_data.X1, xor_data.X2, c = int.(xor_data.y) .+ 1,
+            label = nothing, xlabel = "X₁", ylabel = "X₂")
+	hline!([0], label = nothing, c = :black)
+	vline!([0], label = nothing, c = :black, size = (400, 300))
+end
+
+# ╔═╡ 99d3ae30-6bc2-47bf-adc4-1cc1d3ff178d
+begin
+	lin_mach = fit!(machine(LogisticClassifier(penalty = :none),
+			                select(xor_data, Not(:y)),
+			                xor_data.y))
+	lin_pred = predict_mode(lin_mach, select(xor_data, Not(:y)))
+	(training_misclassification_rate = mean(lin_pred .!= xor_data.y),)
+end
+
 # ╔═╡ aa002263-4dc8-4238-ab27-a9094947600c
-md"## Dealing with Missing Data
+md"## Data Cleaning
+
+### Dealing with Missing Data
 
 In the following artififial dataset the age and the gender is missing for some of the subjects.
 "
@@ -141,9 +183,36 @@ md"Alternatively one can fill in the missing values with some standard values. F
 # ╔═╡ 69bc41cb-862c-4334-8b71-7f9974fedfe2
 MLJ.transform(fit!(machine(FillImputer(), datam)), datam)
 
-# ╔═╡ 76155286-978b-4a05-b428-4be4089d8b9a
-md"## Standardization
+# ╔═╡ 381b1ad3-8b7c-4222-800b-6a138518c925
+md"### Removing Predictors
 
+Constant predictors should always be removed. For example, consider the following input data:"
+
+# ╔═╡ 26c1ee4f-22b6-42be-9170-4710f7c0ad78
+df = DataFrame(a = ones(5), b = randn(5), c = 1:5, d = 2:2:10, e = zeros(5))
+
+# ╔═╡ 481ed397-9729-48a7-b2a7-7f90a2ba6581
+md"Now we compute for each column the standard deviation and keep only those columns with standard deviation larger than 0."
+
+# ╔═╡ fec248c4-b213-4617-b63a-c2be1f7017e6
+df_clean_const = df[:, std.(eachcol(df)) .!= 0]
+
+# ╔═╡ fa66ac8b-499d-49ae-be7d-2bdd3c1e6e0e
+md"We can also check for perfectly correlated predictors using the `cor` function. For our data we find that column 3 and 2 are perfectly correlated:"
+
+# ╔═╡ 68fdc6b3-423c-42df-a067-f91cf3f3a332
+findall(≈(1), cor(Matrix(df_clean_const))) |> # find all indices with correlation ≈ 1
+idxs -> filter(x -> x[1] > x[2], idxs)  # keep only upper off diagonal indices
+
+# ╔═╡ 76e50a60-4056-4f0d-b4e0-3d67d4d771c2
+md"Therefore we will only use one of those predictors."
+
+# ╔═╡ 53d18056-7f76-4134-b73e-be4968d88901
+df_clean = df_clean_const[:, [1, 2]]
+
+# ╔═╡ 76155286-978b-4a05-b428-4be4089d8b9a
+md"
+### Standardization
 Some methods (like k-nearest neighbors) are sensitive to rescaling of data. For example, in the following artificial dataset the height of people is measured in cm and their weights in kg, but one could have just as well used meters and grams or inches and pounds to report the height and the weight. By standardizing the data these arbitrary choices of the units do not matter anymore."
 
 # ╔═╡ b2f03b4a-b200-4b30-8793-6edc02f8136d
@@ -188,38 +257,6 @@ end
 
 # ╔═╡ 75dda04c-c0af-4a05-b840-91f5c1aea53c
 (mean(st_data.x), std(st_data.x))
-
-# ╔═╡ a10b3fa1-358b-4a94-b927-5e0f71edd1f3
-md"## Vector Features
-
-In this section we look at a version of the famous xor problem. It is a binary classification problem with 2-dimensional input. It is called xor problem, because the class label is true if and only if the ``X_1`` and ``X_2`` coordinate of a point have different sign, which is reminiscent of the [logical exclusive or operation](https://en.wikipedia.org/wiki/Exclusive_or). The decision boundary is non-linear. By taking the scalar product with 4 different 2-dimensional vectors and setting to 0 all scalar product that would be negative, we find a 4-dimensional feature representation for which linear logistic regression can classify each point correctly."
-
-# ╔═╡ b66c7efc-8fd8-4152-9b0f-9332f760b51b
-function xor_generator(; n = 200)
-	x = 2 * rand(n, 2) .- 1
-	DataFrame(X1 = x[:, 1], X2 = x[:, 2],
-		      y = coerce((x[:, 1] .> 0) .⊻ (x[:, 2] .> 0), Binary))
-end
-
-# ╔═╡ ebe38042-5160-469b-8c07-484b7c019063
-xor_data = xor_generator()
-
-# ╔═╡ fa7cf2ae-9777-4ba9-9fe0-df545b94c5d8
-begin
-	scatter(xor_data.X1, xor_data.X2, c = int.(xor_data.y) .+ 1,
-            label = nothing, xlabel = "X₁", ylabel = "X₂")
-	hline!([0], label = nothing, c = :black)
-	vline!([0], label = nothing, c = :black, size = (400, 300))
-end
-
-# ╔═╡ 99d3ae30-6bc2-47bf-adc4-1cc1d3ff178d
-begin
-	lin_mach = fit!(machine(LogisticClassifier(penalty = :none),
-			                select(xor_data, Not(:y)),
-			                xor_data.y))
-	lin_pred = predict_mode(lin_mach, select(xor_data, Not(:y)))
-	(training_misclassification_rate = mean(lin_pred .!= xor_data.y),)
-end
 
 # ╔═╡ a7f12901-e155-4f61-b252-c5af6669bfee
 function vector_features(data, vectors...)
@@ -333,11 +370,15 @@ MLCourse.footer()
 # ╠═026de033-b9b2-4165-80e7-8603a386381c
 # ╟─69b9c8ed-acf1-43bf-8478-3a9bc57bc36a
 # ╠═6532d7c4-2385-401a-9e99-8dc86655687f
-# ╠═2e1c3fa4-e424-4844-82c1-53d02271e7a6
+# ╟─28cba8c7-c6d9-4a62-92cc-4856353a1969
+# ╠═933cf81e-39e7-428c-a270-c638e6ead6fe
+# ╟─75a2d9fa-2edd-4506-bb10-ee8e9c780626
+# ╠═cc65c9c0-cd8d-432c-b697-8f90a7b831f9
 # ╠═d35acc45-7404-4b47-98fe-6e13db8b657e
-# ╠═5774b82f-a09e-46f8-a458-0f85fc4c53d8
+# ╠═836afa27-9e57-4717-9850-dbd1a470ee17
 # ╟─001c88b3-c0db-4ad4-9c0f-04a2ea7b090d
-# ╠═0815ba19-5c7d-40d6-b948-8edccfb5c386
+# ╟─0815ba19-5c7d-40d6-b948-8edccfb5c386
+# ╠═5774b82f-a09e-46f8-a458-0f85fc4c53d8
 # ╟─004958cf-0abb-4d8e-90b1-5966412cba91
 # ╠═b43365c6-384e-4fde-95f3-b2ad1ebc421a
 # ╠═a91c6298-98c4-4dc6-9450-279da1c34146
@@ -348,12 +389,25 @@ MLCourse.footer()
 # ╠═0a22b68c-1811-4de1-b3f8-735ee50299d2
 # ╠═6323a352-a5f3-4ba7-93bd-903fb1bf22a0
 # ╟─85c9650d-037a-4e9f-a15c-464ad479ff44
+# ╟─a10b3fa1-358b-4a94-b927-5e0f71edd1f3
+# ╠═b66c7efc-8fd8-4152-9b0f-9332f760b51b
+# ╠═ebe38042-5160-469b-8c07-484b7c019063
+# ╟─fa7cf2ae-9777-4ba9-9fe0-df545b94c5d8
+# ╠═99d3ae30-6bc2-47bf-adc4-1cc1d3ff178d
 # ╟─aa002263-4dc8-4238-ab27-a9094947600c
 # ╠═c7dab115-b990-4760-85d0-4214d33ada5d
 # ╟─e88f9e54-f86c-4d3a-80d7-1a9c5006476a
 # ╠═89cbf454-8d1b-4c82-ae39-0672a225e7dd
 # ╟─315f536b-4f10-4471-8e22-18c385ca80f2
 # ╠═69bc41cb-862c-4334-8b71-7f9974fedfe2
+# ╟─381b1ad3-8b7c-4222-800b-6a138518c925
+# ╠═26c1ee4f-22b6-42be-9170-4710f7c0ad78
+# ╟─481ed397-9729-48a7-b2a7-7f90a2ba6581
+# ╠═fec248c4-b213-4617-b63a-c2be1f7017e6
+# ╟─fa66ac8b-499d-49ae-be7d-2bdd3c1e6e0e
+# ╠═68fdc6b3-423c-42df-a067-f91cf3f3a332
+# ╟─76e50a60-4056-4f0d-b4e0-3d67d4d771c2
+# ╠═53d18056-7f76-4134-b73e-be4968d88901
 # ╟─76155286-978b-4a05-b428-4be4089d8b9a
 # ╠═b2f03b4a-b200-4b30-8793-6edc02f8136d
 # ╠═794de3b3-df22-45c1-950d-a515c4f41409
@@ -367,11 +421,6 @@ MLCourse.footer()
 # ╠═cc550977-1f37-4ad1-8170-d6150cc01a9c
 # ╠═f099be37-82d2-4031-955c-6a797c8400f2
 # ╠═75dda04c-c0af-4a05-b840-91f5c1aea53c
-# ╟─a10b3fa1-358b-4a94-b927-5e0f71edd1f3
-# ╠═b66c7efc-8fd8-4152-9b0f-9332f760b51b
-# ╠═ebe38042-5160-469b-8c07-484b7c019063
-# ╟─fa7cf2ae-9777-4ba9-9fe0-df545b94c5d8
-# ╠═99d3ae30-6bc2-47bf-adc4-1cc1d3ff178d
 # ╠═a7f12901-e155-4f61-b252-c5af6669bfee
 # ╠═ad2cd0c5-e308-4911-aba9-3b56eda8a2e2
 # ╠═1b8239fb-3894-47d6-87bf-4592b2fd078d
