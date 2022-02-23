@@ -76,15 +76,6 @@ begin
     end
 end;
 
-# ╔═╡ 16c3780b-d30f-4db1-97ae-9ff98a9009f3
-let
-	x = randn(200); x .-= mean(x); x ./= std(x, corrected = false)
-	y = sin.(x) .+ 2x;
-	λ = (sqrt((mean(x .* y)^2 + mean(y)^2)/2) - 1)
-	β = ridge_regression(x, y, λ)
-	norm(β)^2
-end
-
 # ╔═╡ 3a71618b-0d74-4480-b87b-c6ba87363b5d
 md"We generate now some data to observe the effect of regularization when fitting this data."
 
@@ -423,7 +414,6 @@ MLCourse.footer()
 # ╟─2e9ce2a9-217e-4910-b6ce-d174f2f2668e
 # ╠═150d58e7-0e73-4b36-836c-d81eef531a9c
 # ╟─78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
-# ╠═16c3780b-d30f-4db1-97ae-9ff98a9009f3
 # ╟─64b9cfa0-99f7-439b-b70e-f9266754ff74
 # ╠═8bd483cc-f490-11eb-38a1-b342dd2551fd
 # ╟─3a71618b-0d74-4480-b87b-c6ba87363b5d
