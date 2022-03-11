@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -88,26 +88,18 @@ and applying a classifier to the last hidden state.
 Here are some example sentences in English, French, Italian, Spanish and Danish
 after preprocessing by the `get_processed_data` function below. The preprocessing replaces most special characters by a single special character (we use the special character ˌ below). Ultimately, the recurrent neural network gets these sentences in one-hot encoded form; for better readability for humans we print them here in the standard form:
 
-\"jewish philosophy refers to the conjunction between serious study of philosophy and jewish theology\"
- \"during the early years of the second templeˌ the highest religious authority was a council known as the great assemblyˌ led by ezra of the book of ezra\"
- \"en 756ˌ abderraman i ˌun omeya superviviente del exterminio de la familia califal destronada por los abbasiesˌ fue acogido por sus partidarios en alˌandalus y se impuso como emir\"
- \"they also saw an elite population convert to judaism ˌthe khazarsˌˌ only to disappear as the centers of power in the lands once occupied by that elite fell to the people of rus and then the mongols\"
- \"ˌ167ˌ\\ncritics argue that wikipediaˌs open nature and a lack of proper sources for most of the information makes it unreliable\"
- \"tambien existia una clase media formada por comerciantesˌ pequenos propietariosˌ funcionarios y profesionales liberalesˌ que en general toleraba el franquismo pero no comulgaba totalmente con sus ideas\"
- \"wikipedia ˌpronunciaˌ vedi sottoˌ e unˌenciclopediaonline a contenuto liberoˌ collaborativaˌ multilingue e gratuitaˌ nata nel 2001ˌ sostenuta e ospitata dalla wikimedia foundationˌ unˌorganizzazione non a scopo di lucrostatunitense\"
- \"dˌautre partˌ des jalons sont poses pour une integration de toutes les economies nationales dans un grand espace economique domine par lˌallemagneˌ65ˌ\"
- \"ˌ423ˌˌ el proyecto preveia grandes infraestructuras viarias ˌbulevaresˌ grandes plazasˌ paseos de rondaˌ diagonalesˌ paseos maritimosˌˌ parques y jardinesˌ enlaces ferroviarios ˌcon las lineas interiores soterradasˌˌ edificios publicos y colectivos en los puntos centrales de las trazas viariasˌ equipamientos y areas de servicios\"
- \"ˌ24ˌ\\nif the stoppage is earlier in the gameˌ or if it is a playoff or grey cup gameˌ play may be stopped for up to 3 hours and then resume\"
- \"ˌ195ˌˌ el estudio se realizo comparando 42 articulos de ambas obras por un comite de expertos sin que estos supieran de cual de las dos enciclopedias provenian\"
- \"las evidencias arqueologicas de establecimientos fenicios ˌebusus ˌibizaˌˌ sexi ˌalmunecarˌˌ malaka ˌmalagaˌˌ permiten hablar de un monopolio fenicio de las rutas comerciales en torno al estrecho de gibraltar ˌincluyendo las del atlanticoˌ como la ruta del estanoˌˌ que limito la colonizacion griega al norte mediterraneo ˌemporionˌ la actual ampuriasˌ\"
- \"ˌ158ˌˌ en cuanto al sistema monetarioˌ al dinero carolingio sucedio tras la independizacion del condado el dinero de vellonˌ con un 75ˌˌ menos de plata\"
- \"es responsable ante las cortes generales\"
- \"ˌ818ˌˌ\\n\\nlas elecciones del 21 de diciembre fueron ganadas en escanos y votos por ciudadanosˌ cuya candidata era ines arrimadas\"
- \"ˌ102ˌ\\ndopo pochi giorni il marito mori\"
- \"ˌ116ˌ\\na kittel ˌyiddishˌ ˌˌˌˌˌˌ a white kneeˌlength overgarmentˌ is worn by prayer leaders and some observant traditional jews on the high holidays\"
- \"esta es una lista de las grafias alternativas usadas para nombrar a wikipedia en las diferentes edicionesˌˌ53ˌˌ\\n\\nnotaˌ cada asterisco ˌˌˌ denota una referencia respectiva por la multiple adopcion linguistica\"
- \"afin dˌassurer la perennite des liens vers ces sourcesˌ internet archive a repare en 2018 pres de 9 millions de liens brisesˌ37ˌ\"
- \"de hechoˌ 18 de los 25 mayores hoteles del mundo se encuentran en ella\"
+- \"jewish philosophy refers to the conjunction between serious study of philosophy and jewish theology\"
+-  \"en 756ˌ abderraman i ˌun omeya superviviente del exterminio de la familia califal destronada por los abbasiesˌ fue acogido por sus partidarios en alˌandalus y se impuso como emir\"
+- \"ˌ167ˌ\\ncritics argue that wikipediaˌs open nature and a lack of proper sources for most of the information makes it unreliable\"
+- \"tambien existia una clase media formada por comerciantesˌ pequenos propietariosˌ funcionarios y profesionales liberalesˌ que en general toleraba el franquismo pero no comulgaba totalmente con sus ideas\"
+- \"wikipedia ˌpronunciaˌ vedi sottoˌ e unˌenciclopediaonline a contenuto liberoˌ collaborativaˌ multilingue e gratuitaˌ nata nel 2001ˌ sostenuta e ospitata dalla wikimedia foundationˌ unˌorganizzazione non a scopo di lucrostatunitense\"
+- \"dˌautre partˌ des jalons sont poses pour une integration de toutes les economies nationales dans un grand espace economique domine par lˌallemagneˌ65ˌ\"
+- \"ˌ158ˌˌ en cuanto al sistema monetarioˌ al dinero carolingio sucedio tras la independizacion del condado el dinero de vellonˌ con un 75ˌˌ menos de plata\"
+- \"es responsable ante las cortes generales\"
+- \"ˌ102ˌ\\ndopo pochi giorni il marito mori\"
+- \"ˌ116ˌ\\na kittel ˌyiddishˌ ˌˌˌˌˌˌ a white kneeˌlength overgarmentˌ is worn by prayer leaders and some observant traditional jews on the high holidays\"
+- \"afin dˌassurer la perennite des liens vers ces sourcesˌ internet archive a repare en 2018 pres de 9 millions de liens brisesˌ37ˌ\"
+- \"de hechoˌ 18 de los 25 mayores hoteles del mundo se encuentran en ella\"
 
 The code in this section is somewhat more advanced than in the rest of this course.
 You do not need to understand everything. But if you are interested in learning
@@ -215,6 +207,104 @@ result a lot.
 # ╔═╡ e68603b3-6f95-4c55-aded-14eaa7615176
 md"# Tree-Based Methods
 
+## Decision Trees
+
+"
+
+# ╔═╡ 4b4714f7-49bf-4191-a59a-79fa1c826519
+function data_generator()
+    x = 8*rand(40) .- 4
+    y = sin.(x) .+ .3*randn(40)
+    DataFrame(x = x, y = y)
+end
+
+# ╔═╡ c5873c6f-53e8-45b6-931d-56088f0b60b1
+training_set = data_generator();
+
+# ╔═╡ f355f66c-a242-4e15-bb09-9e240948e1ed
+tree = machine(DecisionTreeRegressor(min_samples_leaf = 4),
+               select(training_set, Not(:y)),
+               training_set.y);
+
+# ╔═╡ b894f127-89a6-4903-9578-a6ae60e9bae7
+fit!(tree, verbosity = 0);
+
+# ╔═╡ ba27162a-7e83-4235-87c2-14d6f9b0550c
+with_terminal() do
+	MLJDecisionTreeInterface.DecisionTree.print_tree(fitted_params(tree).tree)
+end
+
+# ╔═╡ 16fef29a-753f-44b0-89af-6f5a0195e704
+let grid = -4:.01:4
+    scatter(training_set.x, training_set.y, label = "training set",
+            markersize = 3, markerstrokewidth = 0)
+    plot!(grid, sin.(grid), lw = 3, c = :green,
+          label = "generator without noise")
+    plot!(grid, predict(tree, DataFrame(x = grid)), lw = 3, c = :blue,
+          label = "tree fit", legend = :topleft, xlabel = "x", ylabel = "y")
+end
+
+# ╔═╡ 038a847e-f994-42ce-a13f-ba95d036f011
+md"## Ensembles
+
+If we would have access to multiple training sets we could fit a tree to each training set and average the resulting trees to get a fit that is quite close to the mean of the generator.
+"
+
+# ╔═╡ e9552f59-3b05-4f25-a5fd-e794798b331d
+let grid = -4:.01:4, m = zeros(length(grid))
+    plot()
+	Random.seed!(8)
+    for _ in 1:20
+        d = data_generator()
+        scatter!(d.x, d.y, label = nothing, markersize = 3, markerstrokewidth = 0)
+        mach = machine(DecisionTreeRegressor(min_samples_leaf = 3),
+                       select(d, Not(:y)), d.y)
+        fit!(mach, verbosity = 0)
+        p = predict(mach, DataFrame(x = grid))
+        m .+= p
+        plot!(grid, p, label = nothing)
+    end
+    m ./= 20
+    plot!(grid, sin.(grid), lw = 3, c = :green, ylim = (-2, 2),
+		  label = "generator without noise", xlabel = "x", ylabel = "y")
+    plot!(grid, m, lw = 3, c = :red, label = "mean of the tree fits")
+end
+
+# ╔═╡ f8eb425f-8279-40d2-bc87-acb0902dcb67
+md"## Bagging (Bootstrap Aggregation)
+
+If we have only a single training set we can artifially generate multiple training sets with the bootstrap method, i.e. each artificial training set is obtained by sampling with replacement ``n`` points from the true training set, and average the trees fitted to each bootstrap training set.
+"
+
+# ╔═╡ c014cb7c-e11c-46ea-a2d9-81d26cf29341
+let grid = -4:.01:4, m = zeros(length(grid))
+    plot()
+	Random.seed!(8)
+    for _ in 1:50
+        idxs = rand(1:nrows(training_set), nrows(training_set))
+        d = training_set[idxs, :]
+        scatter!(d.x, d.y, label = nothing, markersize = 3, markerstrokewidth = 0)
+        mach = machine(DecisionTreeRegressor(min_samples_leaf = 3),
+                       select(d, Not(:y)), d.y)
+        fit!(mach, verbosity = 0)
+        p = predict(mach, DataFrame(x = grid))
+        m .+= p
+        plot!(grid, p, label = nothing)
+    end
+    m ./= 50
+    plot!(grid, sin.(grid), lw = 3, c = :green, ylim = (-2, 2),
+		  label = "mean of the generator")
+    plot!(grid, m, lw = 3, c = :red, label = "mean of the tree fits")
+    mach = machine(DecisionTreeRegressor(min_samples_leaf = 3),
+                   select(training_set, Not(:y)), training_set.y)
+    fit!(mach, verbosity = 0)
+    p = predict(mach, DataFrame(x = grid))
+    plot!(grid, p, lw = 3, c = :blue, label = "tree fit", xlabel = "x", ylabel = "y")
+end
+
+# ╔═╡ 93c9127c-935c-4e8a-8da9-d817d2c24a6b
+md"## Random Forests and Gradient Boosting
+
 In this section we will analyse the cars data set and try to predict the miles per gallon a car drives based on different predictors. We will use a one-hot encoding for all categorical predictors.
 
 You should observe the following:
@@ -228,12 +318,16 @@ You should observe the following:
 cars = dropmissing(DataFrame(OpenML.load(455)));
 
 # ╔═╡ 5be3a1e7-de72-49e6-8170-fc5aac38e3bb
-cars_input = MLJ.transform(machine(OneHotEncoder(drop_last = true),
-	                               select(cars, Not([:name, :mpg]))) |> fit!,
+cars_input = MLJ.transform(fit!(machine(OneHotEncoder(drop_last = true),
+	                                    select(cars, Not([:name, :mpg]))),
+								 verbosity = 0),
 	                       select(cars, Not([:name, :mpg])))
 
 # ╔═╡ ef75fad9-41ca-4960-8c86-3f71c9581582
-m1 = machine(LinearRegressor(), cars_input, cars.mpg) |> fit!;
+m1 = machine(LinearRegressor(), cars_input, cars.mpg);
+
+# ╔═╡ b75ff61a-9deb-4ec4-a2c0-3b8231b4d109
+fit!(m1, verbosity = 0);
 
 # ╔═╡ 89a6c574-aa3d-4eec-8bf3-50c0d64bee40
 evaluate!(m1, measure = rmse)
@@ -243,12 +337,14 @@ begin
 	xgb = XGBoostRegressor()
     m2 = machine(TunedModel(model = xgb,
                             resampling = CV(nfolds = 4),
+		                    measure = rmse,
                             tuning = Grid(goal = 25),
                             range = [range(xgb, :eta,
                                            lower = 1e-2, upper = .1, scale = :log),
                                      range(xgb, :num_round, lower = 50, upper = 500),
                                      range(xgb, :max_depth, lower = 2, upper = 6)]),
-                  cars_input, cars.mpg) |> fit!
+                  cars_input, cars.mpg)
+	fit!(m2, verbosity = 0)
 end;
 
 # ╔═╡ 56b1d5da-eb6d-4a80-92ac-1de73dc76e9f
@@ -289,7 +385,10 @@ Random.seed!(23); X, y = make_blobs(centers = 3); # generate some random data
 y[y .== 3] .= 1; # we want only two classes here
 
 # ╔═╡ 3a7fa61a-69e0-4082-9bb2-13df40089bb2
-m5 = machine(SVC(), X, y) |> fit!;
+m5 = machine(SVC(), X, y);
+
+# ╔═╡ 4729c124-c2f8-442d-8f2f-f8e75bee7e40
+fit!(m5, verbosity = 0);
 
 # ╔═╡ a48c53e8-99f7-4b54-9a80-0be243b4cddb
 let grid = MLCourse.grid(-5:.5:11.5, -9:.5:12, names = (:x1, :x2))
@@ -312,9 +411,14 @@ $(MLCourse.embed_figure("conv_exercise.png"))
     - Flux knows the padding option `pad = SamePad()`. It means that the output volume should have the same x and y dimension as the input volume. In this exercise we compute the padding needed this option.  What padding ``p`` do you have to choose for a given ``n`` and ``f`` such that the input and output volumes have the same width and depth for stride ``s=1``. Check you result for the special case of ``n=4`` and ``f=3``.
     - Compute the number of weights and biases of this convolutional layer.
     - Compute the number of weights and biases for a dense layer (standard MLP layer) that has the same number of activations as this convolutional layer. Is the number of parameters larger for the dense layer or the convolutional layer?
+3. You are given a dataset with RGB color images with ``100\\times100`` pixels that you would like to classify into 20 different classes. Compute for the following neural network architectures the number of parameters (weights and biases).
+    - a multilayer perceptron with one hidden layer of 100 neurons.
+    - a convolutional network with 10 filters of size ``3\\times3\\times3`` stride 1 padding 1 followed by a dense hidden layer of 10 neurons.
+    - a convolution network with a first convolutional layer with 20 filters of size ``5\\times5\\times3`` padding 5 stride 2, a second convolutional layer with 10 filters of size ``3\\times3\\times20``, stride 2 padding 1, followed by a dense hidden layer of 10 neurons.
 
 ## Applied
 1. In this exercise our goal is to find a good machine learning model to classify images of Zalando's articles. You can load a description of the so-called Fashion-MNIST data set with `OpenML.describe_dataset(40996)` and load the data set with `OpenML.load(40996)`. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline. Hints: cleaning is not necessary, but plotting some examples is advisable; linear classification is a good starting point for a first benchmark, but you should also explore other models like random forests (`RandomForestClassifier`), multilayer perceptrons (`NeuralNetworkClassifier`) and convolutional neural networks (`ImageClassifer`) and play manually a bit with their hyper-parameters (proper tuning with `TunedModel` may be too time-intensive). To reduce the computation time, we will only use the first 5000 images of the full dataset for training and we will not do cross-validation here but instead use samples 5001 to 10000 as a validation set to estimate the classification accuracy. *Hint:* you can use the resampling strategy `Holdout` for model tuning and evaluation.
+2. (optional) Use a recurrent neural network to classify emails in our spam dataset.
 ")
 
 # ╔═╡ 3bd0ed27-7d3b-4036-87a4-2dd0e2874b58
@@ -324,10 +428,22 @@ MLCourse.footer()
 # ╟─7cfd274d-75d8-4cd9-b38b-4176466c9e26
 # ╟─dd12ea16-f087-4507-a571-c95bf38aa976
 # ╟─e68603b3-6f95-4c55-aded-14eaa7615176
+# ╠═4b4714f7-49bf-4191-a59a-79fa1c826519
+# ╠═c5873c6f-53e8-45b6-931d-56088f0b60b1
+# ╠═f355f66c-a242-4e15-bb09-9e240948e1ed
+# ╠═b894f127-89a6-4903-9578-a6ae60e9bae7
+# ╠═ba27162a-7e83-4235-87c2-14d6f9b0550c
+# ╟─16fef29a-753f-44b0-89af-6f5a0195e704
+# ╟─038a847e-f994-42ce-a13f-ba95d036f011
+# ╟─e9552f59-3b05-4f25-a5fd-e794798b331d
+# ╟─f8eb425f-8279-40d2-bc87-acb0902dcb67
+# ╟─c014cb7c-e11c-46ea-a2d9-81d26cf29341
+# ╟─93c9127c-935c-4e8a-8da9-d817d2c24a6b
 # ╠═a022be72-b0b0-43b7-8f39-c02a53875ff6
 # ╠═987264db-aca7-41c8-aa3a-b9437fcbd7cd
 # ╠═5be3a1e7-de72-49e6-8170-fc5aac38e3bb
 # ╠═ef75fad9-41ca-4960-8c86-3f71c9581582
+# ╠═b75ff61a-9deb-4ec4-a2c0-3b8231b4d109
 # ╠═89a6c574-aa3d-4eec-8bf3-50c0d64bee40
 # ╠═ba5563e7-844e-46b9-a4fd-c2d277d3ed5c
 # ╠═56b1d5da-eb6d-4a80-92ac-1de73dc76e9f
@@ -339,6 +455,7 @@ MLCourse.footer()
 # ╠═2d9cf0a4-6ba7-438b-8e8f-4a911a340f06
 # ╠═87a48194-fc87-414f-8d44-8bf00a87b3ec
 # ╠═3a7fa61a-69e0-4082-9bb2-13df40089bb2
+# ╠═4729c124-c2f8-442d-8f2f-f8e75bee7e40
 # ╠═a48c53e8-99f7-4b54-9a80-0be243b4cddb
 # ╟─2bbf9876-0676-11ec-3985-73f4dcaea02f
 # ╟─01a467a5-7389-44d1-984d-244dfb1ea39f
