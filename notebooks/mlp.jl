@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -307,7 +307,7 @@ let x = -5:.1:5
 end
 
 # ╔═╡ 9d3e7643-34fd-40ee-b442-9d2a434f30e0
-Markdown.parse("# Regression with MLPs
+Markdown.parse("""# Regression with MLPs
 
 ## Fitting the Weather Data
 
@@ -317,9 +317,9 @@ linear regression on the weather data set.
 The following code takes roughly 2 minutes to run.
 
 ```julia
-weather = CSV.read(joinpath(@__DIR__, \"..\", \"data\", \"weather2015-2018.csv\"),
+weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
                    DataFrame)
-weather_test = CSV.read(joinpath(@__DIR__, \"..\", \"data\", \"weather2019-2020.csv\"),
+weather_test = CSV.read(joinpath(@__DIR__, "..", "data", "weather2019-2020.csv"),
                         DataFrame)
 weather_x = float.(select(weather, Not([:LUZ_wind_peak, :time]))[1:end-5, :])
 weather_y = weather.LUZ_wind_peak[6:end]
@@ -333,8 +333,8 @@ nn = NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
                             optimiser = ADAMW(),
                             batch_size = 128,
                             epochs = 150)
-mach = machine(Standardizer() |> nn,
-               weather_x, weather_y)
+model = TransformedTargetModel(Standardizer() |> nn, target = Standardizer())
+mach = machine(model, weather_x, weather_y)
 fit!(mach, verbosity = 2)
 ```
 
@@ -344,6 +344,7 @@ fit!(mach, verbosity = 2)
     the input first to mean zero and standard deviation one.
     We do this, because the usual initializations
     of neural networks work best with standardized input.
+    With the `TransformedTargetModel` we also standardize the output variable.
 
     To learn more about the usual initializations you can have a look at this [blog post](https://towardsdatascience.com/weight-initialization-in-neural-networks-a-journey-from-the-basics-to-kaiming-954fb9b47c79) (optional).
 
@@ -359,32 +360,35 @@ Let us evalute the learned machine.
 (training_error = rmse(predict(mach, weather_x), weather_y),
  test_error = rmse(predict(mach, weather_test_x), weather_test_y))
 ```
-We find a training error of 7.38 and a test error of 8.65.
+We find a training error of 7.14 and a test error of 8.70.
 Both errors are lower than what we found with multiple linear regression
 (training error ≈ 8.09, test_error ≈ 8.91). However, comparing the predictions
 to the ground truth we see that a lot of the variability is still uncaptured
-by the model. This means most likely that the irreducible error is pretty high in this dataset.
+by the model. If the model would prefectly predict the test data, all points in the figure below would lie on the red diagonal. This is not the case and means most likely that the irreducible error is pretty high in this dataset.
 ```julia
 scatter(predict(mach, weather_test_x), weather_test_y,
-        xlabel = \"predicted\", ylabel = \"data\")
+        xlabel = "predicted", ylabel = "data")
 plot!(identity, legend = false)
 ```
 $(MLCourse.embed_figure("weather_mlp.png"))
-")
+""")
 
 # ╔═╡ 0ba71a2a-f2f9-4fc7-aa81-416799e79e57
-Markdown.parse("## Parametrizing Variances of Log-Normal Distributions with MLPs
+Markdown.parse("""## Parametrizing Variances of Log-Normal Distributions with MLPs
 
 For this example we do not use the abstractions provided by MLJ. Instead we use
 directly Flux. You only need to do this if you want to implement some non-standard neural network.
 
 Let us load the data.
 ```julia
-weather = CSV.read(joinpath(@__DIR__, \"..\", \"data\", \"weather2015-2018.csv\"),
+weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
                    DataFrame)
-standardize(x) = (x .- mean(x)) ./ std(x)
-weather_input = Float32.(standardize(weather.LUZ_pressure[1:end-5])')
-weather_output = Float32.(standardize(log.(weather.LUZ_wind_peak[6:end])))
+input_standardizer = fit!(machine(Standardizer(), weather.LUZ_pressure[1:end-5]))
+weather_input = MLJ.transform(input_standardizer, weather.LUZ_pressure[1:end-5])
+output_standardizer = fit!(machine(Standardizer(),
+                                   log.(weather.LUZ_wind_peak[6:end])))
+weather_output = MLJ.transform(output_standardizer,
+                               log.(weather.LUZ_wind_peak[6:end]))
 ```
 
 We define a simple neural network with one hidden layer of 50 tanh neurons.
@@ -398,7 +402,7 @@ function loss(x, y)
     output = nn(x)
     m = output[1, :]
     s = softplus.(output[2, :])
-    mean((m .- y) .^ 2 ./ (2 * s) .+ log.(s))
+    mean((m .- y) .^ 2 ./ (2 * s) .+ 1/2 * log.(s))
 end
 ```
 This function computes the two output dimensions of the neural network.
@@ -411,7 +415,7 @@ Now we train the neural network for 50 epochs.
 ```julia
 opt = ADAMW()
 p = Flux.params(nn) # these are the parameters to be adapted.
-data = Flux.DataLoader((weather_input, weather_output), batchsize = 32)
+data = Flux.DataLoader((weather_input', weather_output), batchsize = 32)
 for _ in 1:50
     Flux.Optimise.train!(loss, p, data, opt)
 end
@@ -419,24 +423,27 @@ end
 
 Let us now plot the result.
 ```julia
-grid = collect(-5:.1:3.5)'
-pred = nn(grid)
+grid = collect(-5:.1:3.5)
+pred = nn(grid')
 m = pred[1, :]
 s = sqrt.(softplus.(pred[2, :]))
-histogram2d(weather_input', weather_output, bins = (250, 200),
-            markersize = 3, xlabel = \"LUZ_pressure [hPa]\",
-            ylabel = \"LUZ_wind_peak [km/h]\", label = nothing, cbar = false)
-plot!(grid', m, c = :red, w = 3, label = \"mean\")
-plot!(grid', m .+ s, c = :red, linestyle = :dash, w = 3, label = \"± standard deviation\")
-plot!(grid', m .- s, c = :red, linestyle = :dash, w = 3, label = nothing)
+u_x(x) = inverse_transform(input_standardizer, x) # function to "un-standardize"
+u_y(y) = exp.(inverse_transform(output_standardizer, y))
+histogram2d(u_x.(weather_input), u_y.(weather_output), bins = (250, 200),
+            markersize = 3, xlabel = "LUZ_pressure [hPa]",
+            ylabel = "LUZ_wind_peak [km/h]", label = nothing, cbar = false)
+plot!(u_x.(grid), u_y.(m), c = :red, w = 3, label = "mean")
+plot!(u_x.(grid), u_y.(m .+ s), c = :red, linestyle = :dash, w = 3,
+      label = "± standard deviation")
+plot!(u_x.(grid), u_y.(m .- s), c = :red, linestyle = :dash, w = 3, label = nothing)
 ```
 
 $(MLCourse.embed_figure("weather_mlp_normal.png"))
 
 We see that the neural network found a slightly non-linear relationship between
 input and average output and the variance of the noise is smaller for high
-pressure values than for low pressure values.
-")
+pressure values than for low pressure values. Note that the dashed lines are not symmetric around the mean, because we fitted a log-normal distribution; the dashed lines would be symmetric around the mean if we plotted the logarithm of the wind peak on the y-axis.
+""")
 
 # ╔═╡ 4bd63efb-0aef-41cd-a9b7-9fa78db107a0
 Markdown.parse("
