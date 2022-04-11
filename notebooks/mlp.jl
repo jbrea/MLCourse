@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.15.1
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -7,8 +7,9 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
@@ -16,21 +17,23 @@ end
 # ╔═╡ 87f59dc7-5149-4eb6-9d81-440ee8cecd72
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
-    using PlutoUI, Plots, MLJ, DataFrames, Random, CSV, Flux, Distributions,
-          StatsPlots, Base64, MLJFlux, MLJOpenML, Random
-    gr()
-    PlutoUI.TableOfContents()
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+    using MLCourse, Plots, MLJ, DataFrames, Random, CSV, Flux, Distributions,
+          StatsPlots, MLJFlux, OpenML, Random
+    import MLCourse: heaviside
 end
 
 # ╔═╡ 83e2c454-042f-11ec-32f7-d9b38eeb7769
 begin
-    using MLCourse
-    MLCourse.list_notebooks(@__FILE__)
+    using PlutoUI
+    PlutoUI.TableOfContents()
 end
 
 # ╔═╡ c95ad296-5191-4f72-a7d7-87ddebc43a65
-md"# Solving the XOR Problem with Learned Feature Vectors"
+md"# Solving the XOR Problem with Learned Feature Vectors
+
+In the following example we define a loss function that learns the features (weights of the hidden neurons) and the \"regression coefficients\" (output weights) with gradient descent.
+"
 
 # ╔═╡ fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
 function xor_generator(; n = 200)
@@ -53,7 +56,7 @@ begin
                               β[3] * relu.(x * w₃) .+
                               β[4] * relu.(x * w₄) .+
                               β[5]
-    f(x, θ) = f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:14])
+    f(x, θ) = f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
     function log_reg_loss(θ)
         p = σ.(f(xor_input, θ))
         -mean(@. xor_target * log(p) + (1 - xor_target) * log(1 - p))
@@ -69,11 +72,14 @@ t = $(@bind t Slider(1:10^2))
 # ╔═╡ 49c2b3a1-50c0-4fb9-a06b-2de7be216702
 begin
     Random.seed!(Meta.parse(seed))
-    θ₀ = .1 * randn(14)
+    θ₀ = .1 * randn(13)
     path = [copy(θ₀)]
     MLCourse.gradient_descent(log_reg_loss, θ₀, .05, 10^4,
                               callback = x -> push!(path, copy(x)))
 end;
+
+# ╔═╡ 9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
+md"The green arrows in the figure above are the weights w₁, …, w₄ of the four (hidden) neurons. The coloring of the dots is based on classification at decision threshold 0.5, i.e. if the activation of the output neuron is above 0.5 for a given input point, this point is classified as red (green, otherwise). Note that the initial configuration of the green vectors depends on the initialization of gradient descent and therefore on the seed. For some seeds the optimal solution to the xor-problem is not found by gradient descent."
 
 # ╔═╡ b650ddb4-5854-4862-ba26-0bf92f77c3df
 begin
@@ -93,8 +99,8 @@ let idx = idxs[t]
     end
     hline!([0], c = :black)
     vline!([0], c = :black)
-    p2 = plot(idxs, losses, ylim = (0, 1), xscale = :log10, xlabel = "t",
-              ylabel = "loss")
+    p2 = plot(idxs, losses, ylim = (0, 1), xscale = :log10, xlabel = "gradient descent step t",
+              ylabel = "loss", title = "learning curve")
     scatter!([idxs[t]], [losses[t]], c = :red)
     plot(p1, p2, layout = (1, 2), size = (700, 400), legend = false)
 end
@@ -142,7 +148,7 @@ begin
     @df xor_results dotplot!(:n_hidden, :test_accuracy, label = \"test\")
 end
 ```
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "overparametrized.png"))))
+$(MLCourse.embed_figure("overparametrized.png"))
 ")
 
 # ╔═╡ 5c2154ef-2a35-4d91-959d-f72100049894
@@ -193,15 +199,6 @@ begin
     end
 end;
 
-
-# ╔═╡ 9e6ad99f-8cd4-4372-a4a2-f280e49e21a3
-begin
-    heaviside(x) = x > 0 ? 1. : 0.;
-    function tocol(y)
-        ma, mi = maximum(y), minimum(y)
-        palette(:jet1, 101)[min.(101, max.(1, reshape(floor.(Int, (y .+ 6) * 5) .+ 1, :)))]
-    end
-end;
 
 # ╔═╡ 653ea4e8-47b2-4d9f-bc5c-583468d6e1ae
 md"## 1D to 1D
@@ -274,6 +271,17 @@ md"## 2D to 1D
 ``w_{14}^{(2)}`` = $(@bind w142_2d Slider(-3.:.1:3., default = floor(60*(rand()-.5))/10, show_value = true))
 "
 
+# ╔═╡ 15cd82d3-c255-4eb5-9f0d-1e662c488027
+md"If you want to tinker more with simple neural networks there is [this nice web-application](http://playground.tensorflow.org/)."
+
+# ╔═╡ 9e6ad99f-8cd4-4372-a4a2-f280e49e21a3
+begin
+    function tocol(y)
+        ma, mi = maximum(y), minimum(y)
+        palette(:jet1, 101)[min.(101, max.(1, reshape(floor.(Int, (y .+ 6) * 5) .+ 1, :)))]
+    end
+end;
+
 # ╔═╡ 66bc40f3-7710-4892-ae9f-79b9c850b0ea
 let x = -5:.1:5
     grid = MLCourse.grid(x, x, output_format = DataFrame)
@@ -298,9 +306,8 @@ let x = -5:.1:5
                  xlabel = "x₁", ylabel = "x₂", legend = false, aspect_ratio = 1)
 end
 
-
 # ╔═╡ 9d3e7643-34fd-40ee-b442-9d2a434f30e0
-Markdown.parse("# Regression with MLPs
+Markdown.parse("""# Regression with MLPs
 
 ## Fitting the Weather Data
 
@@ -310,9 +317,9 @@ linear regression on the weather data set.
 The following code takes roughly 2 minutes to run.
 
 ```julia
-weather = CSV.read(joinpath(@__DIR__, \"..\", \"data\", \"weather2015-2018.csv\"),
+weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
                    DataFrame)
-weather_test = CSV.read(joinpath(@__DIR__, \"..\", \"data\", \"weather2019-2020.csv\"),
+weather_test = CSV.read(joinpath(@__DIR__, "..", "data", "weather2019-2020.csv"),
                         DataFrame)
 weather_x = float.(select(weather, Not([:LUZ_wind_peak, :time]))[1:end-5, :])
 weather_y = weather.LUZ_wind_peak[6:end]
@@ -320,24 +327,26 @@ weather_test_x = float.(select(weather_test, Not([:LUZ_wind_peak, :time]))[1:end
 weather_test_y = weather_test.LUZ_wind_peak[6:end]
 
 Random.seed!(31)
-mach = machine(@pipeline(Standardizer(),
-                         NeuralNetworkRegressor(
-                             builder = MLJFlux.Short(n_hidden = 128,
-                                                     dropout = .5,
-                                                     σ = relu),
-                             optimiser = ADAMW(),
-                             batch_size = 128,
-                             epochs = 150),
-                         target = Standardizer()),
-               weather_x, weather_y) |> x -> fit!(x, verbosity = 2)
+nn = NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
+                                                    dropout = .5,
+                                                    σ = relu),
+                            optimiser = ADAMW(),
+                            batch_size = 128,
+                            epochs = 150)
+model = TransformedTargetModel(Standardizer() |> nn, target = Standardizer())
+mach = machine(model, weather_x, weather_y)
+fit!(mach, verbosity = 2)
 ```
 
 !!! note
 
-    We use here an `MLJ.@pipeline` that standardizes with a `Standardizer`
-    the input first to mean zero and standard deviation one. The same standardization
-    is applied to the target values. We do this, because the standard initializations
-    of neural networks work best with standardized input and output.
+    We use here a `Pipeline` (`|>`) that standardizes with a `Standardizer`
+    the input first to mean zero and standard deviation one.
+    We do this, because the usual initializations
+    of neural networks work best with standardized input.
+    With the `TransformedTargetModel` we also standardize the output variable.
+
+    To learn more about the usual initializations you can have a look at this [blog post](https://towardsdatascience.com/weight-initialization-in-neural-networks-a-journey-from-the-basics-to-kaiming-954fb9b47c79) (optional).
 
 !!! note
 
@@ -351,32 +360,35 @@ Let us evalute the learned machine.
 (training_error = rmse(predict(mach, weather_x), weather_y),
  test_error = rmse(predict(mach, weather_test_x), weather_test_y))
 ```
-We find a training error of 7.20 and a test error of 8.66.
+We find a training error of 7.14 and a test error of 8.70.
 Both errors are lower than what we found with multiple linear regression
 (training error ≈ 8.09, test_error ≈ 8.91). However, comparing the predictions
 to the ground truth we see that a lot of the variability is still uncaptured
-by the model.
+by the model. If the model would prefectly predict the test data, all points in the figure below would lie on the red diagonal. This is not the case and means most likely that the irreducible error is pretty high in this dataset.
 ```julia
 scatter(predict(mach, weather_test_x), weather_test_y,
-        xlabel = \"predicted\", ylabel = \"data\")
+        xlabel = "predicted", ylabel = "data")
 plot!(identity, legend = false)
 ```
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "weather_mlp.png"))))
-")
+$(MLCourse.embed_figure("weather_mlp.png"))
+""")
 
 # ╔═╡ 0ba71a2a-f2f9-4fc7-aa81-416799e79e57
-Markdown.parse("## Parametrizing Variances of Log-Normal Distributions with MLPs
+Markdown.parse("""## Parametrizing Variances of Log-Normal Distributions with MLPs
 
 For this example we do not use the abstractions provided by MLJ. Instead we use
-directly Flux.
+directly Flux. You only need to do this if you want to implement some non-standard neural network.
 
 Let us load the data.
 ```julia
-weather = CSV.read(joinpath(@__DIR__, \"..\", \"data\", \"weather2015-2018.csv\"),
+weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
                    DataFrame)
-standardize(x) = (x .- mean(x)) ./ std(x)
-weather_input = Float32.(standardize(weather.LUZ_pressure[1:end-5])')
-weather_output = Float32.(standardize(log.(weather.LUZ_wind_peak[6:end])))
+input_standardizer = fit!(machine(Standardizer(), weather.LUZ_pressure[1:end-5]))
+weather_input = MLJ.transform(input_standardizer, weather.LUZ_pressure[1:end-5])
+output_standardizer = fit!(machine(Standardizer(),
+                                   log.(weather.LUZ_wind_peak[6:end])))
+weather_output = MLJ.transform(output_standardizer,
+                               log.(weather.LUZ_wind_peak[6:end]))
 ```
 
 We define a simple neural network with one hidden layer of 50 tanh neurons.
@@ -390,7 +402,7 @@ function loss(x, y)
     output = nn(x)
     m = output[1, :]
     s = softplus.(output[2, :])
-    mean((m .- y) .^ 2 ./ (2 * s) .+ log.(s))
+    mean((m .- y) .^ 2 ./ (2 * s) .+ 1/2 * log.(s))
 end
 ```
 This function computes the two output dimensions of the neural network.
@@ -403,7 +415,7 @@ Now we train the neural network for 50 epochs.
 ```julia
 opt = ADAMW()
 p = Flux.params(nn) # these are the parameters to be adapted.
-data = Flux.DataLoader((weather_input, weather_output), batchsize = 32)
+data = Flux.DataLoader((weather_input', weather_output), batchsize = 32)
 for _ in 1:50
     Flux.Optimise.train!(loss, p, data, opt)
 end
@@ -411,24 +423,27 @@ end
 
 Let us now plot the result.
 ```julia
-grid = collect(-5:.1:3.5)'
-pred = nn(grid)
+grid = collect(-5:.1:3.5)
+pred = nn(grid')
 m = pred[1, :]
 s = sqrt.(softplus.(pred[2, :]))
-histogram2d(weather_input', weather_output, bins = (250, 200),
-            markersize = 3, xlabel = \"LUZ_pressure [hPa]\",
-            ylabel = \"LUZ_wind_peak [km/h]\", label = nothing, cbar = false)
-plot!(grid', m, c = :red, w = 3, label = \"mean\")
-plot!(grid', m .+ s, c = :red, linestyle = :dash, w = 3, label = \"± standard deviation\")
-plot!(grid', m .- s, c = :red, linestyle = :dash, w = 3, label = nothing)
+u_x(x) = inverse_transform(input_standardizer, x) # function to "un-standardize"
+u_y(y) = exp.(inverse_transform(output_standardizer, y))
+histogram2d(u_x.(weather_input), u_y.(weather_output), bins = (250, 200),
+            markersize = 3, xlabel = "LUZ_pressure [hPa]",
+            ylabel = "LUZ_wind_peak [km/h]", label = nothing, cbar = false)
+plot!(u_x.(grid), u_y.(m), c = :red, w = 3, label = "mean")
+plot!(u_x.(grid), u_y.(m .+ s), c = :red, linestyle = :dash, w = 3,
+      label = "± standard deviation")
+plot!(u_x.(grid), u_y.(m .- s), c = :red, linestyle = :dash, w = 3, label = nothing)
 ```
 
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "weather_mlp_normal.png"))))
+$(MLCourse.embed_figure("weather_mlp_normal.png"))
 
 We see that the neural network found a slightly non-linear relationship between
 input and average output and the variance of the noise is smaller for high
-pressure values than for low pressure values.
-")
+pressure values than for low pressure values. Note that the dashed lines are not symmetric around the mean, because we fitted a log-normal distribution; the dashed lines would be symmetric around the mean if we plotted the logarithm of the wind peak on the y-axis.
+""")
 
 # ╔═╡ 4bd63efb-0aef-41cd-a9b7-9fa78db107a0
 Markdown.parse("
@@ -459,7 +474,7 @@ let
 end
 ```
 
-![](data:img/png; base64, $(open(base64encode, joinpath(@__DIR__, "figures", "poly.png"))))
+$(MLCourse.embed_figure("poly.png"))
 ")
 
 # ╔═╡ 14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
@@ -471,7 +486,7 @@ The following code to fit the MNIST data with a multilayer perceptron takes a
 few minutes to run.
 
 ```julia
-mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
+mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     coerce!(df, :class => Multiclass)
     coerce!(df, Count => MLJ.Continuous)
     Float32.(df[:, 1:end-1] ./ 255),
@@ -498,26 +513,41 @@ and no explicit comparison with all training images is required.
 md"# Exercises
 
 ## Conceptual
-1. To get a feeling for the kind of functions that can be fitted with neural networks, we will draw ``y`` as a function of ``x`` for some values of the weights. It may be helpful to sketch this neural network with the input neuron, the hidden neurons and the output neuron and label the connections with the weights.
+1. To get a feeling for the kind of functions of one predictor can be fitted with neural networks, we will draw ``y`` as a function of ``x`` for some values of the weights. It may be helpful to sketch this neural network with the input neuron, the hidden neurons and the output neuron and label the connections with the weights.
     * Draw in the same figure ``a_1^{(1)} = g(w_{10}^{(1)} + w_{11}^{(1)} x)``, ``a_2^{(1)}=g(w_{20}^{(1)} + w_{21}^{(1)} x)`` and ``\bar y = w_0^{(2)} + w_1^{(2)}a_1^{(1)} +  w_2^{(2)}a_2^{(1)}`` as a function of ``x``. Use ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = 1``, ``w_{20}^{(1)} = - 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1`` and use the rectified linear activation function ``g = \mbox{relu}``. At which ``x``-values does the slope change? Give the answer in terms of the weights.
     * Draw a similar graph for ``w_{11}^{(1)} < 0`` and ``w_{10}^{(1)}/w_{11}^{(1)}<w_{20}^{(1)}/w_{21}^{(1)}``, e.g. with ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = -1``, ``w_{20}^{(1)} = 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1``.
-    * How does the graph above change, if ``w_1^{(2)}`` and ``w_2^{(2)}`` become negative?
+    * How does the graph above change, if ``w_1^{(2)} = -2`` and ``w_2^{(2)} = -1``?
     * Let us assume we add more neurons to the same hidden layer, i.e. we have ``a_1^{(1)}, \ldots, a_{d^{(1)}}^{(1)}`` activations in the first layer. How would the graph look differently in this case? Draw a sketch and describe in one sentence the qualitative difference.
     * Let us assume we add instead more hidden layers with relu-activations. Would the graph of this neural network look qualitatively different from the ones we have drawn so far in this exercise?
-    * Show that a neural network with one hidden layer of 3 relu-neurons can perfectly fit any continuous piece-wise linear function of the form ``y = \left\{\begin{array}{ll} a_1 + b_1 x & x < c_1 \\ a_2 + b_2 x & c_1 \leq x < c_2 \\ a_3 + b_3 x & c_2 \leq x \end{array}\right. \hspace{1cm}  ``
+    * (optional) Show that a neural network with one hidden layer of 3 relu-neurons can perfectly fit any continuous piece-wise linear function of the form ``y = \left\{\begin{array}{ll} a_1 + b_1 x & x < c_1 \\ a_2 + b_2 x & c_1 \leq x < c_2 \\ a_3 + b_3 x & c_2 \leq x \end{array}\right. \hspace{1cm}  ``
                     with ``c_1 =  \frac{a_1 - a_2}{b_2 - b_1} < c_2 = \frac{a_2 - a_3}{b_3 - b_2}``. Express ``a_1, a_2, a_3`` and ``b_1, b_2, b_3`` in terms of the network weights. There are multiple solutions; find one of them.
 1. Consider a neural network with two hidden layers: ``p = 4`` input units, ``2`` units in the first hidden layer, ``3`` units in the second hidden layer, and a single output.
     - Draw a picture of the network.
     - How many parameters are there?
     - Assume the output of this network is the mean of a conditional normal distribution. Write the negative log-likelihood loss using matrix notation.
-1. Derive the loss function we used in section \"Parametrizing Variances of Log-Normal Distributions with MLPs\" above.
+1. Let us assume you want to predict the proportion ``y`` of citizens voting for one of two parties based on 113 different features that depend e.g. on the voting history, income distribution or demographics (see e.g. [here](https://www.ozy.com/news-and-politics/the-forecast-the-methodology-behind-our-2020-election-model/379778/) for an actual example). Because the proportion is a number between 0 and 1, it is reasonable to model it as a sample from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) ``p(y) = \frac{y^{\alpha - 1}(1-y)^{\beta - 1}}{B(\alpha, \beta)}``, where ``\alpha>0`` and ``\beta>0`` are shape parameters and ``B`` is the beta function. You want parametrize the conditional distribution of proportions ``y`` given predictors ``x`` with a neural network.
+    * How many input units should this neural network have?
+    * How many output units should this neural network have?
+    * What kind of activation function would you choose for the output layer?
+    * Which loss function would you use to estimate the network parameters?
+1. (Optional) Grant Sanderson has some beautiful [videos about neural networks](https://www.3blue1brown.com/topics/neural-networks). Have a look at them, if you are interested.
 
 ## Applied
-1. In this exercise our goal is to find a good machine learning model to classify images of Zalando's articles. You can load a description of the so-called Fashion-MNIST data set with `MLJOpenML.describe_dataset(40996)` and load the data set with `MLJOpenML.load(40996)`. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline. Hints: cleaning is not necessary, but plotting some examples is advisable; linear classification is a good starting point for a first benchmark, but you should also explore other models and tune their hyper-parameters; if you are impatient: choose smaller training sets.
-2. In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `MLJOpenML.describe_dataset(505)`.
+1. In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `OpenML.describe_dataset(505)`. The first 100 columns of this data set contain measurements of near infrared absorbance at different frequencies for different pieces of meat. *Hint:* you can select all these columns based on name with `select(data, r\"absorbance\")` (The \"r\" in this command stands for Regex and it means that all columns with name containing the word \"absorbance\" should be selected). The column `:fat` contains the fat content of each piece of meat. We will use the first 172 data points for training and validation and the rest of the data points as a test set. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline.
+    - Have a look at the raw data by e.g. checking if there are missing values and looking at a correlation plot.
+    - Fit some multiple linear regression models (with e.g. regularization constants tuned with cross-valdiation), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content.
+    - Fit some neural network model (with 2 hyper-paramters of your choice tuned by cross-validation; warning: it may take quite some time to fit if you use a high number for `nfolds`), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content. *Hint 1:* standardization of input and output matters. *Hint 2:* If you want to tune some neural network parameters in a pipeline you can usually access them in the `range` function as `:(neural_network_regressor.builder.dropout)`, for example.
 "
 
+
+# ╔═╡ 7c6951e8-726a-4181-b15f-b629a2835d03
+MLCourse.list_notebooks(@__FILE__)
+
+# ╔═╡ 8c72c4b5-452d-4ba3-903b-866cac1c799d
+MLCourse.footer()
+
 # ╔═╡ Cell order:
+# ╠═87f59dc7-5149-4eb6-9d81-440ee8cecd72
 # ╟─c95ad296-5191-4f72-a7d7-87ddebc43a65
 # ╠═fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
 # ╠═ea7fc5b6-79cc-4cc5-820e-5c55da83207e
@@ -525,6 +555,7 @@ md"# Exercises
 # ╠═49c2b3a1-50c0-4fb9-a06b-2de7be216702
 # ╟─258a3459-3fef-4655-830c-3bdf11eb282d
 # ╟─16d0808e-4094-46ff-8f92-1ed21aa6191b
+# ╟─9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
 # ╟─b650ddb4-5854-4862-ba26-0bf92f77c3df
 # ╟─8c54bfb2-54c5-4777-ad53-97926da97f7e
 # ╟─5c2154ef-2a35-4d91-959d-f72100049894
@@ -533,11 +564,13 @@ md"# Exercises
 # ╟─1171bcb8-a2af-49f3-9a7e-2e7cac34f9f4
 # ╟─1c70c3c4-bded-44ec-ac40-c71268b7307e
 # ╟─66bc40f3-7710-4892-ae9f-79b9c850b0ea
+# ╟─15cd82d3-c255-4eb5-9f0d-1e662c488027
 # ╟─9e6ad99f-8cd4-4372-a4a2-f280e49e21a3
 # ╟─9d3e7643-34fd-40ee-b442-9d2a434f30e0
 # ╟─0ba71a2a-f2f9-4fc7-aa81-416799e79e57
 # ╟─4bd63efb-0aef-41cd-a9b7-9fa78db107a0
 # ╟─14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
 # ╟─2f034d19-1c00-4a10-a880-99436ab00957
+# ╟─7c6951e8-726a-4181-b15f-b629a2835d03
 # ╟─83e2c454-042f-11ec-32f7-d9b38eeb7769
-# ╟─87f59dc7-5149-4eb6-9d81-440ee8cecd72
+# ╟─8c72c4b5-452d-4ba3-903b-866cac1c799d

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.15.1
+# v0.18.0
 
 using Markdown
 using InteractiveUtils
@@ -7,8 +7,9 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
@@ -16,18 +17,13 @@ end
 # ╔═╡ 7aa547f8-25d4-488d-9fc3-f633f7f03f57
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
-    using PlutoUI, MLJ, MLJLinearModels, Plots, LinearAlgebra, Zygote, Flux, Random, DataFrames, Distributions
-    gr()
-    PlutoUI.TableOfContents()
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+    using MLJ, MLJLinearModels, Plots, LinearAlgebra, Zygote, Flux, Random, DataFrames, Distributions, MLCourse
+    import MLCourse: poly
 end
 
-# ╔═╡ cb9f858a-f60a-11eb-3f0e-a9b68cf33921
-begin
-    using MLCourse
-    import MLCourse: poly
-    MLCourse.list_notebooks(@__FILE__)
-end
+# ╔═╡ e03882f9-843e-4552-90b1-c47b6cbba19b
+using PlutoUI; PlutoUI.TableOfContents()
 
 # ╔═╡ 9f18f610-79e2-403a-a792-fe2dafd2054a
 md"# Gradient Descent
@@ -45,13 +41,13 @@ function gradient_descent(f, x, η, T; callback = x -> nothing)
 end
 
 # ╔═╡ 49e744dc-33b7-455a-9cf7-4e8e12f11152
-X, y = make_regression(40, 1, rng = 16)
+X, y = make_regression(40, 1, rng = 16) # make_regression is an MLJ data generator
 
 # ╔═╡ dcc76840-6552-4a86-8268-1291ab8ea0d3
 begin
-    lin_reg_loss(β) = lin_reg_loss(β[1], β[2])
-    lin_reg_loss(β₀, β₁) = lin_reg_loss(β₀, β₁, X.x1, y)
     lin_reg_loss(β₀, β₁, x, y) = mean((y .- β₀  .- β₁ * x).^2)
+    lin_reg_loss(β₀, β₁) = lin_reg_loss(β₀, β₁, X.x1, y)
+    lin_reg_loss(β) = lin_reg_loss(β[1], β[2])
 end
 
 # ╔═╡ 3ca1e8f3-d69f-454f-b917-4bbe2dcfce01
@@ -59,15 +55,15 @@ md"β₀⁽⁰⁾ = $(@bind b0 Slider(-3.:.1:3., show_value = true, default = 0.
 
 β₁⁽⁰⁾ = $(@bind b1 Slider(-3.:.1:3., show_value = true, default = -3.))
 
-η = $(@bind η Slider(.01:.01:.1, show_value = true))
+η = $(@bind η Slider(.01:.01:2, show_value = true))
 
-t = $(@bind t Slider(0:100, show_value = true))
+step t = $(@bind t Slider(0:100, show_value = true))
 "
 
 # ╔═╡ b1fc14bb-1fd2-4739-a761-7a605fd4559b
 begin
-    params = [b0, b1]
-    lin_reg_path = [copy(params)]
+    params = [b0, b1] # initial parameters
+    lin_reg_path = [copy(params)] # we will copy all parameter values to this list
     gradient_descent(lin_reg_loss, params, η, 100,
                      callback = x -> push!(lin_reg_path, copy(x)))
 end
@@ -96,8 +92,8 @@ begin
     σ(x) = 1/(1 + exp(-x))
     log_reg_loss(β) = log_reg_loss(β[1], β[2])
     function log_reg_loss(β₀, β₁)
-        p = σ.(β₀  .+ β₁ * X2.x1)
-        -mean(@. y2 * log(p) + (1-y2) * log(1 - p))
+        p = σ.(β₀  .+ β₁ * X2.x1) # probability of positive class for all inputs
+        -mean(@. y2 * log(p) + (1-y2) * log(1 - p)) # negative log-likelihood
     end
 end
 
@@ -108,7 +104,7 @@ md"β₀⁽⁰⁾ = $(@bind b02 Slider(-3.:.1:3., show_value = true, default = -
 
 η = $(@bind η2 Slider(.1:.1:2, show_value = true))
 
-t = $(@bind t2 Slider(0:100, show_value = true))
+step t = $(@bind t2 Slider(0:100, show_value = true))
 "
 
 # ╔═╡ 93699313-5e42-48a7-abc6-ad146e5bdcdd
@@ -134,10 +130,11 @@ end
 
 
 # ╔═╡ 979feb42-c328-44b5-b519-8e8cda474140
-md"## Gradient Descent to for a Complicated Function"
+md"## Gradient Descent to Minimize a Complicated Function"
 
 # ╔═╡ c448238c-f712-4af3-aedb-cec3a2c1a73e
 begin
+	Random.seed!(5)
     f(x, θ) = θ[1] * sin.(θ[2] * x .+ θ[3]) .+ θ[4] * sin.(θ[5] * x .+ θ[6])
     f(x) = 0.3 * sin(2x) + .7 * sin(3.5x + 1)
     x3 = randn(50)
@@ -147,43 +144,49 @@ end
 # ╔═╡ 6e38a3f6-a592-4dc1-a6c4-d0f0050c9399
 special_loss(θ) = mean((y3 .- f(x3, θ)).^2)
 
+# ╔═╡ 4b3ac87f-39f6-4e6c-b7b3-536925e9b112
+md"step t = $(@bind t3 Slider(1:10^4, show_value = true))
+
+seed = $(@bind special_seed Slider(1:10, default = 3, show_value = true))"
+
 # ╔═╡ 9a61332f-cdc2-4129-b7b5-5ab54ba387a3
 begin
+	Random.seed!(special_seed) # defined by the slider below
     params3 = .1 * randn(6)
     special_path = [copy(params3)]
     gradient_descent(special_loss, params3, .1, 10^4,
                      callback = x -> push!(special_path, copy(x)))
 end
 
-# ╔═╡ 4b3ac87f-39f6-4e6c-b7b3-536925e9b112
-md"t = $(@bind t3 Slider(1:10^4, show_value = true))"
-
 # ╔═╡ 01221937-b6d9-4dac-be90-1b8a1c5e9d87
 let
     p1 = plot(f, label = "orginal function", xlabel = "x", ylabel = "y",
-              ylim = (-1.3, 1.2))
+              ylim = (-1.3, 1.2), xlim = (-3, 3))
     plot!(x -> f(x, special_path[t3]), label = "current fit")
+	scatter!(x3, y3, label = "training data")
     th = round.(special_path[t3], digits = 2)
     annotate!([(0, -1.1, text("f̂(x) = $(th[1]) * sin($(th[2])x + $(th[3])) + $(th[4]) * sin($(th[5])x + $(th[6]))", pointsize = 7))])
     losses = special_loss.(special_path)
     p2 = plot(0:10^4, losses, label = "learning curve", c = :black, yscale = :log10)
     scatter!([t3], [losses[t3]], label = "current loss", xlabel = "t", ylabel = "loss")
-    plot(p1, p2, layout = (1, 2), size = (700, 400))
+    p3 = contour(-4:.1:4, -4:.1:4, (x2, x5) -> special_loss([special_path[t3][1]; x2; special_path[t3][3:4]; x5; special_path[t3][6]]), xlabel = "θ₂", ylabel = "θ₅", title = "loss")
+	scatter!([special_path[t3][2]], [special_path[t3][5]])
+    plot(p1, plot(p2, p3, layout = (2, 1)), layout = (1, 2), size = (700, 400))
 end
 
-
 # ╔═╡ f5e27275-8751-4e80-9888-c3d22d8e80e3
-md"If you want to know more about the magic of how julia computes derivates of
-(almost) arbitrary code: have a look at this [didactic introduction to automatic
-differentiation](https://github.com/MikeInnes/diff-zoo)."
+md"*Optional* If you want to know more about the magic of automatic differentiation and how julia computes derivates of (almost) arbitrary code: have a look at this [didactic introduction to automatic differentiation](https://github.com/MikeInnes/diff-zoo) or this [video with code examples in python](https://www.youtube.com/watch?v=wG_nF1awSSY&t)."
 
 # ╔═╡ ca1301fd-8978-44d6-bfae-e912f939d7a8
-md"# Stochastic Gradient Descent"
+md"# Stochastic Gradient Descent
+
+In each step of stochastic gradient descent (SGD) the gradient is computed only on a (stochastically selected) subset of the data. As long as the selected subset of the data is somewhat representative of the full dataset the gradient will point more or less in the same direction as the full gradient computed on the full dataset. The advantage of computing the gradient only on a subset of the data is that it takes much less time to compute the gradient on a small dataset than on a large dataset. In the figure below you see the niveau lines of the full loss in black and the niveau lines of the loss computed on a green, purple, yellow and a blue subset. The gradient computed on, say, the yellow subset is always perpendicular to the yellow niveau lines but it may not be perpendicular to the niveau lines of the full loss. When selecting in each step another subset we observe a jittered trajectory around the full gradient descent trajectory.
+"
 
 # ╔═╡ 75528011-05d9-47dc-a37b-e6bb6be52c25
 md"η = $(@bind η_st Slider(.01:.01:.1, show_value = true))
 
-t = $(@bind t5 Slider(0:100, show_value = true))
+step t = $(@bind t5 Slider(0:100, show_value = true))
 "
 
 # ╔═╡ e821fb15-0bd3-4fa7-93ea-692bf05097b5
@@ -236,10 +239,15 @@ end
 
 
 # ╔═╡ 913cf5ee-ca1e-4063-bd34-6cccd0cc548b
-md"# Adaptive Learning Rates and Momentum"
+md"# Improved Versions of (S)GD
+
+There are many tricks to improve over standard (stochastic) gradient descent.
+One popular idea is to use [momentum](https://distill.pub/2017/momentum/).
+We do not discuss these ideas further here, but you should know that `ADAM()` and `ADAMW()` are particularly popular (and successful) improvements of standard (S)GD. These methods usually require no (or very little) tuning of the learning rate."
 
 # ╔═╡ eb289254-7167-4183-a4d0-52f68be66b04
 begin
+	Random.seed!(1234)
     params4 = .1 * randn(6)
     special_path2 = [copy(params4)]
 	opt = ADAMW()
@@ -260,7 +268,7 @@ let
     losses = special_loss.(special_path)
     p2 = plot(0:10^4, losses2, label = "learning curve", c = :black, yscale = :log10)
     plot!(0:10^4, losses, label = "GD learning curve", c = :black, linestyle = :dot)
-    scatter!([t3], [losses2[t3]], label = "current loss", xlabel = "t", ylabel = "loss")
+    scatter!([t3], [losses2[t3]], label = "current loss", xlabel = "t", ylabel = "loss", legend = :bottomleft)
     plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
 
@@ -296,7 +304,7 @@ begin
 end
 
 # ╔═╡ 075f35cf-4271-4676-b9f3-e2bcf610c2d1
-md"t = $(@bind t4 Slider(0:10^3:10^5, show_value = true))"
+md"step t = $(@bind t4 Slider(0:10^3:10^5, show_value = true))"
 
 # ╔═╡ 0d431c00-9eef-4ce4-9542-9571728d1501
 let
@@ -310,7 +318,7 @@ let
           label = "fit", w = 3, c = :red, legend = :topleft)
     losses = poly_regression_loss.(poly_path, Ref(h_training), Ref(regression_data.y))
     losses_v = poly_regression_loss.(poly_path, Ref(h_valid), Ref(regression_valid.y))
-    p2 = plot(0:length(poly_path)-1, losses, yscale = :log,
+    p2 = plot(0:length(poly_path)-1, losses, yscale = :log10,
               c = :blue, label = "training loss")
     scatter!([t4], [losses[t4 + 1]], c = :blue, label = nothing)
     plot!(0:length(poly_path)-1, losses_v, c = :red, label = "validation loss")
@@ -332,30 +340,42 @@ distribution, i.e. the conditional probability density of the response is given 
 For simplicity we assume throughout this exercise that the intercept ``\beta_0 = 0``
 and does not need to be fitted.
 
-(a) Generate a training set with 30 points, 3 predictors with values uniformly
-distributed in ``[0, 1]``, responses with Laplace distributed noise with scale
-parameters ``s = 0.3`` and parameters ``\beta`` of your choice.
-Hint: You can sample `n` noise values with mean zero and scale parameters ``s``
-of the Laplace distribution with the following code `rand(Laplace(0.3), 30)`.
+(a) Generate a training set of 100 points with the following data generator.
+Notice that the noise follows a Laplace distribution instead of a normal distribution.
+For once, we do not use a `DataFrame` here but represent the input explicitly as a matrix and the full dataset as a `NamedTuple`. If you run `data = data_generator()`, you can access the input matrix as `data.x` and the output vector as `data.y`.
+```julia
+function data_generator(; n = 100, β = [1., 2., 3.])
+    x = randn(n, 3)
+    y = x * β .+ rand(Laplace(0, 0.3), n)
+    (x = x, y = y)
+end
+```
 
-(b) Calculate with paper and pencil the negative log-likelihood loss.
+(b) Calculate with paper and pencil the negative log-likelihood loss. Apply transformations to the negative log-likelihood function to obtain a good loss function for gradient descent based on the practical considerations in the slides.
 
 (c) Write the code to compute the loss on the training set for a given
-parameter vector.
+parameter vector. *Hint:* use matrix multiplication, e.g. `data.x * β`.
 
 (d) Perform gradient descent on the training set. Plot the learning curve to see
 whether gradient descent has converged. If you see large fluctuations at the end
 of training, decrease the learning rate. If the learning curve is not flat at
-the end, increase the maximal number of steps.
+the end, increase the maximal number of steps. To see well the loss towards the end of gradient descent it is advisable to use log-scale for the y-axis (`yscale = :log10`).
 
 (e) Estimate the coefficients with the standard linear regression.
-Hint: do not forget that we fit without intercept (`fit_intercept = false`).
+Hint: do not forget that we fit without intercept (use `fit_intercept = false` in the `LinearRegressor`).
 
-(f) Compare the test error of the results in (d) and (e) for a very large test
-set, e.g. 10^6 samples.
+(f) Compare which method (d) or (e) found parameters closer to the one of our data generating process `[1, 2, 3]` and explain your finding.
 "
 
+# ╔═╡ cb9f858a-f60a-11eb-3f0e-a9b68cf33921
+MLCourse.list_notebooks(@__FILE__)
+
+# ╔═╡ 8459f86e-bce7-4839-9c51-57335ac6353c
+MLCourse.footer()
+
 # ╔═╡ Cell order:
+# ╟─e03882f9-843e-4552-90b1-c47b6cbba19b
+# ╠═7aa547f8-25d4-488d-9fc3-f633f7f03f57
 # ╟─9f18f610-79e2-403a-a792-fe2dafd2054a
 # ╠═fcbac567-36db-40c5-9436-6315c0caa40a
 # ╠═49e744dc-33b7-455a-9cf7-4e8e12f11152
@@ -376,7 +396,7 @@ set, e.g. 10^6 samples.
 # ╟─01221937-b6d9-4dac-be90-1b8a1c5e9d87
 # ╟─f5e27275-8751-4e80-9888-c3d22d8e80e3
 # ╟─ca1301fd-8978-44d6-bfae-e912f939d7a8
-# ╟─e821fb15-0bd3-4fa7-93ea-692bf05097b5
+# ╠═e821fb15-0bd3-4fa7-93ea-692bf05097b5
 # ╟─75528011-05d9-47dc-a37b-e6bb6be52c25
 # ╟─7541c203-f0dc-4445-9d2a-4cf16b7e912a
 # ╟─913cf5ee-ca1e-4063-bd34-6cccd0cc548b
@@ -384,9 +404,9 @@ set, e.g. 10^6 samples.
 # ╟─166472c5-c0f4-4261-a476-4c9b0f82abd6
 # ╟─08a9418f-786e-4992-b1a5-04cf9060f8fe
 # ╠═dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
-# ╟─c72dc506-fb1d-42ee-83cf-cc49753ecd4f
+# ╠═c72dc506-fb1d-42ee-83cf-cc49753ecd4f
 # ╟─075f35cf-4271-4676-b9f3-e2bcf610c2d1
 # ╟─0d431c00-9eef-4ce4-9542-9571728d1501
 # ╟─e0cc188c-9c8f-47f1-b1fe-afc2a578973d
 # ╟─cb9f858a-f60a-11eb-3f0e-a9b68cf33921
-# ╟─7aa547f8-25d4-488d-9fc3-f633f7f03f57
+# ╟─8459f86e-bce7-4839-9c51-57335ac6353c

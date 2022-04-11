@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.15.1
+# v0.17.7
 
 using Markdown
 using InteractiveUtils
@@ -7,25 +7,27 @@ using InteractiveUtils
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
     quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
 end
 
-# ╔═╡ 7b013132-0ee2-11ec-1dd2-25a9f16f0568
+# ╔═╡ 48d87103-4c23-4144-a121-1e33d2bb87f3
 begin
     using Pkg
-    Pkg.activate(joinpath(@__DIR__, ".."))
-    using PlutoUI
-    PlutoUI.TableOfContents()
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+    using MLCourse, MLJ, DataFrames, MLJMultivariateStatsInterface, OpenML,
+          LinearAlgebra, Statistics, Random, MLJClusteringInterface, StatsPlots,
+          Distributions, Distances
 end
 
-# ╔═╡ 15830699-57c5-4bc2-bc92-54105597ab26
+
+# ╔═╡ 7b013132-0ee2-11ec-1dd2-25a9f16f0568
 begin
-    using MLCourse, MLJ, DataFrames, MLJMultivariateStatsInterface, MLJOpenML,
-    Plots, LinearAlgebra, Statistics, Random, MLJClusteringInterface, StatsPlots
-    MLCourse.list_notebooks(@__FILE__)
+    using PlutoUI
+    PlutoUI.TableOfContents()
 end
 
 # ╔═╡ da8f8ce7-c3ad-4e1a-bb9e-c7be15646d72
@@ -33,10 +35,13 @@ md"# K-means Clustering"
 
 # ╔═╡ 49a1493b-ba68-4e7a-8c3d-47423f7a8204
 begin
-    iris = DataFrame(MLJOpenML.load(61))
+    iris = DataFrame(OpenML.load(61))
     iris = rename!(iris, replace.(names(iris), "'" => ""))
     coerce!(iris, :class => Multiclass)
 end
+
+# ╔═╡ 67b8f27f-b5b5-4dc0-ab51-83ac3dcaa2f7
+iris.class
 
 # ╔═╡ 1ebd74bc-4479-41d2-aba4-934cdd2b778a
 @df iris cornerplot([:sepallength :sepalwidth :petallength :petalwidth],
@@ -46,7 +51,7 @@ end
 md"Number of clusters $(@bind nclust Slider(2:8, show_value = true))"
 
 # ╔═╡ d1c88a44-be52-4b0e-bc23-cca00d10ffb6
-mach1 = fit!(machine(KMeans(k = nclust), select(iris, Not(:class))));
+mach1 = fit!(machine(KMeans(k = nclust), select(iris, Not(:class)))); # nclust is defined by the slider value above
 
 # ╔═╡ 4df24b22-47a7-446a-8e27-9f2031a75764
 prediction = MLJ.predict(mach1, select(iris, Not(:class)));
@@ -70,7 +75,7 @@ Markdown.parse("
 Let us try to apply K-Means Clustering to the MNIST data set.
 
 ```julia
-mnist_x, mnist_y = let df = MLJOpenML.load(554) |> DataFrame
+mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     coerce!(df, :class => Multiclass)
     coerce!(df, Count => MLJ.Continuous)
     select(df, Not(:class)),
@@ -108,23 +113,22 @@ We see that the ninth cluster (9th row in this table and in the figure above) ha
 md"# Hierarchical Clustering"
 
 # ╔═╡ 20297924-5e09-40d2-9f7e-27e0e1b8a968
-mach2 = fit!(machine(HierarchicalClustering(linkage = :complete),
-                     select(iris, Not(:class))));
+hc = MLJ.transform(HierarchicalClustering(linkage = :complete,
+                                          metric = Euclidean()),
+                     select(iris, Not(:class)));
 
 # ╔═╡ 6a603cb6-7a1b-4a1d-9358-c4c811efa2bb
-md"h = $(@bind hclusth Slider(range(minimum(mach2.fitresult.height), stop = maximum(mach2.fitresult.height), length = 100), default = maximum(mach2.fitresult.height)/2))"
+md"h = $(@bind hclusth Slider(range(minimum(hc.dendrogram.heights), stop = maximum(hc.dendrogram.heights), length = 100), default = maximum(hc.dendrogram.heights)/2))"
 
 # ╔═╡ e266ada3-ba4d-4177-8129-f1220f293c72
 let
-    mach2.model.k = nothing
-    mach2.model.h = hclusth
-    pred = predict(mach2, select(iris, Not(:class)))
+    pred = hc(h = hclusth, k = 1)
     p1 = scatter(iris.petallength, iris.petalwidth,
                  legend = false, c = pred,
                  title = "prediction", xlabel = "petal length",
                  ylabel = "petal width")
-    p2 = plot(report(mach2))
-    hline!([mach2.model.h], c = :red, w = 3)
+    p2 = plot(hc.dendrogram)
+    hline!([hclusth], c = :red, w = 3)
     plot(p2, p1, layout = (1, 2), size = (700, 500))
 end
 
@@ -160,40 +164,71 @@ md"# Exercises
 
 (f) In your plot from (a), color the observations according to the clusters labels obtained.
 
-(g) Apply hierarchical clustering with complete linkage to the same data set.
-Draw the dendrogram with the links at the correct heights.
+(g) Apply hierarchical clustering with complete linkage and Euclidean metric to the same data set.  Draw the dendrogram with the links at the correct heights.
 
 ## Applied
 
-**Exercise 2.** In this exercise, you will generate simulated data, and then perform PCA and K-means clustering on the data.
+**Exercise 1.** In this exercise, you will generate simulated data and perform K-means clustering on the data.
 
-(a) Generate a simulated data set with 20 observations in each of three classes (i.e. 60 observations total), and 50 variables.
+(a) Generate a simulated data set with 20 observations in each of three classes (i.e. 60 observations total), and 50 variables with the following generator
+```julia
+function data_generator(d; n = 20)
+    cluster1 = rand(MvNormal([0; -d; fill(0, 48)], [3; fill(.5, 49)]), n)
+    cluster2 = rand(MvNormal([0; 0; fill(0, 48)], [3; fill(.5, 49)]), n)
+    cluster3 = rand(MvNormal([0; d; fill(0, 48)], [3; fill(.5, 49)]), n)
+    (data = DataFrame(vcat(cluster1', cluster2', cluster3'), :auto),
+     true_labels = [fill(1, n); fill(2, n); fill(3, n)])
+end
+```
+
+(b) PCA is an unsupervised machine learning method (you will learn more about it next week) that allows to visualize high-dimensional data in lower dimensions. You can use the command
+```julia
+MLJ.transform(fit!(machine(PCA(maxoutdim = 2), data)), data)
+```
+to fit an unsupervised machine called `PCA` (with at most 2 output dimensions) to the data and transform the data according to this machine to 2 dimensions. Plot the result. Use a different color to indicate the observations in each of the three classes.
+
+(c) Perform K-means clustering of the observations with ``K = 3``. Repeat K-means clustering for multiple random initializations and keep the best result. *Hint:* for reproducibility you can use `Random.seed!(SEED)`, where SEED is positive integer. How well do the clusters that you obtained in K-means clustering compare to the true class labels? *Hint:* a `confusion_matrix` may be helpful to comare the result to the true labels.
 
 
-(b) Perform PCA on the 60 observations and plot the first two principal component score vectors. Use a different color to indicate the observations in each of the three classes. If the three classes appear separated in this plot, then continue on to part (c). If not, return to part (a) and modify the simulation so that there is greater separation between the three classes. Do not continue to part (c) until the three classes show at least some separation in the first two principal component score vectors. Compute and plot the cumulative proportion of variance explained and comment your result.
+(d) Perform K-means clustering with ``K = 2``. Describe your results.
 
-(c) Explain how you could change your simulated data such that the cumulative proportion of variance explained approaches 1 faster/slower than in (b).
+(e) Now perform K-means clustering with ``K = 4``, and describe your results.
 
-(d) Perform K-means clustering of the observations with ``K = 3``. How well do the clusters that you obtained in K-means clustering compare to the true class labels?
+(f) Now perform K-means clustering with ``K = 3`` on the 2-dimensional data you obtained with PCA, rather than on the raw data. Comment on the results.
 
+(g) Perform K-means clustering with ``K = 3`` on the data after scaling each variable to have standard deviation one. How do these results compare to those obtained in (c)? Explain.
 
-(e) Perform K-means clustering with ``K = 2``. Describe your results.
+(h) *Optional:* Create other artificial data sets where scaling does not affect the result of clustering or where it improves the result of clustering.
 
-(f) Now perform K-means clustering with ``K = 4``, and describe your results.
+**Exercise 2**
 
-(g) Now perform K-means clustering with ``K = 3`` on the first two principal component score vectors, rather than on the raw data. That is, perform K-means clustering on the 60x2 matrix of which the first column is the first principal component score vector, and the second column is the second principal component score vector. Comment on the results.
+On the website of the text book, there is a gene expression data set that consists of 40 tissue samples with measurements on 1000 genes. Some samples are from healthy patients, while others are from a diseased group.
 
-(h) Perform K-means clustering with ``K = 3`` on the data after scaling each variable to have standard deviation one. How do these results compare to those obtained in (d)? Explain.
+(a) Download the data set with
+```julia
+CSV.read(download(\"https://www.statlearning.com/s/Ch12Ex13.csv\"),
+         DataFrame, header = false, transpose = true)
+```
 
-(i) Perform hierarchical clustering on the data. By choosing different cuts, do
-you get similar results as with K-means clustering with ``K = 2, 3, 4``?
+(b) Apply hierarchical clustering and plot the result.
 
+(c) Do the results change qualitatively with different types of linkage?
+
+(d) How many patients do you think are in each group?
 
 "
 
+# ╔═╡ 15830699-57c5-4bc2-bc92-54105597ab26
+MLCourse.list_notebooks(@__FILE__)
+
+# ╔═╡ 35ac2056-ab72-44b0-9972-723a0887a622
+MLCourse.footer()
+
 # ╔═╡ Cell order:
+# ╠═48d87103-4c23-4144-a121-1e33d2bb87f3
 # ╟─da8f8ce7-c3ad-4e1a-bb9e-c7be15646d72
 # ╠═49a1493b-ba68-4e7a-8c3d-47423f7a8204
+# ╠═67b8f27f-b5b5-4dc0-ab51-83ac3dcaa2f7
 # ╟─1ebd74bc-4479-41d2-aba4-934cdd2b778a
 # ╟─472f0d57-cf50-4c3d-b251-dcf2f7c121c2
 # ╠═d1c88a44-be52-4b0e-bc23-cca00d10ffb6
@@ -208,3 +243,4 @@ you get similar results as with K-means clustering with ``K = 2, 3, 4``?
 # ╟─85d574c2-b823-4dcf-b711-efc755e724b7
 # ╟─15830699-57c5-4bc2-bc92-54105597ab26
 # ╟─7b013132-0ee2-11ec-1dd2-25a9f16f0568
+# ╟─35ac2056-ab72-44b0-9972-723a0887a622

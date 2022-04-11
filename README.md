@@ -1,27 +1,31 @@
 # MLCourse
 
 This repository contains teaching material for an introductory machine learning course.
-You can find a static preview (i.e. sliders etc. won't work) of the Pluto notebooks used in this course [here](https://jbrea.github.io/MLCourse/notebooks/welcome.html).
+You can find an interactive preview of the Pluto notebooks of this course [here](https://bio322.epfl.ch) and you can run some notebooks on [mybinder](https://mybinder.org/v2/gh/jbrea/MLCourse/binder?urlpath=pluto/open?path%3D/home/jovyan/MLCourse/index.jl) (some notebooks will crash on mybinder when they hit the memory limit).
 
-To use the code, please download [julia](https://julialang.org/downloads) (at least version 1.6)
+To use the code, please download [julia version 1.7.1](https://julialang.org/downloads)
 open julia and install the code in this repository with
 ```julia
 julia> using Pkg
-       Pkg.develop(url = "https://github.com/jbrea/MLCourse#main")
+       Pkg.develop(url = "https://github.com/jbrea/MLCourse")
        Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
        Pkg.instantiate()
+       using MLCourse
+       MLCourse.create_sysimage()
 ```
 
-To use the notebooks, start julia and type
+To use the notebooks, restart julia and type
 ```julia
 julia> using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
        using MLCourse
        MLCourse.start()
 ```
 
-To reduce loading times of the pluto notebooks you can create a custom system image with
+You can update the course material with
 ```julia
 julia> using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
        using MLCourse
-       MLCourse.create_sysimage()
+       MLCourse.update()
 ```
+
+![](https://www.epfl.ch/wp/5.5/wp-content/themes/wp-theme-2018/assets/svg/epfl-logo.svg)
