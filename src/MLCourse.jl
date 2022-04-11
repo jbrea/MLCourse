@@ -220,6 +220,7 @@ end
 
 function create_sysimage(; sysimage_path = project_relative_path("precompile", "mlcourse.so"))
     PackageCompiler.create_sysimage([:Pluto, :MLJ, :MLJLinearModels,
+                                     :PlutoPlotly, :Plots,
                                      :MLCourse, :StatsPlots, :DataFrames,
                                      :MLJFlux, :Distributions];
                                     sysimage_path,
