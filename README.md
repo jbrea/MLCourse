@@ -7,6 +7,7 @@ To use the code, please download [julia version 1.7](https://julialang.org/downl
 or newer, open julia and install the code in this repository with
 ```julia
 julia> using Pkg
+       Pkg.activate(temp = true)
        Pkg.develop(url = "https://github.com/jbrea/MLCourse")
        Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
        Pkg.instantiate()
