@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.19.0
 
 using Markdown
 using InteractiveUtils
@@ -227,7 +227,7 @@ m12 = machine(KNNRegressor(K = K),
 	          regression_data.y);
 
 # ╔═╡ e1477620-dc57-4e9a-b342-8798cf6aeffe
-fit!(m12);
+fit!(m12, verbosity = 0);
 
 # ╔═╡ 8ba77b77-1016-4f5d-9f9e-76b2ad1f9eac
 begin
@@ -268,7 +268,7 @@ m14 = machine(KNNClassifier(K = Kc),
              classification_data.y);
 
 # ╔═╡ 87468757-49c0-474f-8bea-bd5b37d10161
-fit!(m14);
+fit!(m14, verbosity = 0);
 
 # ╔═╡ 0a57f15b-c292-4c64-986d-f046260da66e
 begin

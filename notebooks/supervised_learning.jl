@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.19.0
 
 using Markdown
 using InteractiveUtils
@@ -15,16 +15,10 @@ macro bind(def, element)
 end
 
 # ╔═╡ f63c04d4-eefe-11eb-3fda-1729ac6de2cb
-begin
-	using Pkg
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using PlutoUI
-    PlutoUI.TableOfContents()
-end
-
+using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 
 # ╔═╡ f63c04e8-eefe-11eb-39f6-83b31ebe73e7
-using Plots, OpenML, DataFrames, CSV
+using Plots, OpenML, DataFrames, CSV, MLCourse
 
 # ╔═╡ f63c0540-eefe-11eb-01d6-454a05f9182a
 using StatsPlots
@@ -32,7 +26,7 @@ using StatsPlots
 # ╔═╡ f63c0592-eefe-11eb-0d69-91d4d396c540
 # using MLJ makes the functions machine, fit!, fitted_params, predict, etc. available
 # MLJLinearModel contains LinearRegressor, LogisticClassifier etc.
-using MLJ, MLJLinearModels 
+using MLJ, MLJLinearModels
 
 # ╔═╡ f63c05e4-eefe-11eb-0848-9b4eb61d920c
 using Random
@@ -40,11 +34,8 @@ using Random
 # ╔═╡ 36a44a52-8a29-4f92-8136-2c66a81a1f5f
 using Distributions
 
-# ╔═╡ 0cfbd543-8b9b-406e-b3b4-c6cafbbec212
-begin
-    using MLCourse
-    MLCourse.list_notebooks(@__FILE__)
-end
+# ╔═╡ 11e350b2-70bd-437b-acef-af5103a6eb96
+using PlutoUI; PlutoUI.TableOfContents()
 
 # ╔═╡ f63c04dc-eefe-11eb-1e24-1d02a686920a
 md"In this notebook we have a first look at some data sets and the MLJ machine learning package. You may want to look at its [documentation](https://alan-turing-institute.github.io/MLJ.jl/dev) or [cheatsheet](https://alan-turing-institute.github.io/MLJ.jl/dev/mlj_cheatsheet/).
@@ -253,7 +244,7 @@ rmse(predict(mach), training_data.y)^2
 md"For plotting we will define a new function `fitted_linear_func` that extracts the fitted parameters from a machine and returns a linear function with these parameters."
 
 # ╔═╡ f63c05d8-eefe-11eb-2a11-fd8f954bf059
-function MLCourse.fitted_linear_func(mach)
+function fitted_linear_func(mach)
     θ̂ = fitted_params(mach)
     θ̂₀ = θ̂.intercept
     θ̂₁ = θ̂.coefs[1][2]
@@ -506,10 +497,14 @@ md"""# Exercises
    - Rerun your solution multiple times with training sets of size ``n = 10^4``. Compare the fitted parameters to the one of the generator and look at the test error. Write down your observations.
 """
 
+# ╔═╡ 0cfbd543-8b9b-406e-b3b4-c6cafbbec212
+MLCourse.list_notebooks(@__FILE__)
+
 # ╔═╡ e3aa458a-486c-4d5b-a330-67fb68e6f516
 MLCourse.footer()
 
 # ╔═╡ Cell order:
+# ╠═f63c04d4-eefe-11eb-3fda-1729ac6de2cb
 # ╟─f63c04dc-eefe-11eb-1e24-1d02a686920a
 # ╠═f63c04e8-eefe-11eb-39f6-83b31ebe73e7
 # ╠═f63c04e8-eefe-11eb-1a14-8305504a6f1c
@@ -599,5 +594,5 @@ MLCourse.footer()
 # ╠═f63c0628-eefe-11eb-3125-077e533456d9
 # ╟─f63c0632-eefe-11eb-3b93-8549af7aaed9
 # ╟─0cfbd543-8b9b-406e-b3b4-c6cafbbec212
-# ╟─f63c04d4-eefe-11eb-3fda-1729ac6de2cb
+# ╟─11e350b2-70bd-437b-acef-af5103a6eb96
 # ╟─e3aa458a-486c-4d5b-a330-67fb68e6f516

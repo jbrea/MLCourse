@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.19.0
 
 using Markdown
 using InteractiveUtils
@@ -20,6 +20,7 @@ begin
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using MLCourse, MLJ, DataFrames, MLJMultivariateStatsInterface, OpenML,
     Plots, LinearAlgebra, Statistics, Random, CSV, MLJLinearModels
+    import PlutoPlotly as PP
     chop(x, eps = 1e-12) = abs(x) > eps ? x : zero(typeof(x))
 end
 
@@ -43,7 +44,7 @@ In this example we generate 2-dimensional (hidden = unobserved) data and project
 
 # ╔═╡ e24cff15-a966-405a-b083-4b86be09c6f1
 begin
-    Random.seed!(17)
+    Random.seed!(1)
     h = [1.5 .5] .* randn(500, 2) # 2D data with higher variance along first dimension
     G = [-.3 .4 .866
          .885 .46 .1]             # projection matrix to 3D
@@ -52,29 +53,35 @@ end;
 
 # ╔═╡ 9e60bd23-bd0e-4311-a059-a39a70143307
 let
-	plotly()
-	p1 = scatter(h[:, 1], h[:, 2], aspect_ratio = 1,
-                 xlabel = "H₁", ylabel = "H₂",
-                 label = "h", title = "original (hidden) 2D data")
-	p2 = scatter3d(x[:, 1], x[:, 2], x[:, 3], markersize = 1,
-                   xlabel = "X₁", ylabel = "X₂", zlabel = "X₃",
-                   title = "measured 3D data")
-	plot(p1, p2, layout = (1, 2), legend = false)
+	p1 = PP.Plot(PP.scatter(x = h[:, 1], y = h[:, 2], mode = "markers"),
+                 PP.Layout(title = "original (hidden) 2D data"))
+    p2 = PP.Plot(PP.scatter3d(x = x[:, 1], y = x[:, 2], z = x[:, 3],
+                              mode = "markers", marker_size = 2),
+                 PP.Layout(title = "measured 3D data"))
+    l = PP.Layout(yaxis1_scaleanchor = "x",
+                  xaxis1_title = "H₁", yaxis1_title = "H₂",
+                  scene2 = PP.attr(xaxis_title = "X₁",
+                                   yaxis_title_text = "X₂",
+                                   zaxis_title = "X₃",
+                                   camera_eye = PP.attr(x = -2.8, y = 1, z = 1)),
+                  uirevision = 1, showlegend = false)
+    plot = [p1 p2]
+    PP.relayout!(plot, l)
+    PP.PlutoPlot(plot)
 end
 
 # ╔═╡ a0bb0a63-67e2-414e-a3f0-b76875c1295d
-m1 = fit!(machine(PCA(), DataFrame(x, :auto)));
+m1 = fit!(machine(PCA(), DataFrame(x, :auto)), verbosity = 0);
 
 # ╔═╡ 4439f803-e70f-4231-82e9-88bb574498f4
 ĥ = MLJ.transform(m1, x);
 
 # ╔═╡ e38cdfcf-362f-4e6e-81a2-e58334bb8d5f
 let
-    gr()
     scatter(h[:, 1], h[:, 2],
             xlabel = "H₁", ylabel = "H₂",
             aspect_ratio = 1, label = "original hidden data")
-    scatter!(ĥ.x1, ĥ.x2, label = "reconstructed hidden data", markersize = 3)
+    scatter!(sign(h[1, 1]) * sign(ĥ.x1[1]) * ĥ.x1, ĥ.x2, label = "reconstructed hidden data", markersize = 3)
 end
 
 # ╔═╡ 16843059-269e-4557-a4b9-5d7034f99ba8
@@ -154,7 +161,7 @@ let
 end
 
 # ╔═╡ 48528bf7-8a40-4773-944c-54d0446a5cac
-sma = fit!(machine(PCA(mean = 0), DataFrame(sdata, :auto)));
+sma = fit!(machine(PCA(mean = 0), DataFrame(sdata, :auto)), verbosity = 0);
 
 # ╔═╡ 9a5e0976-1c0e-45fc-855e-b0fbec801e8c
 srec = MLJ.transform(sma, sdata);
@@ -208,7 +215,7 @@ end;
 pca_data = data_generator(seed = 241);
 
 # ╔═╡ 927627e0-9614-4234-823d-eb2e13229784
-pca = fit!(machine(PCA(pratio = 1), DataFrame(pca_data, :auto)));
+pca = fit!(machine(PCA(pratio = 1), DataFrame(pca_data, :auto)), verbosity = 0);
 
 # ╔═╡ c7935f29-21f3-414a-b013-a1abd0f9f502
 fitted_params(pca) # shows the loadings as columns
@@ -217,7 +224,7 @@ fitted_params(pca) # shows the loadings as columns
 report(pca)
 
 # ╔═╡ 89406c26-7cba-4dd2-a6a3-8d572b440e01
-gr(); biplot(pca)
+biplot(pca)
 
 # ╔═╡ 743477bb-6cf0-419e-814b-e774738e8d89
 m2 = fit!(machine(PCA(maxoutdim = 2), DataFrame(pca_data, :auto)), verbosity = 0);
@@ -242,20 +249,28 @@ end;
 
 # ╔═╡ 884a7428-2dd4-4091-b889-3acfbfa45d5b
 let
-    plotly()
-    scatter3d(pca_data[:, 1], pca_data[:, 2], pca_data[:, 3],
-              markersize = 1, label = nothing)
+    p1 = PP.scatter3d(x = pca_data[:, 1], y = pca_data[:, 2], z = pca_data[:, 3],
+                      mode = "markers", marker_size = 3)
     a = pc_vectors(m2)
-    col = [:red, :green, :orange]
+    col = ["red", "green", "orange"]
     k = Meta.parse(pc[1:1])
     var = 0.
-    for i in 1:size(pca_data, 1)
-        s = pca_data[i, :]
-        e = s - (a[k]'*s) * a[k]
-        plot3d!([s[1], e[1]], [s[2], e[2]], [s[3], e[3]],
-                color = col[k], w = 4, label = nothing)
-    end
-    plot3d!(xlim = (-7, 7), ylim = (-7, 7), zlim = (-7, 7), aspect_ratio = 1)
+    lines = [begin
+                s = pca_data[i, :]
+                e = s - (a[k]'*s) * a[k]
+                PP.scatter3d(x = [s[1], e[1]], y = [s[2], e[2]], z = [s[3], e[3]],
+                             line_color = col[k], mode = "lines")
+            end
+            for i in 1:size(pca_data, 1)]
+    PP.PlutoPlot(PP.Plot([p1; lines],
+                         PP.Layout(scene = PP.attr(camera_eye = PP.attr(x = 1,
+                                                                        y = 2,
+                                                                        z = .4),
+                                                   xaxis_title = "X₁",
+                                                   yaxis_title_text = "X₂",
+                                                   zaxis_title = "X₃"),
+                                   uirevision = 1,
+                                   showlegend = false)))
 end
 
 
@@ -266,23 +281,43 @@ The `fitted_params` of a `PCA` machine contain as columns the the principal comp
 
 # ╔═╡ d3e5ca43-f70e-4a11-a3c9-fc0755179e4c
 let
-    plotly()
-    scatter3d(pca_data[:, 1], pca_data[:, 2], pca_data[:, 3], markersize = 1, label = "data")
+    p1 = PP.scatter3d(x = pca_data[:, 1],
+                      y = pca_data[:, 2],
+                      z = pca_data[:, 3],
+                      mode = "markers",
+                      name = "data",
+                      marker_size = 3)
     a1, a2, a3 = pc_vectors(m2)
     a1 *= 2; a2 *= 2
-    wireframe!(-8:.1:8, -8:.1:8, pca_plane,
-               label = nothing, w = 1)
-    plot3d!([-a1[1], a1[1]], [-a1[2], a1[2]], [-a1[3], a1[3]],
-            c = :red, w = 10, label = "PC1")
-    plot3d!([-a2[1], a2[1]], [-a2[2], a2[2]], [-a2[3], a2[3]],
-            c = :green, arrow = true, w = 10, label = "PC2")
-    for i in 1:size(pca_data, 1)
-        s = pca_data[i, :]
-        e = s - (a3'*s) * a3
-        plot3d!([s[1], e[1]], [s[2], e[2]], [s[3], e[3]],
-                color = :orange, label = i == 1 ? "distance to plane" : nothing, w = 4)
-    end
-    plot3d!()
+    xgrid = -8:.1:8
+    p2 = PP.mesh3d(x = repeat(xgrid, length(xgrid)),
+                    y = repeat(xgrid, inner = length(xgrid)),
+                    z = reshape(pca_plane.(xgrid, xgrid'), :),
+                    opacity = .5, color = "gray")
+    p3 = PP.scatter3d(x = [-a1[1], a1[1]], y = [-a1[2], a1[2]], z = [-a1[3], a1[3]],
+                      mode = "lines", line_color = "red",
+                      line_width = 3, name = "first PC")
+    p4 = PP.scatter3d(x = [-a2[1], a2[1]], y = [-a2[2], a2[2]], z = [-a2[3], a2[3]],
+                      line_color = "green", mode = "lines", line_width = 3,
+                      name = "second PC")
+    residuals = [begin
+                    s = pca_data[i, :]
+                    e = s - (a3'*s) * a3
+                    PP.scatter3d(x = [s[1], e[1]], y = [s[2], e[2]], z = [s[3], e[3]],
+                            line_color = "orange",
+                            mode = "lines",
+                            name = "distance to plane", showlegend = i == 1)
+                end
+                for i in 1:size(pca_data, 1)]
+    PP.PlutoPlot(PP.Plot([p1; p2; p3; p4; residuals],
+                         PP.Layout(scene = PP.attr(camera_eye = PP.attr(x = 1,
+                                                                        y = 1,
+                                                                        z = .4),
+                                                   xaxis_title = "X₁",
+                                                   yaxis_title_text = "X₂",
+                                                   zaxis_title = "X₃"),
+                                   uirevision = 1,
+                                   showlegend = true)))
 end
 
 # ╔═╡ 936570b9-43da-4c32-b15a-d595f690b1a6
@@ -296,9 +331,8 @@ Reconstruction using the first $(@bind firstkpc Select(string.(1:3))) component(
 
 # ╔═╡ 9032ad56-123c-4585-9b67-c94e5ecb3899
 let
-    plotly()
-    scatter3d(pca_data[:, 1], pca_data[:, 2], pca_data[:, 3],
-              markersize = 1, label = "data")
+    p1 = PP.scatter3d(x = pca_data[:, 1], y = pca_data[:, 2], z = pca_data[:, 3],
+                      marker_size = 2, name = "data", mode = "markers")
     a1, a2, a3 = pc_vectors(m2)
     ϕ = if firstkpc == "1"
         a1
@@ -308,8 +342,17 @@ let
         [a1 a2 a3]
     end
     rec = pca_data * ϕ * ϕ'
-    scatter3d!(rec[:, 1], rec[:, 2], rec[:, 3], legend = false,
-               markersize = 1, label = "reconstruction")
+    p2 = PP. scatter3d(x = rec[:, 1], y = rec[:, 2], z = rec[:, 3],
+                       marker_size = 2, name = "reconstruction", mode = "markers")
+    PP.PlutoPlot(PP.Plot([p1, p2],
+                         PP.Layout(scene = PP.attr(camera_eye = PP.attr(x = 1,
+                                                                        y = 1,
+                                                                        z = .4),
+                                                   xaxis_title = "X₁",
+                                                   yaxis_title_text = "X₂",
+                                                   zaxis_title = "X₃"),
+                                   uirevision = 1,
+                                   showlegend = true)))
 end
 
 
@@ -390,7 +433,7 @@ let
 end
 
 # ╔═╡ d2bfdda4-4496-4daa-bcb5-51d9a7519823
-mdenoise = fit!(machine(PCA(maxoutdim = 2, mean = 0), data));
+mdenoise = fit!(machine(PCA(maxoutdim = 2, mean = 0), data), verbosity = 0);
 
 # ╔═╡ 694ad552-3088-4872-bed5-89b4dfc67219
 report(mdenoise)
@@ -424,7 +467,7 @@ let
 end
 
 # ╔═╡ 0cb282aa-81d4-408d-a919-0d28cdbb7bed
-pca_faces = fit!(machine(PCA(), faces[:, 1:end-1]));
+pca_faces = fit!(machine(PCA(), faces[:, 1:end-1]), verbosity = 0);
 
 # ╔═╡ c70b5212-a823-4ff8-937d-10919efc766c
 let
@@ -454,7 +497,7 @@ md"cumulative proportion of variance explained $(@bind pratio Slider(.9:.001:.99
 
 # ╔═╡ cddfed10-7c9c-47b0-83fc-b3322da522ed
 begin
-    first_few_pc_faces = fit!(MLJ.machine(PCA(pratio = pratio), faces[:, 1:end-1]))
+    first_few_pc_faces = fit!(MLJ.machine(PCA(pratio = pratio), faces[:, 1:end-1]), verbosity = 0)
     npc = size(fitted_params(first_few_pc_faces).projection, 2)
     md"Using the first ``L = ``$npc components. The compression ratio is ``\frac{n\times p}{(p+n)\times L}`` = $(round(400*64^2/((64^2 + 400)*npc), sigdigits = 2))."
 end
@@ -526,14 +569,14 @@ let
                    c = c, title = "original 3D data")
     p1 = scatter(eight_clouds.x1, eight_clouds.x2, c = c,
                  xlabel = "x", ylabel = "y", title = "projection onto X-Y")
-    pc = MLJ.transform(fit!(machine(PCA(maxoutdim = 2), eight_clouds)))
+    pc = MLJ.transform(fit!(machine(PCA(maxoutdim = 2), eight_clouds), verbosity = 0))
     p2 = scatter(pc.x1, pc.x2, xlabel = "PC 1", ylabel = "PC 2", c = c,
                  title = "PCA projection")
     plot(p0, p1, p2, layout = (1, 3), legend = false, size = (700, 400))
 end
 
 # ╔═╡ e4302d86-5e4f-4c56-bdca-8b4eed2af47c
-tsne_proj = tsne(Array(eight_clouds), 2, 0, 2000, 50.0);
+tsne_proj = tsne(Array(eight_clouds), 2, 0, 2000, 50.0, progress = false);
 
 # ╔═╡ 6b319dbe-c626-4294-92b6-cab574aabfb0
 let
@@ -605,7 +648,7 @@ end;
 # ╔═╡ 422026f0-8c87-471a-af51-ba6273f293b2
 mach1 = fit!(machine(MLJLinearModels.LinearRegressor(),
 		             pcr_data_x[train_idx, :],
-		             pcr_data_y[train_idx]));
+		             pcr_data_y[train_idx]), verbosity = 0);
 
 # ╔═╡ 3148b8bd-63fc-4052-a899-656d2c2057f8
 rmse(predict(mach1, pcr_data_x[test_idx, :]), pcr_data_y[test_idx])
@@ -613,7 +656,7 @@ rmse(predict(mach1, pcr_data_x[test_idx, :]), pcr_data_y[test_idx])
 # ╔═╡ 434f1616-e028-4043-9aef-049e490525f5
 mach2 = fit!(machine(PCA() |> MLJLinearModels.LinearRegressor(),
 		             pcr_data_x[train_idx, :],
-		             pcr_data_y[train_idx]));
+		             pcr_data_y[train_idx]), verbosity = 0);
 
 # ╔═╡ 9283a9d2-355b-439b-98b6-d8491904eb05
 rmse(predict(mach2, pcr_data_x[test_idx, :]), pcr_data_y[test_idx])
@@ -677,12 +720,10 @@ data2 = DataFrame(randn(50, 2) * randn(2, 3) .+ 0.5*randn(50, 3), :auto)
 data3 = DataFrame(randn(50, 2) * randn(2, 10), :auto)
 ```
 
-(a) Plot the datasets `data1` and `data2` with `scatter3d`. *Hint:* Plots can be displayed with different plotting backends. If you run `plotly()` in a cell of your notebook you switch to the interactive but slow plotly backendend. If you want a non-interactive but fast backend, run `gr()`.
-
-(b) Write down your expectations on the curve of proportion of variance
+(a) Write down your expectations on the curve of proportion of variance
 explained for the tree datasets.
 
-(c) Perform PCA and plot the proportion of variance explained.
+(b) Perform PCA and plot the proportion of variance explained.
 
 **Exercise 2** In this exercise we look at a food consumption dataset with the relative
 consumption of certain food items in European countries. The

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.19.0
 
 using Markdown
 using InteractiveUtils
@@ -19,6 +19,7 @@ begin
 	using Pkg
     Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 	using Plots, DataFrames, Random, CSV, MLJ, MLJLinearModels, MLCourse
+	import PlutoPlotly as PP
 	import Distributions: Poisson
     import MLCourse: fitted_linear_func
 end
@@ -33,7 +34,7 @@ md"# Linear Regression
 "
 
 # ╔═╡ 9f84bcc5-e5ab-4935-9076-c19e9bd668e8
-weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), 
+weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
                    DataFrame);
 
 # ╔═╡ d14244d4-b54e-42cf-b812-b149d9fa59e0
@@ -46,12 +47,15 @@ m1 = machine(LinearRegressor(),
 	         training_set1.wind_peak_in5h);
 
 # ╔═╡ dbe563b8-2d0d-40b7-8ccf-7efa40f640f2
-fit!(m1);
+fit!(m1, verbosity = 0);
 
 # ╔═╡ 006fc1eb-50d5-4206-8c87-53e873f158f4
 begin
     scatter(training_set1.LUZ_pressure,
-            training_set1.wind_peak_in5h, label = "data")
+            training_set1.wind_peak_in5h,
+		    xlabel = "pressure [hPa]",
+		    ylabel = "wind speed [km/h]",
+		    label = "data")
     plot!(fitted_linear_func(m1), label = "linear fit", w = 3)
 end
 
@@ -120,21 +124,53 @@ end;
 
 
 # ╔═╡ d541a8cd-5aa4-4c2d-bfdf-5e6297bb65a8
-begin
-    plotly()
-    p1 = scatter3d(X.X1, X.X2, y, markersize = 1,
-                   xlims = (-3, 3), xlabel = "X1",
-                   ylims = (-3, 3), ylabel = "X2",
-                   zlims = (-4, 4), zlabel = "y", label = "data")
-    wireframe!(-3:.1:3, -3:.1:3, f0(β₀, β₁, β₂),
-               label = "function", title = "data & function", color = :green)
-    plot_residuals!(X.X1, X.X2, y, f0(β₀, β₁, β₂))
-    p2 = contour(-1:.1:1, -1:.1:1, (β₀, β₁) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2), levels = 100, ylabel = "β₁", cbar = false, title = "loss")
-    scatter!([β₀], [β₁], label = nothing)
-    p3 = contour(-1:.1:1, -1:.1:1, (β₀, β₂) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2), levels = 100, xlabel = "β₀", ylabel = "β₂")
-    scatter!([β₀], [β₂], label = "current loss")
-    plot(p1, plot(p2, p3, layout = (2, 1)), layout = (1, 2),
-         size = (700, 400), legend = false)
+let
+    f = f0(β₀, β₁, β₂)
+    p1 = PP.scatter3d(x = X.X1, y = X.X2, z = y,
+                      marker_size = 3, mode = "markers", name = "data")
+    l1 = PP.Layout(scene1 = PP.attr(xaxis = PP.attr(title_text = "X₁",
+                                                    title_standoff = 0,
+                                                    range = (-3, 3)),
+                                    yaxis = PP.attr(range = (-3, 3),
+                                                    title_text = "X₂",
+                                                    title_standoff = 0),
+                                    zaxis = PP.attr(range = (-4, 4),
+                                                    title = "Y"),
+		                            domain = PP.attr(x = [-.1, .6], y = [0, 1]),
+                                    uirevision = 1),
+                   showlegend = false, showscale = false,
+                   xaxis2_domain = [.7, 1], xaxis4_domain = [.7, 1],
+                   xaxis2_title_text = "β₀", yaxis2_title_text = "β₁",
+                   xaxis4_title_text = "β₀", yaxis4_title_text = "β₂",
+                   xaxis2_title_standoff = 0, yaxis2_title_standoff = 0,
+                   xaxis4_title_standoff = 0, yaxis4_title_standoff = 0
+                  )
+    xgrid = -3:1:3; ygrid = -3:1:3
+    p2 = PP.mesh3d(x = repeat(xgrid, length(ygrid)),
+                      y = repeat(ygrid, inner = length(xgrid)),
+                      z = reshape(f.(xgrid, ygrid'), :), opacity = .5,
+                      name = "function", title = "data & function",
+                      color = "green")
+    res = [PP.scatter3d(x = [x1, x1], y = [x2, x2], z = [z, f(x1, x2)],
+	                    mode = "lines", line_color = "red", name = nothing)
+           for (x1, x2, z) in zip(X.X1, X.X2, y)]
+    plot1 = PP.Plot([p1, p2, res...])
+#     plot_residuals!(X.X1, X.X2, y, f0(β₀, β₁, β₂))
+    lossf1 = (β₀, β₁) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2)
+    xgrid = -1:.1:1; ygrid = -1:.1:1
+    p3 = PP.contour(x = xgrid, y = ygrid, z = lossf1.(xgrid, ygrid'),
+                    ncontours = 50, ylabel = "β₁", showscale = false, title = "loss")
+    p4 = PP.scatter(x = [β₀], y = [β₁], mode = "markers", marker_color = "red")
+    plot2 = PP.Plot([p3, p4], PP.Layout(title = "loss function"))
+    lossf2 = (β₀, β₂) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2)
+    p5 = PP.contour(x = xgrid, y = ygrid,
+                    z = lossf2.(xgrid, ygrid'),
+                    ncontours = 50, xlabel = "β₀", ylabel = "β₂")
+    p6 = PP.scatter(x = [β₀], y = [β₂], mode = "markers", marker_color = "red")
+    plot3 = PP.Plot([p5, p6])
+    plot = [plot1 plot2; PP.Plot() plot3]
+    PP.relayout!(plot, l1)
+    PP.PlutoPlot(plot)
 end
 
 # ╔═╡ da6462d8-3343-41d8-82dd-48770176d4ba
@@ -165,7 +201,7 @@ m2 = machine(LinearRegressor(),
              weather.LUZ_wind_peak[6:end]);
 
 # ╔═╡ 93c39214-1498-4ebd-a7a6-cdb0438da14d
-fit!(m2);
+fit!(m2, verbosity = 0);
 
 # ╔═╡ fac51c63-f227-49ac-89f9-205bf03e7c08
 md"Let us have a look at the fitted parameters. For example, we can conclude that an increase of pressure in Luzern by 1hPa correlates with a decrease of almost 3km/h of the expected wind peaks - everything else being the same. This result is consistent with our expectation that high pressure locally is usually accompanied by good weather without strong winds. On the other hand, an increase of pressure in Genève by 1hPa correlates with an increase of more than 3km/h of the expected wind peaks. This result is also consistent with our expectations, given that stormy west wind weather occurs usually when there is a pressure gradient from south west to north east of Switzerland. Note also that the parameter for pressure in Pully (50 km north east from Genève) is -2km/h⋅hPa, i.e. when the pressure in Pully is the same as in Genève these two contributions to the prediction almost compensate each other."
@@ -304,11 +340,10 @@ CSV.write(joinpath(dirname(pathof(MLCourse)), "..", "data", "spam_preprocessed.c
 # ╔═╡ f7117513-283f-4e32-a2a1-3594c794c94d
 md"## Multiple Logistic Regression
 
-In the top row of the figure below we see in two different ways (once as a 3D
-plot and once as a contour plot) the probability of class A for the selected
-parameter values. The bottom row shows samples (large points, red = class A)
+In the figure below we see on the left the probability of class A for the selected
+parameter values and the decision threshold as a red plane. On the right we see samples (large points, red = class A)
 obtained with this probability distribution and predictions (small points)
-at decision threshold 0.5.
+at the given decision threshold.
 Play with the parameters to get a feeling for how they affect the probability
 and the samples.
 
@@ -317,7 +352,15 @@ and the samples.
 θ₁ = $(@bind θ₁ Slider(-8:8, default = 3, show_value = true))
 
 θ₂ = $(@bind θ₂ Slider(-8:8, default = 0, show_value = true))
+
+decision threshold = $(@bind thresh Slider(.01:.01:1, default = .5, show_value = true))
 "
+
+# ╔═╡ 26d957aa-36d4-4b90-9b91-2d9d883877ea
+begin
+	Random.seed!(123)
+	samples = (X1 = 6 * rand(200) .- 3, X2 = 6 * rand(200) .- 3)
+end;
 
 # ╔═╡ fd4165dc-c3e3-4c4c-9605-167b5b4416da
 md"## Confusion Matrix, ROC and AUC"
@@ -346,17 +389,64 @@ end;
 
 # ╔═╡ 4f89ceab-297f-4c2c-9029-8d2d7fad084f
 let f(x1, x2) = logistic(θ₀ + θ₁ * x1 + θ₂ * x2)
-    p1 = wireframe(-3:.1:3, -3:.1:3, f, zlims = (0, 1))
-    p2 = contour(-3:.1:3, -3:.1:3, f, contour_labels = true, levels = 20, cbar = false)
-	plotly()
-    samples = (X1 = 6 * rand(200) .- 3, X2 = 6 * rand(200) .- 3)
+    Random.seed!(17)
+    xgrid = -3:.25:3; ygrid = -3:.25:3
+    wireframe = [[PP.scatter3d(x = fill(x, length(ygrid)),
+                               y = ygrid, z = f.(x, ygrid),
+                               mode = "lines", line_color = "blue")
+                      for x in xgrid];
+                 [PP.scatter3d(x = xgrid,
+                               y = fill(y, length(xgrid)),
+                               z = f.(xgrid, y), mode = "lines",
+                               line_color = "blue")
+                  for y in ygrid];
+                 PP.mesh3d(opacity = .2, color = "red",
+                           x = repeat(xgrid, length(ygrid)),
+                           y = repeat(ygrid, inner = length(xgrid)),
+                           z = fill(thresh, length(xgrid)*length(ygrid)))]
+    l1 = PP.Layout(scene1 = PP.attr(xaxis_title_text = "X₁",
+                                    xaxis_title_standoff = 0,
+                                    yaxis_title_text = "X₂",
+                                    yaxis_title_standoff = 0,
+                                    zaxis_title_text = "probability of A",
+                                    zaxis_title_standoff = 0,
+                                    camera_eye = PP.attr(x = -1, y = 2.2, z = .2),
+                                    domain = PP.attr(x = [-.1, .65], y = [-.1, 1.1])
+                                   ),
+                   xaxis2_domain = [.65, 1], yaxis2_domain = [.1, .9],
+                   xaxis2_title_text = "X₁", yaxis2_title_text = "X₂",
+                   xaxis2_title_standoff = 0, yaxis2_title_standoff = 0,
+                   uirevision = 1, showlegend = false)
     labels = f.(samples.X1, samples.X2) .> rand(200)
-    xgrid = MLCourse.grid(-3:.2:3, -3:.2:3, names = (:X1, :X2))
-    scatter(xgrid.X1, xgrid.X2, color = (f.(xgrid.X1, xgrid.X2) .> .5) .+ 1,
-            markersize = 2, markerstrokewidth = 0, label = nothing)
-    p3 = scatter!(samples.X1, samples.X2, color = labels .+ 1, xlabel = "X1")
-    plot(p1, p2, plot(), p3, layout = (2, 2), size = (700, 600),
-         ylabel = "X2", legend = false)
+    grid = MLCourse.grid(-3:.2:3, -3:.2:3, names = (:X1, :X2))
+    plabels = f.(grid.X1, grid.X2) .> thresh
+    pdata = [PP.scatter(x = grid.X1[plabels],
+                        y = grid.X2[plabels],
+                        mode = "markers", marker_color = "green",
+                        marker_size = 3),
+             PP.scatter(x = grid.X1[(!).(plabels)],
+                        y = grid.X2[(!).(plabels)],
+                        mode = "markers", marker_color = "red",
+                        marker_size = 3),
+             PP.scatter(x = samples.X1[labels], y = samples.X2[labels],
+                        mode = "markers",
+                        marker_color = "green"),
+             PP.scatter(x = samples.X1[(!).(labels)], y = samples.X2[(!).(labels)],
+                        mode = "markers",
+                        marker_color = "red")]
+    plot = hcat(PP.Plot(wireframe), PP.Plot(pdata))
+    PP.relayout!(plot, l1)
+    PP.PlutoPlot(plot)
+#     p2 = contour(-3:.1:3, -3:.1:3, f, contour_labels = true, levels = 20, cbar = false)
+# 	plotly()
+#     samples = (X1 = 6 * rand(200) .- 3, X2 = 6 * rand(200) .- 3)
+#     labels = f.(samples.X1, samples.X2) .> rand(200)
+#     xgrid = MLCourse.grid(-3:.2:3, -3:.2:3, names = (:X1, :X2))
+#     scatter(xgrid.X1, xgrid.X2, color = (f.(xgrid.X1, xgrid.X2) .> .5) .+ 1,
+#             markersize = 2, markerstrokewidth = 0, label = nothing)
+#     p3 = scatter!(samples.X1, samples.X2, color = labels .+ 1, xlabel = "X1")
+#     plot(p1, p2, plot(), p3, layout = (2, 2), size = (700, 600),
+#          ylabel = "X2", legend = false)
 end
 
 
@@ -391,7 +481,7 @@ let
 end
 
 # ╔═╡ f1a48773-2971-4069-a240-fd1e10aeb1ed
-confusion_matrix(auc_samples_x .> 1/(2.0^s) * logodds(threshold), 
+confusion_matrix(auc_samples_x .> 1/(2.0^s) * logodds(threshold),
                  categorical(auc_samples_y, levels = [false, true], ordered = true))
 
 # ╔═╡ 62ad57e5-1366-4635-859b-ccdab2efd3b8
@@ -400,7 +490,7 @@ md"## Multiple Logistic Regression on the spam data"
 # ╔═╡ 29e1d9ff-4375-455a-a69b-8dd0c2cac57d
 m3 = fit!(machine(LogisticClassifier(penalty = :none),
                   normalized_word_counts,
-                  spam_or_ham));
+                  spam_or_ham), verbosity = 0);
 
 # ╔═╡ 1d1a24c6-c166-49a2-aa21-7acf50b55a66
 predict(m3)
@@ -428,7 +518,7 @@ end
 md"In the following we use the functions `roc_curve` and `auc` to plot the ROC curve and compute the area under the curve."
 
 # ╔═╡ e7d48a13-b4e6-4633-898c-c13b3e7f68ea
-let 
+let
 	fprs1, tprs1, _ = roc_curve(predict(m3), spam_or_ham)
     fprs2, tprs2, _ = roc_curve(predict(m3, test_input), test_labels)
 	plot(fprs1, tprs1, label = "training ROC")
@@ -510,7 +600,7 @@ m4 = machine(LinearCountRegressor(),
              bikesharing.count);
 
 # ╔═╡ 368b2d2c-393a-4b25-9a7c-0404a41e5873
-fit!(m4);
+fit!(m4, verbosity = 0);
 
 # ╔═╡ d7af774f-5d58-40a4-a5cd-905fdbe460a3
 fitted_params(m4)
@@ -646,6 +736,7 @@ MLCourse.footer()
 # ╟─ec1c2ea5-29ce-4371-be49-08798305ff50
 # ╠═681cb7b9-f041-4aea-907e-4d85135c005a
 # ╟─f7117513-283f-4e32-a2a1-3594c794c94d
+# ╟─26d957aa-36d4-4b90-9b91-2d9d883877ea
 # ╟─4f89ceab-297f-4c2c-9029-8d2d7fad084f
 # ╟─fd4165dc-c3e3-4c4c-9605-167b5b4416da
 # ╟─7738c156-8e1b-4723-9818-fba364822171

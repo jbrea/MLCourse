@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.0
+# v0.19.0
 
 using Markdown
 using InteractiveUtils
@@ -237,12 +237,24 @@ begin
                                                   lower = 1, upper = 20),
                                             range(model, :(ridge_regressor.lambda),
                                                   lower = 1e-12, upper = 1e-3,
-                                                  scale = :log)],
+                                                  scale = :log10)],
                                    measure = rmse)
     self_tuning_mach = machine(self_tuning_model,
                                select(regression_data, :x),
-                               regression_data.y) |> fit!
+                               regression_data.y)
+	fit!(self_tuning_mach, verbosity = 0)
 end;
+
+# ╔═╡ 13979da4-3d27-4c57-8f7e-f79a5343d46f
+Main.PlutoRunner.approx_size(p::Plots.Plot) = try
+                sum(p.series_list; init=0) do series
+					isnothing(series[:y]) && return 0 # hack to avoid warning
+                    length(series[:y])
+                end
+            catch e
+                @warn "Failed to guesstimate plot size" exception=(e,catch_backtrace())
+                0
+            end
 
 # ╔═╡ f5057d4a-1103-4728-becc-287d93d682ba
 plot(self_tuning_mach)
@@ -287,7 +299,7 @@ md"The `LogisticClassifier` and the `MultinomialClassifier` have a `penalty` arg
 # ╔═╡ d956613e-db32-488c-8ebb-fd61dfa31e59
 spam_fit = fit!(machine(LogisticClassifier(penalty = :l2, lambda = 1e-5),
                         select(spam_train, Not(:spam_or_ham)),
-                        spam_train.spam_or_ham));
+                        spam_train.spam_or_ham), verbosity = 0);
 
 # ╔═╡ 552f14fc-06c7-4c2a-9515-e64f28828b70
 confusion_matrix(predict_mode(spam_fit, select(spam_train, Not(:spam_or_ham))),
@@ -322,20 +334,33 @@ begin
     weather_input = select(weather, Not(:LUZ_wind_peak))[1:end-5, :]
     weather_output = weather.LUZ_wind_peak[6:end]
     weather_fits = glmnet(Array(weather_input), weather_output)
-end
+end;
+
+# ╔═╡ f6158ed5-bd0d-4781-b9cd-22b271e86ef8
+md"In the following figure we can see that the predictor `BER_wind_peak` is the first one to have a non-zero coefficient when we decrease the regularization constant `λ`."
+
+# ╔═╡ fb4c4d75-1599-4804-8aef-d19b431bf237
+import PlutoPlotly as PP
 
 # ╔═╡ 4652a904-5edb-463c-a046-5c5d378f7cca
 let lambda = log.(weather_fits.lambda),
     col_names = names(weather_input)
-    plotly()
-    p = plot()
-    for i in 1:size(weather_fits.betas, 1)
-        plot!(lambda, weather_fits.betas[i, :], label = col_names[i])
-    end
-    plot!(legend = :outertopright, xlabel = "log(λ)", size = (700, 400))
-    gr()
-    p
+	cols = union((x -> x[1]).(findall(weather_fits.betas .> 0)))
+	append!(cols, setdiff(1:length(col_names), cols))
+	p = [PP.scatter(x = lambda, y = weather_fits.betas[i, :],
+	                name = col_names[i])
+        for i in cols]
+    PP.PlutoPlot(PP.Plot(p, PP.Layout(xaxis_title = "log(λ)")))
 end
+
+# ╔═╡ 6f5b0cd1-ba68-46a5-a348-fed201da4a15
+md"Indeed, if we were allowed to use only one predictor, the wind peak in Bern is most informative about the wind peak in Luzern five hours later. The correlation is positive, but there is a lot of noise."
+
+# ╔═╡ c9ed011c-8d36-4926-9ec4-84be3b4878d7
+scatter(weather_input.BER_wind_peak, weather_output, xlabel = "wind peak in Bern [km/h]", ylabel = "wind peak in Luzern 5 hours later [km/h]", label = nothing)
+
+# ╔═╡ 45df70c6-4c5a-419b-af9d-05d276b3759a
+md"In the figures below we see that the first few predictors explain most of the variability that is explainable with linear models. In fact, at `log(λ) = 0` we see that less than 10 predictors are sufficient to explain approximately 30% of the variance. Adding more predictors increases the explained variance to less than 40%."
 
 # ╔═╡ 40bb385f-1cbd-4555-a8ab-544a67f33595
 let lambda = log.(weather_fits.lambda)
@@ -345,9 +370,6 @@ let lambda = log.(weather_fits.lambda)
               xlabel = "log(λ)")
     plot(p1, p2, layout = (2, 1), legend = false)
 end
-
-# ╔═╡ c9ed011c-8d36-4926-9ec4-84be3b4878d7
-scatter(weather_input.BER_wind_peak, weather_output)
 
 # ╔═╡ 8262b948-6d54-4348-87d1-4c762c74db30
 md"# Exercises
@@ -438,6 +460,7 @@ MLCourse.footer()
 # ╟─a54e3439-69b8-41c8-bfe0-4575795fb9b8
 # ╟─bdbf0dfd-8da5-4e54-89c4-ef4d6b3796ce
 # ╠═fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
+# ╟─13979da4-3d27-4c57-8f7e-f79a5343d46f
 # ╠═f5057d4a-1103-4728-becc-287d93d682ba
 # ╠═bd54bfcd-f682-4b74-8a44-35463d421491
 # ╟─596fd0f2-eee0-46ca-a203-e7cbac6f9788
@@ -452,9 +475,13 @@ MLCourse.footer()
 # ╠═1fa932c1-ce29-40ca-a8dc-e636aa2ecf66
 # ╠═470dc7f4-04a9-4253-8125-9112778021eb
 # ╠═ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
+# ╟─f6158ed5-bd0d-4781-b9cd-22b271e86ef8
+# ╟─fb4c4d75-1599-4804-8aef-d19b431bf237
 # ╟─4652a904-5edb-463c-a046-5c5d378f7cca
+# ╟─6f5b0cd1-ba68-46a5-a348-fed201da4a15
+# ╟─c9ed011c-8d36-4926-9ec4-84be3b4878d7
+# ╟─45df70c6-4c5a-419b-af9d-05d276b3759a
 # ╟─40bb385f-1cbd-4555-a8ab-544a67f33595
-# ╠═c9ed011c-8d36-4926-9ec4-84be3b4878d7
 # ╟─8262b948-6d54-4348-87d1-4c762c74db30
 # ╟─e04c5e8a-15f8-44a8-845d-60acaf795813
 # ╟─c48dff95-8028-4e97-8ec6-705ea2b9c72e

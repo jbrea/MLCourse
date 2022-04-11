@@ -1,16 +1,11 @@
 ### A Pluto.jl notebook ###
-# v0.17.7
+# v0.19.0
 
 using Markdown
 using InteractiveUtils
 
 # ╔═╡ 065a1e67-6b63-43df-9d6d-303af08d8434
-begin
-	using Pkg
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using PlutoUI
-    PlutoUI.TableOfContents()
-end
+using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 
 # ╔═╡ 034f7cc2-eacd-11eb-29e2-810a573295cf
 using LinearAlgebra
@@ -22,10 +17,7 @@ using DataFrames # load the DataFrames package
 using Random
 
 # ╔═╡ 034f7d3a-eacd-11eb-1144-65f9acfcf24c
-begin
-	using Plots
-	plotly()
-end
+using Plots
 
 # ╔═╡ 034f7d58-eacd-11eb-3189-bff16ec27739
 using Distributions
@@ -39,6 +31,9 @@ begin
     MLCourse.list_notebooks(@__FILE__)
 end
 
+# ╔═╡ 2b67233e-76ba-40be-81e2-787fbe5d3641
+using PlutoUI; PlutoUI.TableOfContents()
+
 # ╔═╡ f3508747-da29-47c9-a98e-22ea15caaf2f
 Markdown.parse("Hi and welcome to an introduction to the Julia programming language.
 
@@ -49,7 +44,9 @@ The output gets displayed above the cell. Have a look at [this website](https://
 To get help, please open the Live docs at the bottom right of this page and click on the code you want to get help for. For example, click on the ÷ symbol in the 8th cell below.")
 
 If you want to learn more about Julia visit [julialang.org](https://julialang.org).
-In the following sections you find links to different chapters of the [manual](https://docs.julialang.org/en/v1/). There is also this [cheat sheet](https://juliadocs.github.io/Julia-Cheat-Sheet/). Noteworthy differences to other programming languages can be found [here](https://docs.julialang.org/en/v1/manual/noteworthy-differences/).")
+In the following sections you find links to different chapters of the [manual](https://docs.julialang.org/en/v1/). There is also this [cheat sheet](https://juliadocs.github.io/Julia-Cheat-Sheet/). Noteworthy differences to other programming languages can be found [here](https://docs.julialang.org/en/v1/manual/noteworthy-differences/).
+
+Before we start, we activate the environment of this course. The environment defines all the versions of the packages used in this course.")
 
 # ╔═╡ d92c0729-c7ab-42cc-b713-30f00e237833
 md"# Mathematical Operations
@@ -504,19 +501,13 @@ plot(1:4, rand(4))
 scatter(rand(100), rand(100))
 
 # ╔═╡ 034f7d44-eacd-11eb-0ab2-2f0d2caed9d6
-with_terminal() do
-    plotattr()
-end # get some help on plotting attributes
+plotattr() # get some help on plotting attributes
 
 # ╔═╡ 034f7d4c-eacd-11eb-3960-d10d1c16075d
-with_terminal() do
-    plotattr(:Series)
-end
+plotattr(:Series)
 
 # ╔═╡ 034f7d4c-eacd-11eb-3841-97ca37e34c9f
-with_terminal() do
-    plotattr(:Series, "label")
-end
+plotattr(:Series, "label")
 
 # ╔═╡ 034f7d58-eacd-11eb-123f-9b563a7ae27e
 scatter(rand(100), rand(100), label = "my data", xlabel = "X1", ylabel = "X2")
@@ -615,6 +606,7 @@ MLCourse.footer()
 
 # ╔═╡ Cell order:
 # ╟─f3508747-da29-47c9-a98e-22ea15caaf2f
+# ╠═065a1e67-6b63-43df-9d6d-303af08d8434
 # ╟─d92c0729-c7ab-42cc-b713-30f00e237833
 # ╠═b8630ee9-d2c0-4cd0-b3f7-77f66e997a80
 # ╠═034f7b46-eacd-11eb-1aa2-f380d08206cc
@@ -762,5 +754,5 @@ MLCourse.footer()
 # ╟─034f7d8a-eacd-11eb-1dc0-d99d481ab6fa
 # ╟─4a03cfae-9876-4cf0-a498-d750853191cb
 # ╟─d6e5fe02-21a5-486c-a237-878be1d95439
-# ╟─065a1e67-6b63-43df-9d6d-303af08d8434
+# ╟─2b67233e-76ba-40be-81e2-787fbe5d3641
 # ╟─0314376e-ff8c-4ad0-8a4b-f94f04f31f2c

@@ -1,19 +1,15 @@
 ### A Pluto.jl notebook ###
-# v0.18.0
+# v0.19.0
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 64bac944-8008-498d-a89b-b9f8ee54aa98
+# ╔═╡ a022be72-b0b0-43b7-8f39-c02a53875ff6
 begin
     using Pkg
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using PlutoUI
-    PlutoUI.TableOfContents()
+    using OpenML, MLJ, MLJXGBoostInterface, DataFrames, MLJLinearModels, MLJDecisionTreeInterface
 end
-
-# ╔═╡ a022be72-b0b0-43b7-8f39-c02a53875ff6
-using OpenML, MLJ, MLJXGBoostInterface, DataFrames, MLJLinearModels, MLJDecisionTreeInterface
 
 # ╔═╡ cf267836-0ac5-494d-9b5e-12eb314ac170
 using MLJLIBSVMInterface, Random, Plots
@@ -22,6 +18,12 @@ using MLJLIBSVMInterface, Random, Plots
 begin
     using MLCourse
     MLCourse.list_notebooks(@__FILE__)
+end
+
+# ╔═╡ 64bac944-8008-498d-a89b-b9f8ee54aa98
+begin
+    using PlutoUI
+    PlutoUI.TableOfContents()
 end
 
 # ╔═╡ 7cfd274d-75d8-4cd9-b38b-4176466c9e26
@@ -230,9 +232,7 @@ tree = machine(DecisionTreeRegressor(min_samples_leaf = 4),
 fit!(tree, verbosity = 0);
 
 # ╔═╡ ba27162a-7e83-4235-87c2-14d6f9b0550c
-with_terminal() do
-	MLJDecisionTreeInterface.DecisionTree.print_tree(fitted_params(tree).tree)
-end
+MLJDecisionTreeInterface.DecisionTree.print_tree(fitted_params(tree).tree)
 
 # ╔═╡ 16fef29a-753f-44b0-89af-6f5a0195e704
 let grid = -4:.01:4
@@ -348,14 +348,15 @@ begin
 end;
 
 # ╔═╡ 56b1d5da-eb6d-4a80-92ac-1de73dc76e9f
-evaluate!(machine(report(m2).best_model, cars_input, cars.mpg), measure = rmse)
+evaluate!(machine(report(m2).best_model, cars_input, cars.mpg),
+	      measure = rmse, verbosity = 0)
 
 # ╔═╡ df56c35c-713a-494c-b59f-3f54644bac71
 m3 = machine(RandomForestRegressor(n_trees = 500),
 	         cars_input, cars.mpg);
 
 # ╔═╡ 2942f37c-b848-49c9-a599-0deb5040045c
-evaluate!(m3, measure = rmse)
+evaluate!(m3, measure = rmse, verbosity = 0)
 
 # ╔═╡ c4b21c4a-f8ec-468e-b86b-7e4c3e0203df
 md"The following code takes a moment to run. It is certainly not the best neural network regressor, but it would take quite a bit of time to tune it and find one that outperforms gradient boosting.
