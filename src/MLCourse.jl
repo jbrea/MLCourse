@@ -1,17 +1,20 @@
 module MLCourse
 
 import Pkg
-
-project_relative_path(xs...) = normpath(joinpath(dirname(dirname(pathof(MLCourse))), xs...))
-
-include("notebooks.jl")
-include_dependency(joinpath("..", "Project.toml"))
-const _VERSION = VersionNumber(Pkg.TOML.parsefile(project_relative_path("Project.toml"))["version"])
-
-using Requires, Git, Pluto, Distributed, PackageCompiler
+using Requires, PrecompilePlutoCourse
 using Markdown, Base64
 
+include("notebooks.jl")
+
 function __init__()
+PrecompilePlutoCourse.configure(@__MODULE__,
+    start_notebook = pkgdir(@__MODULE__, "index.jl"),
+    sysimage_path = pkgdir(@__MODULE__, "precompile", "mlcourse.so"),
+    warmup_file = pkgdir(@__MODULE__, "precompile", "warmup.jl"),
+    packages = [:Pluto, :MLJ, :MLJLinearModels, :Distributions,
+                :MLCourse, :StatsPlots, :DataFrames, :MLJFlux]
+)
+
 @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin
 using Zygote
 """
@@ -177,54 +180,9 @@ end
 function embed_figure(name)
     "![](data:img/png; base64,
          $(open(base64encode,
-                project_relative_path("notebooks", "figures", name))))"
+                pkgdir(@__MODULE__, "notebooks", "figures", name))))"
 end
 
 heaviside(x::T) where T = ifelse(x > 0, one(T), zero(T))
-
-function start()
-    nb = joinpath(project_relative_path(), "index.jl")
-    exeflags = ["--project=$(project_relative_path())"]
-    sysimg = project_relative_path("precompile", "mlcourse.so")
-    isfile(sysimg) && push!(exeflags, "--sysimage=$sysimg")
-    pid = Distributed.addprocs(1, exeflags = exeflags) |> first
-    expr = :(using Pluto; Pluto.run(notebook = $nb,
-                                    workspace_use_distributed = false,
-                                    dismiss_update_notification = true))
-    @async Distributed.remotecall_eval(Main, [pid], expr)
-    println("Starting a Pluto notebook in your browswer.
-Please use `MLCourse.stop()` to interrupt the Pluto notebook server.")
-end
-
-stop() = Distributed.interrupt()
-
-function update(; kwargs...)
-    @info "Performing an automatic update while keeping local changes.
-    If this fails, please run manually `git pull` in the directory
-    `$(project_relative_path())`."
-    current_dir = pwd()
-    cd(project_relative_path())
-    if !isempty(readlines(`$(git()) diff --stat`))
-        run(`$(git()) add -u`)
-    end
-    if !isempty(readlines(`$(git()) diff --cached`))
-        run(`$(git()) -c user.name="student" -c user.email="student@mlcourse" commit -m "automatic commit of local changes"`)
-    end
-    run(`$(git()) pull -s recursive -X patience -X ours -X ignore-all-space --no-edit`)
-    if !isempty(read(`$(git()) diff HEAD^ --name-only Manifest.toml`, String))
-        Pkg.instantiate()
-        MLCourse.create_sysimage(; kwargs...)
-    end
-    cd(current_dir)
-end
-
-function create_sysimage(; sysimage_path = project_relative_path("precompile", "mlcourse.so"))
-    PackageCompiler.create_sysimage([:Pluto, :MLJ, :MLJLinearModels,
-                                     :PlutoPlotly, :Plots,
-                                     :MLCourse, :StatsPlots, :DataFrames,
-                                     :MLJFlux, :Distributions];
-                                    sysimage_path,
-                                    precompile_execution_file=project_relative_path("precompile", "warmup.jl"))
-end
 
 end # module

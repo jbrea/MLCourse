@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.18.0
+# v0.19.0
 
 using Markdown
 using InteractiveUtils
@@ -489,7 +489,7 @@ begin
 		"""))
 	end
 
-	Base.get(button::CounterButtons) = button.labels
+    Base.get(::CounterButtons) = [0, 0]
 	PlutoUI.BuiltinsNotebook.Bonds.initial_value(::CounterButtons) = [0, 0]
 	PlutoUI.BuiltinsNotebook.Bonds.possible_values(::CounterButtons) = PlutoUI.BuiltinsNotebook.Bonds.InfinitePossibilities()
 	function PlutoUI.BuiltinsNotebook.Bonds.validate_value(::CounterButtons, val)
@@ -837,8 +837,10 @@ let
         r = 0
     elseif !is_terminated(cwenv)
         act!(cwenv, a)
-        r::Int = reward(cwenv)
+        r = reward(cwenv)
         cwenv.cumulative_reward += r
+	else
+		r = reward(cwenv)
     end;
     plot(cwenv)
     plot!(size = (700, 400))

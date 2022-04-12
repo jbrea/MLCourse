@@ -256,7 +256,6 @@ md"Instead of using estimates for the irreducible error we could just compute it
 
 # ╔═╡ dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
 let x = rand(100), grid = 0:.05:1
-    gr()
     p1 = scatter(x, vcat(conditional_generator.(x, n = 1)...), label = "samples")
     plot!(f, label = "f")
     plot!(f̂, label = "f̂")
@@ -437,16 +436,6 @@ let f(x1, x2) = logistic(θ₀ + θ₁ * x1 + θ₂ * x2)
     plot = hcat(PP.Plot(wireframe), PP.Plot(pdata))
     PP.relayout!(plot, l1)
     PP.PlutoPlot(plot)
-#     p2 = contour(-3:.1:3, -3:.1:3, f, contour_labels = true, levels = 20, cbar = false)
-# 	plotly()
-#     samples = (X1 = 6 * rand(200) .- 3, X2 = 6 * rand(200) .- 3)
-#     labels = f.(samples.X1, samples.X2) .> rand(200)
-#     xgrid = MLCourse.grid(-3:.2:3, -3:.2:3, names = (:X1, :X2))
-#     scatter(xgrid.X1, xgrid.X2, color = (f.(xgrid.X1, xgrid.X2) .> .5) .+ 1,
-#             markersize = 2, markerstrokewidth = 0, label = nothing)
-#     p3 = scatter!(samples.X1, samples.X2, color = labels .+ 1, xlabel = "X1")
-#     plot(p1, p2, plot(), p3, layout = (2, 2), size = (700, 600),
-#          ylabel = "X2", legend = false)
 end
 
 
@@ -454,11 +443,15 @@ end
 begin
     Random.seed!(seed)
     auc_samples_x = 2 * randn(200)
+    auc_samples_y = logistic.(2.0^s * auc_samples_x) .> rand(200)
 end;
+
+# ╔═╡ f1a48773-2971-4069-a240-fd1e10aeb1ed
+confusion_matrix(auc_samples_x .> 1/(2.0^s) * logodds(threshold),
+                 categorical(auc_samples_y, levels = [false, true], ordered = true))
 
 # ╔═╡ c98524b5-d6b3-469c-82a1-7d231cc792d6
 begin
-    auc_samples_y = logistic.(2.0^s * auc_samples_x) .> rand(200)
     errs = [error_rates(auc_samples_x, auc_samples_y, 1/(2.0^s) * logodds(t))
            for t in .01:.01:.99]
     push!(errs, (0., 0.))
@@ -467,7 +460,6 @@ end;
 
 # ╔═╡ 3336ab15-9e9b-44af-a7d5-1d6472241e62
 let
-	gr()
     p1 = scatter(auc_samples_x, auc_samples_y, markershape = :vline, label = nothing, color = :black)
     plot!(x -> logistic(2.0^s * x), color = :blue, label = nothing, xlims = (-8, 8))
     vline!([1/(2.0^s) * logodds(threshold)], w = 3, color = :red,
@@ -479,10 +471,6 @@ let
             xlabel = "false positive rate")
     plot(p1, p2, size = (700, 400))
 end
-
-# ╔═╡ f1a48773-2971-4069-a240-fd1e10aeb1ed
-confusion_matrix(auc_samples_x .> 1/(2.0^s) * logodds(threshold),
-                 categorical(auc_samples_y, levels = [false, true], ordered = true))
 
 # ╔═╡ 62ad57e5-1366-4635-859b-ccdab2efd3b8
 md"## Multiple Logistic Regression on the spam data"
