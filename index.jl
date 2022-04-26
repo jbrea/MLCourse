@@ -47,7 +47,7 @@ Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.2"
+julia_version = "1.7.1"
 manifest_format = "2.0"
 
 [[deps.ArgTools]]
