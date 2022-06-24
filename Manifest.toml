@@ -1,6 +1,6 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.2"
+julia_version = "1.7.3"
 manifest_format = "2.0"
 
 [[deps.ARFFFiles]]
@@ -429,7 +429,7 @@ uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 version = "0.8.6"
 
 [[deps.Downloads]]
-deps = ["ArgTools", "LibCURL", "NetworkOptions"]
+deps = ["ArgTools", "FileWatching", "LibCURL", "NetworkOptions"]
 uuid = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 
 [[deps.DualNumbers]]
@@ -1054,10 +1054,10 @@ uuid = "929cbde3-209d-540e-8aea-75f648917ca0"
 version = "4.9.1"
 
 [[deps.LLVMExtra_jll]]
-deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg"]
-git-tree-sha1 = "5558ad3c8972d602451efe9d81c78ec14ef4f5ef"
+deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl", "Pkg", "TOML"]
+git-tree-sha1 = "43817483288cdceb8d3258756040a3e63578bb1b"
 uuid = "dad2f222-ce93-54a1-a47d-0025e8a3acab"
-version = "0.0.14+2"
+version = "0.0.14+3"
 
 [[deps.LLVMOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1714,9 +1714,7 @@ version = "0.2.4"
 
 [[deps.PrecompilePlutoCourse]]
 deps = ["Distributed", "Git", "PackageCompiler", "Pkg", "Pluto"]
-git-tree-sha1 = "aecbf08a11856067a4d5034a3a6234756d7a12a6"
-repo-rev = "main"
-repo-url = "https://github.com/jbrea/PrecompilePlutoCourse.jl"
+git-tree-sha1 = "8f08e87f9a685a11a9d9e2247bc72dfb90c78e7d"
 uuid = "031ef55e-ae57-4a95-aa50-04a4c1cc4953"
 version = "0.1.0"
 
