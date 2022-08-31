@@ -1,8 +1,8 @@
-using Pkg
+using Pkg, Logging
 Pkg.activate(joinpath(@__DIR__, ".."))
 
 using Pluto, MLCourse, MLJ, MLJLinearModels, StatsPlots, DataFrames,
-      Distributions
+      Distributions, Random, Flux, Zygote
 
 X, y = make_regression()
 
@@ -11,13 +11,16 @@ mach = fit!(machine(LinearRegressor(), X, y), verbosity = 0)
 predict(mach)
 
 plot(rand(10), rand(10))
+scatter(rand(10), rand(10))
+
+MLCourse.gradient_descent(x -> sum(abs2, x), rand(4), .1, 2)
 
 df = DataFrame(a = rand(10), b = rand(10))
 @df df scatter(:a, :b)
 
 rand(Bernoulli(.4))
 
-redirect_stdout(Pipe()) do
+with_logger(SimpleLogger(Logging.Warn)) do
 
 session = Pluto.ServerSession()
 session.options.server.port = 40404
