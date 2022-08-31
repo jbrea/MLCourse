@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -350,13 +350,16 @@ nested_cv.report_per_fold
 md"# Exercises
 
 ## Conceptual
-1. We review k-fold cross-validation.
-    - Explain how k-fold cross-validation is implemented.
-    - What are the advantages and disadvantages of k-fold cross-validation relative to:
-        - The validation set approach?
-        - LOOCV?
-3. You are given a model with unknown hyper-parameters and the goal is to find the optimal hyper-parameters and estimate the test error of the optimal model. Suppose of colleague of yours argues that this should be done in the following way: \"Take all the data and run cross-validation to find the best hyper-parameters. Taking all data is better, than taking only a subset, because one has more data to estimate the parameters and estimate the test error on the validation sets. Once the best hyper-parameters are found: estimate the test error by running again cross-validation on all the data with the hyper-parameter fixed to the best value.\" Do you agree with your colleague? If not, explain where you disagree and where you agree.
-2. Suppose you receive the following email of a colleague of yours. Write an answer to this email.
+#### Exercise 1
+We review k-fold cross-validation.
+- Explain how k-fold cross-validation is implemented.
+- What are the advantages and disadvantages of k-fold cross-validation relative to:
+    - The validation set approach?
+    - LOOCV?
+#### Exercise 2
+You are given a model with unknown hyper-parameters and the goal is to find the optimal hyper-parameters and estimate the test error of the optimal model. Suppose of colleague of yours argues that this should be done in the following way: \"Take all the data and run cross-validation to find the best hyper-parameters. Taking all data is better, than taking only a subset, because one has more data to estimate the parameters and estimate the test error on the validation sets. Once the best hyper-parameters are found: estimate the test error by running again cross-validation on all the data with the hyper-parameter fixed to the best value.\" Do you agree with your colleague? If not, explain where you disagree and where you agree.
+#### Exercise 3
+Suppose you receive the following email of a colleague of yours. Write an answer to this email.
 ```
     Hi
 
@@ -385,13 +388,16 @@ md"# Exercises
 
 
 ## Applied
-1. Take the `classification_data` in our notebook on
+#### Exercise 4
+Take the `classification_data` in our notebook on
    \"flexibility and bias-variance-decomposition notebook\" and find with 10-fold
    cross-validation the optimal number ``k`` of neighbors of kNN
    classification, using the AUC measure. Hint: `MLJ` has the builtin function `auc`.
    Plot the validation AUC for ``k = 1, \ldots, 50``.
-3. With the same data as in the previous exercise, use the `MLJ` function `estimate!` and a self tuning machine to estimate with the validation set approach the test error of kNN classifier whose hyper-parameter is tuned with 5 fold cross-validation. Use one quarter of the data for the test set.
-2. In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download a dataset with `using OpenML; cars = DataFrame(OpenML.load(455))`. In the cleaning step we will remove all rows that contain missing values (you can use the function `dropmissing`). We select the machine learning methods polynomial regression and k nearest neighbors regression and we take as measure the `rmse`. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found.
+#### Exercise 5
+With the same data as in the previous exercise, use the `MLJ` function `estimate!` and a self tuning machine to estimate with the validation set approach the test error of kNN classifier whose hyper-parameter is tuned with 5 fold cross-validation. Use one quarter of the data for the test set.
+#### Exercise 6
+In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download a dataset with `using OpenML; cars = DataFrame(OpenML.load(455))`. In the cleaning step we will remove all rows that contain missing values (you can use the function `dropmissing`). We select the machine learning methods polynomial regression and k nearest neighbors regression and we take as measure the `rmse`. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found.
 "
 
 # 1. Perform k-nearest neighbors regression on data generated with our `data_generator`

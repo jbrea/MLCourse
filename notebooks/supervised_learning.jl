@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -46,20 +46,20 @@ md"In this notebook we have a first look at some data sets and the MLJ machine l
 
 
 # ╔═╡ f63c04e8-eefe-11eb-1a14-8305504a6f1c
-mnist = OpenML.load(554) |> DataFrame;
+mnist = OpenML.load(554, maxbytes = 10^5) |> DataFrame;
 
 # ╔═╡ f63c04f2-eefe-11eb-2562-e530426e4300
-md"With the semicolon we omit the output of a cell.
+md"With the keyword argument `maxbytes = 10^5`, we load only a small fraction of the dataset. We can load the full dataset by omitting this argument or setting it to `maxbytes = typemax(Int)`. With the semicolon we omit the output of a cell.
 "
 
 # ╔═╡ f63c04f2-eefe-11eb-3ceb-ff1e36a2a302
-mnist.class # this is a vector of 70'000 integers between 0 and 9.
+mnist.class # this is a vector of integers between 0 and 9.
 
 # ╔═╡ f63c04fc-eefe-11eb-35b6-5345dda134e7
 size(mnist)
 
 # ╔═╡ f63c04fc-eefe-11eb-043c-7fec2fc41913
-md"The input of this data set consists of 70'000 grayscale images of 28x28 pixels.
+md"The input of this data set consists of grayscale images of 28x28 pixels.
 
 We can plot different input images with the following code.
 "
@@ -80,7 +80,7 @@ mnist.class[19] # the label corresponding to image 19 is a 6 :)
 # ╔═╡ f63c050e-eefe-11eb-1709-0ddce2aee0ed
 Markdown.parse("## Spam Detection
 
-We load the spam data from a csv file on the harddisk to a DataFrame.
+We load the (first 50 rows of the ) spam data from a csv file on the harddisk to a DataFrame.
 Our goal is to classify emails as spam or \"ham\".
 The email texts are preprocessed. Html tags, numbers and punctuation is removed,
 all characters are transformed to lowercase and words are reduced to their
@@ -93,7 +93,7 @@ preprocessing code in the scripts folder of the MLCourse package
 ")
 
 # ╔═╡ f63c051a-eefe-11eb-0db2-c519292f88a2
-spam = CSV.read(joinpath(@__DIR__, "..", "data", "spam.csv"), DataFrame)
+spam = CSV.read(joinpath(@__DIR__, "..", "data", "spam.csv"), DataFrame, limit = 50)
 
 # ╔═╡ f63c051a-eefe-11eb-16eb-a572fe41aa43
 spam[spam.label .== "ham", :] # select only ham
@@ -104,13 +104,13 @@ spam[spam.label .== "spam", :] # select only spam
 # ╔═╡ f63c0524-eefe-11eb-3732-258d6989e217
 md"## Wind Speed Prediction
 
-We load the weather data from a csv file on the harddisk to a DataFrame.
+We load (the first 5000 rows of) the weather data from a csv file on the harddisk to a DataFrame.
 Our goal is to predict the wind speed in Lucerne from 5 hours old measurements.
 "
 
 # ╔═╡ f63c052e-eefe-11eb-3a14-e5e8f3d578a8
-weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), 
-                   DataFrame)[1:10000,:] # to speed up plotting, we use only the first 10'000 rows of the data set. Change `10000` to `end`, if you want to see all data.
+weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
+                   DataFrame, limit = 5000)
 
 # ╔═╡ f63c052e-eefe-11eb-0884-7bd433ce0c5e
 y = weather.LUZ_wind_peak[6:end] # from hour 6 until the end we take all wind values
@@ -409,8 +409,8 @@ fitted_params(mach3)
 md"In the following cell we define the loss function to compute the loss of the optimal parameters (found by the `fit!`)."
 
 # ╔═╡ d0c4804f-c66d-4405-a7dc-1e85974e261f
-ll(θ) = log(logistic(-θ[1])) + 
-        log(logistic(θ[1] + 2θ[2])) + 
+ll(θ) = log(logistic(-θ[1])) +
+        log(logistic(θ[1] + 2θ[2])) +
         log(logistic(-θ[1] - 3θ[2]))
 
 # ╔═╡ b8971599-494a-4fb3-9fa0-fb374fb7d79d
@@ -444,14 +444,16 @@ predict_mode(mach3, DataFrame(x = -1:.5:2))
 md"""# Exercises
 
 ## Conceptual
-1. We have some training data ``((x_1 = 0, y_1 = -1), (x_2 = 2, y_2 = 4),
+#### Exercise 1
+We have some training data ``((x_1 = 0, y_1 = -1), (x_2 = 2, y_2 = 4),
    (x_3 = 2, y_3 = 3))`` and a family of probability densities
    ``p(y|x) = \frac1{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(y - \theta_0 - \theta_1 x)^2}{2\sigma^2}\right)``.
    - Write the log-likelihood function of the parameters ``\theta_0`` and ``\theta_1``
      for this data and model.
    - Find the parameters ``\hat\theta_0`` and ``\hat\theta_1`` that maximize the log-likelihood function and compare your result to the solution we found in our blackboard example of linear regression as a loss minimizing machine.
    - Show for general training data ``((x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n))`` that the log-likelihood function is maximized by the same ``\hat\theta`` that minimizes the loss function of linear regression.
-1. Explain whether each scenario is a classification or regression problem, and
+#### Exercise 2
+   Explain whether each scenario is a classification or regression problem, and
    indicate whether we are most interested in inference/interpretation or prediction.
    Finally, provide ``n`` and ``p``.
    - We collect a set of data on the top 500 firms in the US. For each firm we
@@ -469,7 +471,8 @@ md"""# Exercises
      each week we record the % change in the USD/Euro, the %
      change in the US market, the % change in the British market,
      and the % change in the German market.
-1. Take one of the examples of supervised machine learning applications
+#### Exercise 3
+Take one of the examples of supervised machine learning applications
    discussed in the introductory lecture of this course. Discuss with a colleague
    - the data generating process for X
    - the data generating process for Y|X
@@ -477,12 +480,23 @@ md"""# Exercises
    - a distribution that could be used to model Y|X
 
 ## Applied
-1. Change the noise level ``\sigma``, the size of the training data ``n`` and the seed with the sliders of the section "Linear Regression" and observe the training and the test losses. Write down your observations when
-    - ``n`` is small.
-    - ``n`` is large.
-    - Compare training loss and test loss when ``n`` is large for different seed values.
-    - Compare for large ``n`` the test error to ``\sigma^2`` for different values of ``\sigma``.
-1. Write a data generator function that samples inputs ``x`` normally distributed
+#### Exercise 4
+In this exercise we construct an example, where the response looks noisy, if we consider only some predictors, although the response would be deterministic if we consider all predictors. For this example we assume that the time it takes for a feather to reach the ground when dropping it from one meter is completely determined by the following factors: fluffiness of the feather (``f \in [1, 4]``), shape of the feather (``s = \{\mbox{s, e}\}``, for spherical or elongated), air density (``ρ ∈ [1.1, 1.4]`` kg/m³), wind speed (``w ∈ [0, 5]`` m/s). We assume that time it takes to reach the ground is deterministically given by the function
+```math
+g(f, s, ρ, w) = ρ + 0.1f^2 + 0.3w + 2χ(s = \mbox{s}) + 0.5χ(s = \mbox{e})
+```
+where we use the indicator function ``χ(\mbox{true}) = 1`` and ``χ(\mbox{false}) = 0``.
+1. Generate an artificial dataset that corresponds to 500 experiments of dropping different feathers under different conditions. *Hints:* you can sample from a uniform distribution over the interval ``[a, b]`` using either `rand(500)*(b-a) .+ a` or `rand(Uniform(a, b), 500)` and you can sample categorical values in the same way as we did it in the first week when sampling column C in exercise 1. To implement the indicator function you can use for example the syntax `(s == :s)` and `(s == :f)`.
+2. Create a scatter plot with fluffiness of the feather on the horizontal axis and time to reach the ground on the vertical axis.
+3. Argue, why it looks like the time to reach the ground depended probabilistically on the fluffiness, although we used a deterministic function to compute the time to reach the ground.
+#### Exercise 5
+Change the noise level ``\sigma``, the size of the training data ``n`` and the seed with the sliders of the section "Linear Regression" and observe the training and the test losses. Write down your observations when
+- ``n`` is small.
+- ``n`` is large.
+- Compare training loss and test loss when ``n`` is large for different seed values.
+- Compare for large ``n`` the test error to ``\sigma^2`` for different values of ``\sigma``.
+#### Exercise 6
+Write a data generator function that samples inputs ``x`` normally distributed
    with mean 2 and standard deviation 3. The response ``y\in\{\mbox{true, false}\}``
    should be sampled from a Bernoulli distribution with rate of ``\mbox{true}``
    equal to ``\sigma(0.5x - 2.7)`` where ``\sigma(x) = 1/(1 + e^{-x})`` is the sigmoid (or logistic) function.

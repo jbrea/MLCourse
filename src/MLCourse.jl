@@ -11,8 +11,6 @@ PrecompilePlutoCourse.configure(@__MODULE__,
     start_notebook = pkgdir(@__MODULE__, "index.jl"),
     sysimage_path = pkgdir(@__MODULE__, "precompile", "mlcourse.so"),
     warmup_file = pkgdir(@__MODULE__, "precompile", "warmup.jl"),
-    packages = [:Pluto, :MLJ, :MLJLinearModels, :Distributions,
-                :MLCourse, :StatsPlots, :DataFrames, :MLJFlux]
 )
 
 @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin

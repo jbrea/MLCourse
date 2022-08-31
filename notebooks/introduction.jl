@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -586,17 +586,35 @@ Here are some other popular Julia packages. They are not relevant for this cours
 # ╔═╡ 4a03cfae-9876-4cf0-a498-d750853191cb
 md"""# Exercises
 
-1. Create a data frame with 3 columns named A, B and C.
+#### Exercise 1
+Create a data frame with 3 columns named A, B and C.
    1. Column A contains 5 random numbers sampled from a Bernoulli distribution with rate 0.3, column B contains 5 random numbers from the uniform distribution over the interval [0, 1), and column C contains 5 samples from the set `(:hip, :hop)`.
    2. Create a vector whose i'th element contains the sum of the i'th entries of columns A and B of the data frame created in 1.
    3. Select all rows with `:hop` in column C and display the resulting data frame.
-1. 
-   1. Use comprehension (see "Vectors, Matrices, Arrays") to create a vector where with all numbers of the form ``x^y`` with ``x=1, \ldots, 10``, ``y = 2, \ldots, 7`` and ``y > x``.
-   2. Compute the sum of the square root of this numbers.
-2. 
+#### Exercise 2
+   Very often the first version of some code does not run as it should. Therefore we need good debugging strategies. For this it is important to know how to read error messages. In this exercise we will produce different error messages and try to interpret them.
+   1. Write `longfunc(1, [1, 2, 3])` in a new cell and read the error message. At the bottom of this error message you can see where the error occurred. You can click on the yellowish field with text `Other: 2` to jump to the relevant code. Based on this you should know now that `x = 1` and `y = [1, 2, 3]` are tried to be added in `longfunc`. Let us now look at the first line of the error message: it says `no method matching +(::Int64, ::Vector{Int64})`, which means that Julia doesn't know how to add the integer `x = 1` to the vector `y = [1, 2, 3]`. Now there are multiple ways to fix the error, depending on what you want. If you wanted to add `1` to every element of the vector, you could modify `longfunc` such that `tmp = x .+ y`. Try this fix. You will run into another error. Can you also fix the next error?
+   2. Create a cell with content `A = []`, another cell with `mean(x) = sum(x)/length(x)`, and a third cell with content `mean(A)`. This produces a scary error message :). Usually you can ignore all the lines that do not have a link to jump to some code (e.g. you can ignore the line `1. zero(::Type{Any})` etc.; it is telling you that the error occurred somewhere in the `zero` function which is a builtin function of Julia). What matters is the line `mean(::Vector{Any})` which tells you that you called the function `mean` with a vector of type `Any` (this is the type of the empty vector `A = []`). You can get rid of the error by changing e.g. `A = [1, 2, 3]`.
+   3. Create a cell with content `f(x) = longfunc(x)` and another one with content `f([2, 3])`. This produces another commonly occuring error message, including a hint about closest alternatives. If you carefully look at the error message `longfunc(::Any, !Matched::Any)` you see that the function `longfunc` did not get a second argument (this is the meaning of `!Matched`). You can fix this e.g. with `f(x) = longfunc(x[1], x[2])`.
+   4. By now you should be (close to) a debugging wizzard and you can find fixes to all bugs in the following lines of code (copy them over to a new cell). The goal is just to have something that runs without errors; the result does not need to be meaningful :) *Hint:* Click on the topmost clickalble link in the error messages to jump to the line of code that creates the error.
+```julia
+begin
+   function full_of_bugs(x)
+       tmp = [myfunc(3); x]
+       tmp2 = tmp^2
+       tmp3 = tmp2 + log(sum(x))
+       sqrt(tmp3 - length(x))
+   end
+   full_of_bugs([2, 1, -5])
+end
+```
+#### Exercise 3
+   1. Use comprehension (see "Vectors, Matrices, Arrays") to create a vector with all numbers of the form ``x^y`` with ``x=1, \ldots, 10``, ``y = 2, \ldots, 7`` and ``y > x``.
+   2. Compute the sum of the square root of these numbers.
+#### Exercise 4
    1. Write a function that returns the smallest entry of a vector (without using the built-in function `minimum`, `argmin` or `findmin`).
    2. Test your function on a vector of 10 randomly sampled integers in the range 1 to 100.
-3. 
+#### Exercise 5
    1. Plot the `cos` function on the interval 0 to 4π. Hint: type `\pi + [Tab]` to enter the symbol π. To learn how to place custom tick labels on the x-axis, type `xticks` in a cell and open the \"Live docs\" at the bottom-right.
    2. Add a scatter plot with 100 points whose ``x`` and ``y`` coordinates are randomly sampled from the interval ``[0, 1)`` on top of the figure with the cosine.
 """

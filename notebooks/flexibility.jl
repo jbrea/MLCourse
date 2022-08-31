@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -376,16 +376,18 @@ end
 md"# Exercises
 
 ## Conceptual
-1. For each of example below, indicate whether we would generally expect the performance of a flexible statistical learning method to be better or worse than an inflexible method. Justify your answer.
-   + The sample size n is extremely large, and the number of predictors ``p`` is small.
-   + The number of predictors ``p`` is extremely large, and the number of observations ```n`` is small.
-   + The relationship between the predictors and response is highly non-linear.
-   + The variance of the error terms, i.e. ``\sigma^2 = Var(\epsilon)``, is extremely high.
-1. The table below provides a training data set containing six observations, three predictors, and one qualitative response variable. Suppose we wish to use this data set to make a prediction for ``Y`` when ``X_1 = X_2 = X_3 = 0`` using K-nearest neighbors.
-   - Compute the Euclidean distance between each observation and the test point, X1 = X2 = X3 = 0.
-   - What is our prediction with K = 1? Why?
-   - What is our prediction with K = 3? Why?
-   - If the decision boundary at threshold 0.5 in this problem is highly non- linear, then would we expect the best value for K to be large or small? Why?
+#### Exercise 1
+For each of example below, indicate whether we would generally expect the performance of a flexible statistical learning method to be better or worse than an inflexible method. Justify your answer.
++ The sample size n is extremely large, and the number of predictors ``p`` is small.
++ The number of predictors ``p`` is extremely large, and the number of observations ```n`` is small.
++ The relationship between the predictors and response is highly non-linear.
++ The variance of the error terms, i.e. ``\sigma^2 = Var(\epsilon)``, is extremely high.
+#### Exercise 2
+The table below provides a training data set containing six observations, three predictors, and one qualitative response variable. Suppose we wish to use this data set to make a prediction for ``Y`` when ``X_1 = X_2 = X_3 = 0`` using K-nearest neighbors.
+- Compute the Euclidean distance between each observation and the test point, X1 = X2 = X3 = 0.
+- What is our prediction with K = 1? Why?
+- What is our prediction with K = 3? Why?
+- If the decision boundary at threshold 0.5 in this problem is highly non- linear, then would we expect the best value for K to be large or small? Why?
 |Obs.|``X_1``|``X_2``|``X_3``|``Y``|
 |:----|-------|-------|-------|-----:|
 |1 | 0 | 3 | 0 | Red|
@@ -394,17 +396,21 @@ md"# Exercises
 |4 | 0 | 1 | 2 | Green|
 |5 | -1| 0 | 1 | Green|
 |6 | 1 | 1 | 1 | Red|
-3. Try without looking at the figure above:
-   - Provide a sketch of typical (squared) bias, variance, training error, test error, and Bayes (or irreducible) error curves, on a single plot, as we go from less flexible statistical learning methods towards more flexible approaches. The x-axis should represent the amount of flexibility in the method, and the y-axis should represent the values for each curve. There should be five curves. Make sure to label each one.
-   - Explain why each of the five curves has its particular shape.
-2. Suppose that we take a data set with mutually distinct inputs ``x_i\neq x_j`` for ``i\neq j``, divide it into equally-sized training and test sets, and then try out two different classification procedures. First we use logistic regression and get an error rate of 20% on the training data and 30% on the test data. Next we use 1-nearest neighbors (i.e. ``K = 1``) and get an average error rate (averaged over both test and training data sets) of 18%. Based on these results, which method should we prefer to use for classification of new observations? Why?
+#### Exercise 3
+Try without looking at the figure above:
+- Provide a sketch of typical (squared) bias, variance, training error, test error, and Bayes (or irreducible) error curves, on a single plot, as we go from less flexible statistical learning methods towards more flexible approaches. The x-axis should represent the amount of flexibility in the method, and the y-axis should represent the values for each curve. There should be five curves. Make sure to label each one.
+- Explain why each of the five curves has its particular shape.
+#### Exercise 4
+Suppose that we take a data set with mutually distinct inputs ``x_i\neq x_j`` for ``i\neq j``, divide it into equally-sized training and test sets, and then try out two different classification procedures. First we use logistic regression and get an error rate of 20% on the training data and 30% on the test data. Next we use 1-nearest neighbors (i.e. ``K = 1``) and get an average error rate (averaged over both test and training data sets) of 18%. Based on these results, which method should we prefer to use for classification of new observations? Why?
 
 ## Applied
-1. Apply K-nearest neighbors regression to the weather data set. Use as input all predictors except `:time` and `:LUZ_wind_peak`.
+#### Exercise 5
+Apply K-nearest neighbors regression to the weather data set. Use as input all predictors except `:time` and `:LUZ_wind_peak`.
     * Compute the training and the test loss for ``K = 5, 10, 20, 50, 100``.
     * Which value of the hyper-parameter ``K`` should we prefer to make predictions on new data?
     * Should we prefer K-nearest neighbors with optimal ``K`` or multiple linear regression to make predictions on new data? *Hint*: Remember that we found a training error (RMSE) of approximately 8.1 and a test error of 8.9.
-2. In this exercise we review the error-decomposition and the bias-variance decomposition.
+#### Exercise 6
+In this exercise we review the error-decomposition and the bias-variance decomposition.
 * Write a data generator where the mean of the output depends through the non-linear function ``f(x) = x^2 * \sin(x) + 4 * \tanh(10x)`` on the input and normally distributed noise ``\epsilon`` with mean 0 and standard deviation 1.5.
     * Take the linear function ``\hat f(x) = 2x`` and estimate its reducible error at input point ``x = 0`` and at input point ``x = 2`` in two ways:
         * Using directly ``f``.

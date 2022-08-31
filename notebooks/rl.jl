@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -248,7 +248,7 @@ begin
         x = distributed_representation(s)
         x′ = distributed_representation(s′)
         Q′ = maximum(Qnetwork(x′))
-        θ = params(Qnetwork)
+        θ = Flux.params(Qnetwork)
         gs = gradient(θ) do
             (r + Q′ - Qnetwork(x)[a])^2
         end

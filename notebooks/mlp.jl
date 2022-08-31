@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -513,30 +513,35 @@ and no explicit comparison with all training images is required.
 md"# Exercises
 
 ## Conceptual
-1. To get a feeling for the kind of functions of one predictor can be fitted with neural networks, we will draw ``y`` as a function of ``x`` for some values of the weights. It may be helpful to sketch this neural network with the input neuron, the hidden neurons and the output neuron and label the connections with the weights.
-    * Draw in the same figure ``a_1^{(1)} = g(w_{10}^{(1)} + w_{11}^{(1)} x)``, ``a_2^{(1)}=g(w_{20}^{(1)} + w_{21}^{(1)} x)`` and ``\bar y = w_0^{(2)} + w_1^{(2)}a_1^{(1)} +  w_2^{(2)}a_2^{(1)}`` as a function of ``x``. Use ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = 1``, ``w_{20}^{(1)} = - 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1`` and use the rectified linear activation function ``g = \mbox{relu}``. At which ``x``-values does the slope change? Give the answer in terms of the weights.
-    * Draw a similar graph for ``w_{11}^{(1)} < 0`` and ``w_{10}^{(1)}/w_{11}^{(1)}<w_{20}^{(1)}/w_{21}^{(1)}``, e.g. with ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = -1``, ``w_{20}^{(1)} = 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1``.
-    * How does the graph above change, if ``w_1^{(2)} = -2`` and ``w_2^{(2)} = -1``?
-    * Let us assume we add more neurons to the same hidden layer, i.e. we have ``a_1^{(1)}, \ldots, a_{d^{(1)}}^{(1)}`` activations in the first layer. How would the graph look differently in this case? Draw a sketch and describe in one sentence the qualitative difference.
-    * Let us assume we add instead more hidden layers with relu-activations. Would the graph of this neural network look qualitatively different from the ones we have drawn so far in this exercise?
-    * (optional) Show that a neural network with one hidden layer of 3 relu-neurons can perfectly fit any continuous piece-wise linear function of the form ``y = \left\{\begin{array}{ll} a_1 + b_1 x & x < c_1 \\ a_2 + b_2 x & c_1 \leq x < c_2 \\ a_3 + b_3 x & c_2 \leq x \end{array}\right. \hspace{1cm}  ``
-                    with ``c_1 =  \frac{a_1 - a_2}{b_2 - b_1} < c_2 = \frac{a_2 - a_3}{b_3 - b_2}``. Express ``a_1, a_2, a_3`` and ``b_1, b_2, b_3`` in terms of the network weights. There are multiple solutions; find one of them.
-1. Consider a neural network with two hidden layers: ``p = 4`` input units, ``2`` units in the first hidden layer, ``3`` units in the second hidden layer, and a single output.
-    - Draw a picture of the network.
-    - How many parameters are there?
-    - Assume the output of this network is the mean of a conditional normal distribution. Write the negative log-likelihood loss using matrix notation.
-1. Let us assume you want to predict the proportion ``y`` of citizens voting for one of two parties based on 113 different features that depend e.g. on the voting history, income distribution or demographics (see e.g. [here](https://www.ozy.com/news-and-politics/the-forecast-the-methodology-behind-our-2020-election-model/379778/) for an actual example). Because the proportion is a number between 0 and 1, it is reasonable to model it as a sample from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) ``p(y) = \frac{y^{\alpha - 1}(1-y)^{\beta - 1}}{B(\alpha, \beta)}``, where ``\alpha>0`` and ``\beta>0`` are shape parameters and ``B`` is the beta function. You want parametrize the conditional distribution of proportions ``y`` given predictors ``x`` with a neural network.
-    * How many input units should this neural network have?
-    * How many output units should this neural network have?
-    * What kind of activation function would you choose for the output layer?
-    * Which loss function would you use to estimate the network parameters?
-1. (Optional) Grant Sanderson has some beautiful [videos about neural networks](https://www.3blue1brown.com/topics/neural-networks). Have a look at them, if you are interested.
+#### Exercise 1
+To get a feeling for the kind of functions of one predictor can be fitted with neural networks, we will draw ``y`` as a function of ``x`` for some values of the weights. It may be helpful to sketch this neural network with the input neuron, the hidden neurons and the output neuron and label the connections with the weights.
+* Draw in the same figure ``a_1^{(1)} = g(w_{10}^{(1)} + w_{11}^{(1)} x)``, ``a_2^{(1)}=g(w_{20}^{(1)} + w_{21}^{(1)} x)`` and ``\bar y = w_0^{(2)} + w_1^{(2)}a_1^{(1)} +  w_2^{(2)}a_2^{(1)}`` as a function of ``x``. Use ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = 1``, ``w_{20}^{(1)} = - 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1`` and use the rectified linear activation function ``g = \mbox{relu}``. At which ``x``-values does the slope change? Give the answer in terms of the weights.
+* Draw a similar graph for ``w_{11}^{(1)} < 0`` and ``w_{10}^{(1)}/w_{11}^{(1)}<w_{20}^{(1)}/w_{21}^{(1)}``, e.g. with ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = -1``, ``w_{20}^{(1)} = 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1``.
+* How does the graph above change, if ``w_1^{(2)} = -2`` and ``w_2^{(2)} = -1``?
+* Let us assume we add more neurons to the same hidden layer, i.e. we have ``a_1^{(1)}, \ldots, a_{d^{(1)}}^{(1)}`` activations in the first layer. How would the graph look differently in this case? Draw a sketch and describe in one sentence the qualitative difference.
+* Let us assume we add instead more hidden layers with relu-activations. Would the graph of this neural network look qualitatively different from the ones we have drawn so far in this exercise?
+* (optional) Show that a neural network with one hidden layer of 3 relu-neurons can perfectly fit any continuous piece-wise linear function of the form ``y = \left\{\begin{array}{ll} a_1 + b_1 x & x < c_1 \\ a_2 + b_2 x & c_1 \leq x < c_2 \\ a_3 + b_3 x & c_2 \leq x \end{array}\right. \hspace{1cm}  ``
+                with ``c_1 =  \frac{a_1 - a_2}{b_2 - b_1} < c_2 = \frac{a_2 - a_3}{b_3 - b_2}``. Express ``a_1, a_2, a_3`` and ``b_1, b_2, b_3`` in terms of the network weights. There are multiple solutions; find one of them.
+#### Exercise 2
+Consider a neural network with two hidden layers: ``p = 4`` input units, ``2`` units in the first hidden layer, ``3`` units in the second hidden layer, and a single output.
+- Draw a picture of the network.
+- How many parameters are there?
+- Assume the output of this network is the mean of a conditional normal distribution. Write the negative log-likelihood loss using matrix notation.
+#### Exercise 3
+Let us assume you want to predict the proportion ``y`` of citizens voting for one of two parties based on 113 different features that depend e.g. on the voting history, income distribution or demographics (see e.g. [here](https://www.ozy.com/news-and-politics/the-forecast-the-methodology-behind-our-2020-election-model/379778/) for an actual example). Because the proportion is a number between 0 and 1, it is reasonable to model it as a sample from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) ``p(y) = \frac{y^{\alpha - 1}(1-y)^{\beta - 1}}{B(\alpha, \beta)}``, where ``\alpha>0`` and ``\beta>0`` are shape parameters and ``B`` is the beta function. You want parametrize the conditional distribution of proportions ``y`` given predictors ``x`` with a neural network.
+* How many input units should this neural network have?
+* How many output units should this neural network have?
+* What kind of activation function would you choose for the output layer?
+* Which loss function would you use to estimate the network parameters?
+#### Exercise 4
+(Optional) Grant Sanderson has some beautiful [videos about neural networks](https://www.3blue1brown.com/topics/neural-networks). Have a look at them, if you are interested.
 
 ## Applied
-1. In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `OpenML.describe_dataset(505)`. The first 100 columns of this data set contain measurements of near infrared absorbance at different frequencies for different pieces of meat. *Hint:* you can select all these columns based on name with `select(data, r\"absorbance\")` (The \"r\" in this command stands for Regex and it means that all columns with name containing the word \"absorbance\" should be selected). The column `:fat` contains the fat content of each piece of meat. We will use the first 172 data points for training and validation and the rest of the data points as a test set. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline.
-    - Have a look at the raw data by e.g. checking if there are missing values and looking at a correlation plot.
-    - Fit some multiple linear regression models (with e.g. regularization constants tuned with cross-valdiation), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content.
-    - Fit some neural network model (with 2 hyper-paramters of your choice tuned by cross-validation; warning: it may take quite some time to fit if you use a high number for `nfolds`), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content. *Hint 1:* standardization of input and output matters. *Hint 2:* If you want to tune some neural network parameters in a pipeline you can usually access them in the `range` function as `:(neural_network_regressor.builder.dropout)`, for example.
+#### Exercise 5
+In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `OpenML.describe_dataset(505)`. The first 100 columns of this data set contain measurements of near infrared absorbance at different frequencies for different pieces of meat. *Hint:* you can select all these columns based on name with `select(data, r\"absorbance\")` (The \"r\" in this command stands for Regex and it means that all columns with name containing the word \"absorbance\" should be selected). The column `:fat` contains the fat content of each piece of meat. We will use the first 172 data points for training and validation and the rest of the data points as a test set. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline.
+- Have a look at the raw data by e.g. checking if there are missing values and looking at a correlation plot.
+- Fit some multiple linear regression models (with e.g. regularization constants tuned with cross-valdiation), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content.
+- Fit some neural network model (with 2 hyper-paramters of your choice tuned by cross-validation; warning: it may take quite some time to fit if you use a high number for `nfolds`), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content. *Hint 1:* standardization of input and output matters. *Hint 2:* If you want to tune some neural network parameters in a pipeline you can usually access them in the `range` function as `:(neural_network_regressor.builder.dropout)`, for example.
 "
 
 
