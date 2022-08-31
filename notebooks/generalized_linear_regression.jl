@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -19,13 +19,15 @@ begin
 	using Pkg
     Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 	using Plots, DataFrames, Random, CSV, MLJ, MLJLinearModels, MLCourse
-	import PlutoPlotly as PP
 	import Distributions: Poisson
     import MLCourse: fitted_linear_func
 end
 
 # ╔═╡ 12d5824c-0873-49a8-a5d8-f93c73b633ae
-using PlutoUI; PlutoUI.TableOfContents()
+begin
+	import PlutoPlotly as PP
+	using PlutoUI; PlutoUI.TableOfContents()
+end
 
 # ╔═╡ 8217895b-b120-4b08-b18f-d921dfdddf10
 md"# Linear Regression
@@ -35,7 +37,7 @@ md"# Linear Regression
 
 # ╔═╡ 9f84bcc5-e5ab-4935-9076-c19e9bd668e8
 weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
-                   DataFrame);
+                   DataFrame, limit = 8000);
 
 # ╔═╡ d14244d4-b54e-42cf-b812-b149d9fa59e0
 training_set1 = DataFrame(LUZ_pressure = weather.LUZ_pressure[1:end-5],
@@ -92,6 +94,9 @@ end;
 
 # ╔═╡ ce536f60-68b3-4901-bd6a-c96378054b12
 rmse(predict(m1, select(test_set1, :LUZ_pressure)), test_set1.wind_peak_in5h)
+
+# ╔═╡ 16a8b69e-6e55-4cbd-bb58-1b4605b47cba
+md"If we used all the data the training error would be 10.0 km/h and the test error would be 11.5 km/h."
 
 # ╔═╡ c65b81bd-395f-4461-a73b-3535903cb2d7
 md"## Multiple Linear Regression
@@ -219,7 +224,7 @@ rmse(predict(m2, select(weather_test[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
      weather_test.LUZ_wind_peak[6:end])
 
 # ╔═╡ 2724c9b7-8caa-4ba7-be5c-2a9095281cfd
-md"We see that both the training and the test error is lower, when using multiple predictors instead of just one."
+md"We see that both the training and the test error is lower, when using multiple predictors instead of just one. This also holds true if we use all the data, where the training error is 8.1 km/h and the test error is 8.9 km/h."
 
 # ╔═╡ 99a371b2-5158-4c42-8f50-329352b6c1f2
 md"# Error Decomposition
@@ -287,7 +292,8 @@ representation of our emails:
 
 # ╔═╡ 210b977d-7136-407f-a1c9-eeea869d0312
 begin
-    spamdata = CSV.read(joinpath(@__DIR__, "..", "data", "spam.csv"), DataFrame)
+    spamdata = CSV.read(joinpath(@__DIR__, "..", "data", "spam.csv"), DataFrame,
+		                limit = 6000)
     dropmissing!(spamdata) # remove entries without any text (missing values).
 end
 
@@ -496,9 +502,9 @@ almost always correctly. Let us see how well this works for test data.
 
 # ╔═╡ 50c035e6-b892-4157-a52f-824578366977
 begin
-    test_crps = Corpus(StringDocument.(spamdata.text[2001:4000]))
+    test_crps = Corpus(StringDocument.(spamdata.text[2001:end]))
     test_input = float.(DataFrame(tf(DocumentTermMatrix(test_crps, small_lex)), :auto))
-    test_labels = coerce(String.(spamdata.label[2001:4000]), OrderedFactor)
+    test_labels = coerce(String.(spamdata.label[2001:end]), OrderedFactor)
     confusion_matrix(predict_mode(m3, test_input), test_labels)
 end
 
@@ -550,7 +556,10 @@ In this section our goal will be to predict the number of rented bikes at a give
 OpenML.describe_dataset(42712);
 
 # ╔═╡ 6384a36d-1dac-4d72-9d7b-84511f20e6ca
-bikesharing = OpenML.load(42712) |> DataFrame
+bikesharing = OpenML.load(42712, maxbytes = 10^5) |> DataFrame
+
+# ╔═╡ db0f6302-333f-4e65-bff8-cd6c64f72cce
+dropmissing!(bikesharing);
 
 # ╔═╡ b4e180b4-5582-4491-89d3-1f730c4f2fbf
 DataFrame(schema(bikesharing))
@@ -626,13 +635,14 @@ prediction_type(LinearCountRegressor())
 md"""# Exercises
 
 ## Conceptual
-
-1. Suppose we have a data set with three predictors, ``X_1`` = Final Grade, ``X_2`` = IQ, ``X_3`` = Level (1 for College and 0 for High School).  The response is starting salary after graduation (in thousands of dollars). Suppose we use least squares to fit the model, and get ``\hat\beta_0 = 25, \hat\beta_1 = 2, \hat\beta_2 = 0.07, \hat\beta_3 = 15``.
+#### Exercise 1
+Suppose we have a data set with three predictors, ``X_1`` = Final Grade, ``X_2`` = IQ, ``X_3`` = Level (1 for College and 0 for High School).  The response is starting salary after graduation (in thousands of dollars). Suppose we use least squares to fit the model, and get ``\hat\beta_0 = 25, \hat\beta_1 = 2, \hat\beta_2 = 0.07, \hat\beta_3 = 15``.
    - Which answer is correct, and why?
       - For a fixed value of IQ and Final Grade, high school graduates earn more, on average, than college graduates.
       - For a fixed value of IQ and Final Grade, college graduates earn more, on average, than high school graduates.
    - Predict the salary of a college graduate with IQ of 110 and a Final Grade of 4.0.
-2. Suppose we collect data for a group of students in a machine learning class with variables ``X_1 =`` hours studied, ``X_2 =`` grade in statistics class, and ``Y =`` receive a 6 in the machine learning class. We fit a logistic regression and produce estimated coefficients, ``\hat{\beta}_0 = -6``, ``\hat{\beta}_1 = 0.025``, ``\hat{\beta}_2 = 1``.
+#### Exercise 2
+Suppose we collect data for a group of students in a machine learning class with variables ``X_1 =`` hours studied, ``X_2 =`` grade in statistics class, and ``Y =`` receive a 6 in the machine learning class. We fit a logistic regression and produce estimated coefficients, ``\hat{\beta}_0 = -6``, ``\hat{\beta}_1 = 0.025``, ``\hat{\beta}_2 = 1``.
    - Estimate the probability that a student who studies for 75 hours and had a 4 in the statistics class gets a 6 in the machine learning class.
    - How many hours would the above student need to study to have a 50% chance of getting an 6 in the machine learning class?
 3. In this exercise we will derive the loss function implicitly defined by maximum likelihood estimation of the parameters in a classification setting with multiple classes. Remember that the input ``f(x)`` of the softmax function ``s`` is a vector-valued function. Here we assume a linear function ``f`` and write the ``i``th component of this function as ``f_i(x) = \theta_{i0} + \theta_{i1}x_1 + \cdots + \theta_{ip}x_p``. Note that each component ``i`` has now its own parameters ``\theta_{i0}`` to ``\theta_{ip}``. Using matrix multiplication we can also write ``f(x) = \theta x`` where ``\theta = \left(\begin{array}{ccc}\theta_{10} & \cdots & \theta_{1p}\\\vdots & \ddots & \cdots\\\theta_{K0} & \cdots & \theta_{Kp}\end{array}\right)`` is a ``K\times(p+1)`` dimensional matrix and ``x = (1, x_1, x_2, \ldots, x_p)`` is a column vector of length ``p+1``.
@@ -642,13 +652,18 @@ md"""# Exercises
     - Show that one can always set ``\theta_{K0}, \theta_{K1}, \ldots, \theta_{Kp}`` to zero. *Hint* Show that the softmax function with the transformed parameters ``\tilde\theta_{ij}=\theta_{ij} - \theta_{Kj}`` has the same value as the softmax function in the original parameters.
 
 ## Applied
-1. In the multiple linear regression of the weather data set above we used all
+#### Exercise 3
+In the multiple linear regression of the weather data set above we used all
    available predictors. We do not know if all of them are relevant. In this exercise our aim is to find models with fewer predictors and quantify the loss in prediction accuracy.
-    - Systematically search for the model with at most 2 predictors that has the lowest test rmse. *Hint* write a function `train_and_evaluate` that takes the training and the test data as input as well as an array of two predictors; remember that `data[:, [\"A\", \"B\"]]` returns a sub-dataframe with columns \"A\" and \"B\". This function should fit a `LinearRegressor` on the training set with those two predictors and return the test rmse for the two predictors. To get a list of all pairs of predictors you can use something like `predictors = setdiff(names(train), ["time", "LUZ_wind_peak"]); predictor_pairs = [[p1, p2] for p1 in predictors, p2 in predictors if p1 != p2 && p1 > p2]`
-    - How much higher is the test error compared to the fit with all available predictors?
-    - How many models did you have to fit to find your result above?
-    - How many models would you have to fit to find the best model with at most 5 predictors? *Hint* the function `binomial` may be useful.
-2. In this exercise we perform linear classification of the MNIST handwritten digits
+- Systematically search for the model with at most 2 predictors that has the lowest test rmse. *Hint* write a function `train_and_evaluate` that takes the training and the test data as input as well as an array of two predictors; remember that `data[:, [\"A\", \"B\"]]` returns a sub-dataframe with columns \"A\" and \"B\". This function should fit a `LinearRegressor` on the training set with those two predictors and return the test rmse for the two predictors. To get a list of all pairs of predictors you can use something like `predictors = setdiff(names(train), ["time", "LUZ_wind_peak"]); predictor_pairs = [[p1, p2] for p1 in predictors, p2 in predictors if p1 != p2 && p1 > p2]`
+- How much higher is the test error compared to the fit with all available predictors?
+- How many models did you have to fit to find your result above?
+- How many models would you have to fit to find the best model with at most 5 predictors? *Hint* the function `binomial` may be useful.
+#### Exercise 4
+- Read the section on [scientific types in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types).
+- Coerce the `count` variable of the bike sharing data to `Continuous` and fit a linear model (`LinearRegressor`) with predictors `:temp` and `:humidity`. Compare the predictions of this model with the ones from the `LinearCountRegressor` and comment on the differences.
+#### Exercise 5
+In this exercise we perform linear classification of the MNIST handwritten digits
    dataset.
    - Load the MNIST data set with `using OpenML; mnist = OpenML.load(554) |> DataFrame; dropmissing!(mnist);`
    - Usually the first 60'000 images are taken as training set, but for this exercise I recommend to use fewer rows, e.g. the first 5000.
@@ -680,12 +695,13 @@ MLCourse.footer()
 # ╠═006fc1eb-50d5-4206-8c87-53e873f158f4
 # ╟─e4712ebe-f395-418b-abcc-e10ada4b05c2
 # ╠═8c9ae8f7-81b2-4d60-a8eb-ded5364fe0cc
-# ╠═f4f890b6-0ad4-4155-9321-15d673e15489
+# ╟─f4f890b6-0ad4-4155-9321-15d673e15489
 # ╠═9b62c374-c26e-4990-8ffc-790928e62e88
 # ╟─7923a0a8-3033-4dde-91e8-22bf540c9866
 # ╠═57f352dc-55ee-4e14-b68d-698938a97d92
 # ╠═b0de002f-3f39-4378-8d68-5c4606e488b7
 # ╠═ce536f60-68b3-4901-bd6a-c96378054b12
+# ╟─16a8b69e-6e55-4cbd-bb58-1b4605b47cba
 # ╟─c65b81bd-395f-4461-a73b-3535903cb2d7
 # ╟─51c9ea74-3110-4536-a4af-7cc73b45a4a6
 # ╟─d541a8cd-5aa4-4c2d-bfdf-5e6297bb65a8
@@ -751,6 +767,7 @@ MLCourse.footer()
 # ╟─b6689b27-e8a2-44e4-8791-ce237767ee63
 # ╠═310999a0-f212-4e69-a4cb-346b3f49f202
 # ╠═6384a36d-1dac-4d72-9d7b-84511f20e6ca
+# ╠═db0f6302-333f-4e65-bff8-cd6c64f72cce
 # ╠═b4e180b4-5582-4491-89d3-1f730c4f2fbf
 # ╟─b9ba1df0-5086-4c0f-a2c9-200c2be27294
 # ╠═1bf98d4b-ffbf-4157-9496-38e2c8e92c94

@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -34,14 +34,15 @@ md"# Gradient Descent
 # ╔═╡ fcbac567-36db-40c5-9436-6315c0caa40a
 function gradient_descent(f, x, η, T; callback = x -> nothing)
     for t in 1:T
-        x .-= η * gradient(f, x)[1] # update parameters in direction of -∇f
+		∇f = gradient(f, x)[1] # compute the gradient
+        x .-= η * ∇f # update parameters in direction of -∇f
         callback(x) # the callback will be used to save intermediate values
     end
     x
 end
 
 # ╔═╡ 49e744dc-33b7-455a-9cf7-4e8e12f11152
-X, y = make_regression(40, 1, rng = 16) # make_regression is an MLJ data generator
+X, y = make_regression(40, 1, rng = 16); # make_regression is an MLJ data generator
 
 # ╔═╡ dcc76840-6552-4a86-8268-1291ab8ea0d3
 begin
@@ -62,9 +63,9 @@ step t = $(@bind t Slider(0:100, show_value = true))
 
 # ╔═╡ b1fc14bb-1fd2-4739-a761-7a605fd4559b
 begin
-    params = [b0, b1] # initial parameters
-    lin_reg_path = [copy(params)] # we will copy all parameter values to this list
-    gradient_descent(lin_reg_loss, params, η, 100,
+    params = [b0, b1] # initial parameters (defined by the sliders above)
+	lin_reg_path = [copy(params)] # store the initial value in a path variable
+    gradient_descent(lin_reg_loss, params, η, 100, # η is defined by the slider
                      callback = x -> push!(lin_reg_path, copy(x)))
 end
 
@@ -81,6 +82,36 @@ let
     plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
 
+
+# ╔═╡ 07f3f800-6e06-416c-bfdd-e4ece8565a42
+md"
+!!! tip
+	Use the sliders above to see how gradient descent proceeds.
+"
+
+# ╔═╡ fd0dca4d-d2db-4c6a-b218-cdacc49d2946
+md"In the following we want to keep track of the learning progress in many different examples. For this we define a `Tracker` object that does exactly the same as what we did for the `lin_reg_path` in the cell above."
+
+# ╔═╡ 2fe2049c-e9db-4a1e-a927-f147f137b3c4
+# In this cell we define a callable object.
+# This is somewhat advanced, you do not need to understand everything
+begin 
+	struct Tracker{T} # structure definition with parametric type
+		path::T
+	end
+	Tracker(x::T) where T = Tracker{Vector{T}}([copy(x)]) # constructor
+	(t::Tracker)(x) = push!(t.path, copy(x))        # making the object callable
+end
+
+# ╔═╡ 396d2cc3-b7de-4c1b-ad56-1bed63852b18
+md"With this new `Tracker` we can write the gradient descent procedure above as
+```julia
+    params = [b0, b1] # initial parameters
+	tracker = Tracker(params) # initialize the tracker
+    gradient_descent(lin_reg_loss, params, η, 100, callback = tracker)
+    lin_reg_path = tracker.path
+```
+"
 
 # ╔═╡ eb9e2b3f-dc4b-49a2-a611-b45f2918adcf
 md"## Gradient Descent for Logistic Regression"
@@ -110,20 +141,19 @@ step t = $(@bind t2 Slider(0:100, show_value = true))
 # ╔═╡ 93699313-5e42-48a7-abc6-ad146e5bdcdd
 begin
     params2 = [b02, b12]
-    log_reg_path = [copy(params2)]
-    gradient_descent(log_reg_loss, params2, η2, 100,
-                     callback = x -> push!(log_reg_path, copy(x)))
+    tracker2 = Tracker(params2)
+    gradient_descent(log_reg_loss, params2, η2, 100, callback = tracker2)
 end
 
 # ╔═╡ 33bdc912-e46a-4310-9184-733be7871768
-let
+let path = tracker2.path
     p1 = scatter(X2.x1, y2, xlim = (-3.5, 3.5), ylim = (-.1, 1.1),
                  legend = :bottomleft, marker_style = :vline,
                  xlabel = "x", ylabel = "y", label = "training data")
-    plot!(x -> σ(log_reg_path[t2+1]' * [1, x]), c = :red, w = 2, label = "current fit")
+    plot!(x -> σ(path[t2+1]' * [1, x]), c = :red, w = 2, label = "current fit")
     p2 = contour(-3:.1:3, -3:.1:3, log_reg_loss, cbar = false, aspect_ratio = 1)
-    scatter!(first.(log_reg_path), last.(log_reg_path), markersize = 1, c = :red, label = nothing)
-    scatter!([log_reg_path[t2+1][1]], [log_reg_path[t2+1][2]], label = nothing,
+    scatter!(first.(path), last.(path), markersize = 1, c = :red, label = nothing)
+    scatter!([path[t2+1][1]], [path[t2+1][2]], label = nothing,
              markersize = 4, c = :red, xlabel = "β₀", ylabel = "β₁")
     plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
@@ -142,7 +172,7 @@ begin
 end
 
 # ╔═╡ 6e38a3f6-a592-4dc1-a6c4-d0f0050c9399
-special_loss(θ) = mean((y3 .- f(x3, θ)).^2)
+mse(θ) = mean((y3 .- f(x3, θ)).^2)
 
 # ╔═╡ 4b3ac87f-39f6-4e6c-b7b3-536925e9b112
 md"step t = $(@bind t3 Slider(1:10^4, show_value = true))
@@ -153,24 +183,23 @@ seed = $(@bind special_seed Slider(1:10, default = 3, show_value = true))"
 begin
 	Random.seed!(special_seed) # defined by the slider below
     params3 = .1 * randn(6)
-    special_path = [copy(params3)]
-    gradient_descent(special_loss, params3, .1, 10^4,
-                     callback = x -> push!(special_path, copy(x)))
+    tracker3 = Tracker(params3)
+    gradient_descent(mse, params3, .1, 10^4, callback = tracker3)
 end
 
 # ╔═╡ 01221937-b6d9-4dac-be90-1b8a1c5e9d87
-let
+let path = tracker3.path
     p1 = plot(f, label = "orginal function", xlabel = "x", ylabel = "y",
               ylim = (-1.3, 1.2), xlim = (-3, 3))
-    plot!(x -> f(x, special_path[t3]), label = "current fit")
+    plot!(x -> f(x, path[t3]), label = "current fit")
 	scatter!(x3, y3, label = "training data")
-    th = round.(special_path[t3], digits = 2)
+    th = round.(path[t3], digits = 2)
     annotate!([(0, -1.1, text("f̂(x) = $(th[1]) * sin($(th[2])x + $(th[3])) + $(th[4]) * sin($(th[5])x + $(th[6]))", pointsize = 7))])
-    losses = special_loss.(special_path)
+    losses = mse.(path)
     p2 = plot(0:10^4, losses, label = "learning curve", c = :black, yscale = :log10)
     scatter!([t3], [losses[t3]], label = "current loss", xlabel = "t", ylabel = "loss")
-    p3 = contour(-4:.1:4, -4:.1:4, (x2, x5) -> special_loss([special_path[t3][1]; x2; special_path[t3][3:4]; x5; special_path[t3][6]]), xlabel = "θ₂", ylabel = "θ₅", title = "loss")
-	scatter!([special_path[t3][2]], [special_path[t3][5]])
+    p3 = contour(-4:.1:4, -4:.1:4, (x2, x5) -> mse([path[t3][1]; x2; path[t3][3:4]; x5; path[t3][6]]), xlabel = "θ₂", ylabel = "θ₅", title = "loss")
+	scatter!([path[t3][2]], [path[t3][5]])
     plot(p1, plot(p2, p3, layout = (2, 1)), layout = (1, 2), size = (700, 400))
 end
 
@@ -191,27 +220,31 @@ step t = $(@bind t5 Slider(0:100, show_value = true))
 
 # ╔═╡ e821fb15-0bd3-4fa7-93ea-692bf05097b5
 begin
-    lin_reg_loss_st = let batch = rand(1:4, 101), i = 0
-        function(β)
-            xb, yb = Zygote.ignore() do
-                i += 1
-                idxs = (batch[i]-1)*10 + 1:batch[i]*10
-                X.x1[idxs], y[idxs]
-            end
-            lin_reg_loss(β[1], β[2], xb, yb)
+    seed = 123
+    Random.seed!(seed)
+    function lin_reg_loss_st(β)
+        # With Zygote.ignore the batch selection is not considered in the gradient
+        # computation, i.e. the gradient gets computed as if xb and yb were the
+        # full data.
+        xb, yb = Zygote.ignore() do
+            batch = rand(1:4)                 # select batch
+            idxs = (batch-1)*10 + 1:batch*10  # compute indices for this batch
+            X.x1[idxs], y[idxs]
         end
+        lin_reg_loss(β[1], β[2], xb, yb)
     end
-    lin_reg_loss_b(i) = (β₀, β₁) -> lin_reg_loss(β₀, β₁, X.x1[(i-1)*10+1:i*10],
-                                                 y[(i-1)*10+1:i*10])
     params_st = [b0, b1]
-    lin_reg_stoch_path = [copy(params_st)]
-    gradient_descent(lin_reg_loss_st, params_st, η_st, 100,
-                     callback = x -> push!(lin_reg_stoch_path, copy(x)))
+    tracker_st = Tracker(params_st)
+    gradient_descent(lin_reg_loss_st, params_st, η_st, 100, callback = tracker_st)
 end;
 
 # ╔═╡ 7541c203-f0dc-4445-9d2a-4cf16b7e912a
-let
-    b = lin_reg_loss_st.batch[t5+1]
+let path = tracker_st.path,
+    lin_reg_loss_b(i) = (β₀, β₁) -> lin_reg_loss(β₀, β₁, X.x1[(i-1)*10+1:i*10],
+                                                 y[(i-1)*10+1:i*10])
+    Random.seed!(seed)
+    batches = rand(1:4, 101)
+    b = batches[t5+1]
     colors = [:green, :blue, :orange, :purple]
     ma = fill(.2, 40)
     ma[(b-1)*10 + 1:b*10] .= 1
@@ -220,7 +253,7 @@ let
                  c = vcat([fill(c, 10)
                            for c in colors]...),
                  xlabel = "x", ylabel = "y", label = "training data")
-    plot!(x -> lin_reg_stoch_path[t5+1]' * [1, x], c = :red, w = 2,
+    plot!(x -> path[t5+1]' * [1, x], c = :red, w = 2,
           label = "current fit")
     p2 = contour(-3:.1:3, -3:.1:3, lin_reg_loss, cbar = false,
                  linestyle = :dash, c = :black, aspect_ratio = 1)
@@ -230,9 +263,9 @@ let
     end
     plot!(first.(lin_reg_path), last.(lin_reg_path),
           c = :black, w = 3, label = "GD")
-    plot!(first.(lin_reg_stoch_path), last.(lin_reg_stoch_path),
+    plot!(first.(path), last.(path),
           c = :red, w = 1.5, label = "SGD")
-    ps = lin_reg_stoch_path[t5+1]
+    ps = path[t5+1]
     scatter!([ps[1]], [ps[2]], label = nothing, c = :red)
     plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
@@ -243,29 +276,36 @@ md"# Improved Versions of (S)GD
 
 There are many tricks to improve over standard (stochastic) gradient descent.
 One popular idea is to use [momentum](https://distill.pub/2017/momentum/).
-We do not discuss these ideas further here, but you should know that `ADAM()` and `ADAMW()` are particularly popular (and successful) improvements of standard (S)GD. These methods usually require no (or very little) tuning of the learning rate."
+We do not discuss these ideas further here, but you should know that `ADAM()` and variants like `ADAMW()` are particularly popular (and successful) improvements of standard (S)GD. These methods usually require no (or very little) tuning of the learning rate."
+
+# ╔═╡ 2739fb52-fb1b-46d6-9708-e24bfdc459e2
+function advanced_gradient_descent(f, x, optimizer, T; callback = x -> nothing)
+    for t in 1:T
+        ∇f = gradient(f, x)[1] # compute ∇f
+		Flux.update!(optimizer, x, ∇f) # apply the changes to x
+        callback(x) # the callback will be used to save intermediate values
+    end
+    x
+end
 
 # ╔═╡ eb289254-7167-4183-a4d0-52f68be66b04
 begin
 	Random.seed!(1234)
     params4 = .1 * randn(6)
-    special_path2 = [copy(params4)]
+	tracker4 = Tracker(params4)
 	opt = ADAMW()
-    for _ in 1:10^4
-        Flux.Optimise.train!(_ -> special_loss(params4), [params4], [nothing], opt,
-                             cb = () -> push!(special_path2, copy(params4)))
-    end
+	advanced_gradient_descent(mse, params4, opt, 10^4, callback = tracker4)
 end
 
 # ╔═╡ 166472c5-c0f4-4261-a476-4c9b0f82abd6
-let
+let special_path = tracker3.path, special_path2 = tracker4.path
     p1 = plot(f, label = "orginal function", xlabel = "x", ylabel = "y",
               ylim = (-1.3, 1.2))
     plot!(x -> f(x, special_path2[t3]), label = "current fit")
     th = round.(special_path2[t3], digits = 2)
     annotate!([(0, -1.1, text("f̂(x) = $(th[1]) * sin($(th[2])x + $(th[3])) + $(th[4]) * sin($(th[5])x + $(th[6]))", pointsize = 7))])
-    losses2 = special_loss.(special_path2)
-    losses = special_loss.(special_path)
+    losses2 = mse.(special_path2)
+    losses = mse.(special_path)
     p2 = plot(0:10^4, losses2, label = "learning curve", c = :black, yscale = :log10)
     plot!(0:10^4, losses, label = "GD learning curve", c = :black, linestyle = :dot)
     scatter!([t3], [losses2[t3]], label = "current loss", xlabel = "t", ylabel = "loss", legend = :bottomleft)
@@ -292,22 +332,18 @@ begin
     h_training = Array(select(poly(regression_data, 12), Not(:y)))
     h_valid = Array(select(poly(regression_valid, 12), Not(:y)))
     poly_regression_loss(θ, x, y) = mean((y .- θ[1] .- x * θ[2:end]).^2)
+	poly_regression_loss(θ) = poly_regression_loss(θ, h_training, regression_data.y)
     poly_params = 1e-3 * randn(13)
-    poly_path = [copy(poly_params)]
+    tracker5 = Tracker(poly_params)
 	poly_opt = ADAMW()
-    for _ in 1:10^5
-        Flux.Optimise.train!((x, y) -> poly_regression_loss(poly_params, x, y),
-                             [poly_params], [(h_training, regression_data.y)],
-                             poly_opt,
-                             cb = () -> push!(poly_path, copy(poly_params)))
-    end
+	advanced_gradient_descent(poly_regression_loss, poly_params, poly_opt, 3*10^4, callback = tracker5)
 end
 
 # ╔═╡ 075f35cf-4271-4676-b9f3-e2bcf610c2d1
-md"step t = $(@bind t4 Slider(0:10^3:10^5, show_value = true))"
+md"step t = $(@bind t4 Slider(0:10^3:3*10^4, show_value = true))"
 
 # ╔═╡ 0d431c00-9eef-4ce4-9542-9571728d1501
-let
+let poly_path = tracker5.path
     p1 = scatter(regression_data.x, regression_data.y,
                  label = "training data", ylims = (-.1, 1.1))
     plot!(g, label = "generator", c = :green, w = 2)
@@ -383,6 +419,10 @@ MLCourse.footer()
 # ╟─3ca1e8f3-d69f-454f-b917-4bbe2dcfce01
 # ╠═b1fc14bb-1fd2-4739-a761-7a605fd4559b
 # ╟─bbc0b514-4789-44d1-8d90-9fc325d9ad6b
+# ╟─07f3f800-6e06-416c-bfdd-e4ece8565a42
+# ╟─fd0dca4d-d2db-4c6a-b218-cdacc49d2946
+# ╠═2fe2049c-e9db-4a1e-a927-f147f137b3c4
+# ╟─396d2cc3-b7de-4c1b-ad56-1bed63852b18
 # ╟─eb9e2b3f-dc4b-49a2-a611-b45f2918adcf
 # ╠═402bb576-8945-403e-a9a6-fd5bfb8016bc
 # ╟─cd5f079f-a06d-4d55-9666-e2b05ddf8989
@@ -400,6 +440,7 @@ MLCourse.footer()
 # ╟─75528011-05d9-47dc-a37b-e6bb6be52c25
 # ╟─7541c203-f0dc-4445-9d2a-4cf16b7e912a
 # ╟─913cf5ee-ca1e-4063-bd34-6cccd0cc548b
+# ╠═2739fb52-fb1b-46d6-9708-e24bfdc459e2
 # ╠═eb289254-7167-4183-a4d0-52f68be66b04
 # ╟─166472c5-c0f4-4261-a476-4c9b0f82abd6
 # ╟─08a9418f-786e-4992-b1a5-04cf9060f8fe

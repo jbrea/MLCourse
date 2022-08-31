@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -112,32 +112,90 @@ We see that the ninth cluster (9th row in this table and in the figure above) ha
 # ╔═╡ 12317841-c1f8-4022-970e-8ef613c79b78
 md"# Hierarchical Clustering"
 
+# ╔═╡ 872e95fd-fac0-4c39-bc65-e4cdcf0050bb
+hc = machine(HierarchicalClustering(k = 3, linkage = :complete, metric = Euclidean()))
+
 # ╔═╡ 20297924-5e09-40d2-9f7e-27e0e1b8a968
-hc = MLJ.transform(HierarchicalClustering(linkage = :complete,
-                                          metric = Euclidean()),
-                     select(iris, Not(:class)));
+MLJ.predict(hc, select(iris, Not(:class)))
 
 # ╔═╡ 6a603cb6-7a1b-4a1d-9358-c4c811efa2bb
-md"h = $(@bind hclusth Slider(range(minimum(hc.dendrogram.heights), stop = maximum(hc.dendrogram.heights), length = 100), default = maximum(hc.dendrogram.heights)/2))"
+md"h = $(@bind hclusth Slider(range(minimum(hc.model._cache.dendrogram.heights), stop = maximum(hc.model._cache.dendrogram.heights), length = 100), default = maximum(hc.model._cache.dendrogram.heights)/2))"
 
 # ╔═╡ e266ada3-ba4d-4177-8129-f1220f293c72
 let
-    pred = hc(h = hclusth, k = 1)
+    hc.model.h = hclusth
+	pred = predict(hc, select(iris, Not(:class)))
     p1 = scatter(iris.petallength, iris.petalwidth,
-                 legend = false, c = pred,
+                 legend = false, c = Int.(int(pred)),
                  title = "prediction", xlabel = "petal length",
                  ylabel = "petal width")
-    p2 = plot(hc.dendrogram)
+    p2 = plot(hc.model._cache.dendrogram)
     hline!([hclusth], c = :red, w = 3)
     plot(p2, p1, layout = (1, 2), size = (700, 500))
 end
 
 
+# ╔═╡ 675e3a37-8044-4e8a-9821-cf2e71cf38f2
+md"# DBSCAN
+
+Density-Based Spatial Clustering of Applications with Noise (DBSCAN) is another popular clustering method.
+It captures the insight that clusters are dense groups of points.
+The idea is that if a particular point belongs to a cluster, it should be near to lots of other points in that cluster.
+The following illustration is based on a nice blog post by [Naftali Harris](https://www.naftaliharris.com/blog/visualizing-dbscan-clustering/).
+
+Change the seed and the different parameters of the methods to investigate their sensitivity!
+"
+
+# ╔═╡ 9ca4cac1-f378-42cd-ba60-d174a47e23a8
+md"""Seed of random number generator $(@bind seed Slider(collect(1:50), show_value = true)).
+
+Cluster assignment with $(@bind method Select(["DBSCAN", "k-means", "hierarchical clustering"]))"""
+
+# ╔═╡ 9d54fbb8-44f8-46c8-90ef-de85746c410b
+function smiley_data(; n = 400, pimples = n÷10,
+                       a = 6, b = 8, d = 4, c = .15, C = (c - a/b^2))
+    i = 1
+    res = 20 * rand(n + pimples, 2) .- 10
+    while i ≤ n
+        x = 20*rand() - 10
+		y = 20*rand() - 10
+        if 81 < x^2 + y^2 < 100 ||
+           (x + 4)^2 + (y - 4)^2 < 1 ||
+           (x - 4)^2 + (y - 4)^2 < 1 ||
+           (-b < x < b && y > c*x^2 - a && y < C* x^2 - d)
+            res[i, 1] = x
+            res[i, 2] = y
+            i += 1
+        end
+    end
+    res
+end;
+
+# ╔═╡ 6d845685-ac31-4df7-9d18-f1fab6c08e3d
+begin
+	Random.seed!(seed) # the seed is defined by the slider below
+	smiley = DataFrame(smiley_data(), :auto)
+	smiley_kmeans_pred = predict(fit!(machine(KMeans(k = 4), smiley), verbosity = 0),
+		                         smiley)
+	smiley_hclust_pred = predict(machine(HierarchicalClustering(k = 4)), smiley)
+	smiley_dbscan_pred = predict(machine(DBSCAN(min_cluster_size = 10, radius = 1)), smiley)
+end;
+
+# ╔═╡ 8ea10eb7-8b37-4026-a7ec-e44bba7532ea
+let d = smiley
+	scatter(d.x1, d.x2, aspect_ratio = 1,
+            color = Int.(int.(method == "k-means" ? smiley_kmeans_pred :
+                              method == "hierarchical clustering" ? smiley_hclust_pred :
+                              smiley_dbscan_pred)),
+            ylabel = "X₂", xlabel = "X₁", label = nothing)
+end
+
 # ╔═╡ 85d574c2-b823-4dcf-b711-efc755e724b7
 md"# Exercises
 ## Conceptual
 
-**Exercise 1.** In this exercise, you will perform clustering manually, with ``K = 2``, on a small example with ``n = 6`` observations and ``p = 2`` features. The observations are as follows.
+#### Exercise 1
+In this exercise, you will perform clustering manually, with ``K = 2``, on a small example with ``n = 6`` observations and ``p = 2`` features. The observations are as follows.
 
  ````\begin{array}{c|cc}
  \hline
@@ -168,7 +226,8 @@ md"# Exercises
 
 ## Applied
 
-**Exercise 1.** In this exercise, you will generate simulated data and perform K-means clustering on the data.
+#### Exercise 2
+In this exercise, you will generate simulated data and perform K-means clustering on the data.
 
 (a) Generate a simulated data set with 20 observations in each of three classes (i.e. 60 observations total), and 50 variables with the following generator
 ```julia
@@ -200,7 +259,7 @@ to fit an unsupervised machine called `PCA` (with at most 2 output dimensions) t
 
 (h) *Optional:* Create other artificial data sets where scaling does not affect the result of clustering or where it improves the result of clustering.
 
-**Exercise 2**
+#### Exercise 3
 
 On the website of the text book, there is a gene expression data set that consists of 40 tissue samples with measurements on 1000 genes. Some samples are from healthy patients, while others are from a diseased group.
 
@@ -237,9 +296,15 @@ MLCourse.footer()
 # ╟─70b3f1bb-7c47-4bb0-aa17-cda6fdbe0469
 # ╟─8b458fe0-8de4-46a1-b14b-1ef430a3c0f3
 # ╟─12317841-c1f8-4022-970e-8ef613c79b78
+# ╠═872e95fd-fac0-4c39-bc65-e4cdcf0050bb
 # ╠═20297924-5e09-40d2-9f7e-27e0e1b8a968
 # ╟─6a603cb6-7a1b-4a1d-9358-c4c811efa2bb
 # ╟─e266ada3-ba4d-4177-8129-f1220f293c72
+# ╟─675e3a37-8044-4e8a-9821-cf2e71cf38f2
+# ╠═6d845685-ac31-4df7-9d18-f1fab6c08e3d
+# ╟─9ca4cac1-f378-42cd-ba60-d174a47e23a8
+# ╟─8ea10eb7-8b37-4026-a7ec-e44bba7532ea
+# ╟─9d54fbb8-44f8-46c8-90ef-de85746c410b
 # ╟─85d574c2-b823-4dcf-b711-efc755e724b7
 # ╟─15830699-57c5-4bc2-bc92-54105597ab26
 # ╟─7b013132-0ee2-11ec-1dd2-25a9f16f0568

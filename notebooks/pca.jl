@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -191,10 +191,10 @@ In the figure below you see a visualization of the variance along the first, sec
 @bind pc Select(["1 PC", "2 PC", "3 PC"])
 
 # ╔═╡ 2b73abbb-8cef-4da0-b4cf-b640fe0ad102
-md"The `PCA` function in `MLJ` has three important keyword arguments as explained in the doc string (see Live docs). If the keyword argument `pratio = 1` all principal components are computed."
+md"The `PCA` function in `MLJ` has three important keyword arguments as explained in the doc string (see Live docs). If the keyword argument `variance_ratio = 1` all principal components are computed."
 
 # ╔═╡ 45ee714c-9b73-492e-9422-69f27be79de2
-md"The report of a `PCA` machine returns the number of dimensions `indim` of the data. the number of computed principal components `outdim`, the total variance `tvar` and the `mean` of the data set, together with the variances `principalvars` along the computed principal components. The sum of the variances `principalvars` is given in `tprincipalvar` and the rest in `tresidualvar = tvar - tprincipalvar`. If you change the `pratio` to a lower value above you will see that not all principal components are computed."
+md"The report of a `PCA` machine returns the number of dimensions `indim` of the data. the number of computed principal components `outdim`, the total variance `tvar` and the `mean` of the data set, together with the variances `principalvars` along the computed principal components. The sum of the variances `principalvars` is given in `tprincipalvar` and the rest in `tresidualvar = tvar - tprincipalvar`. If you change the `variance_ratio` to a lower value above you will see that not all principal components are computed."
 
 # ╔═╡ ecc77003-c138-4ea9-93a7-27df46aa1e89
 md"Biplots are useful to see loadings and scores at the same time. The scores of each data point are given by the coordinates of the numbers plotted in gray when reading the bottom and the left axis. For example, the score for point 22 would be approximately (0, 4.8). The loadings are given by the red labels (not the tips of the arrows) when reading the top and the right axis. For examples the loadings of the first principal component are approximately (0.95, 0.1, 0.28) (see also `fitted_params` above)."
@@ -215,7 +215,7 @@ end;
 pca_data = data_generator(seed = 241);
 
 # ╔═╡ 927627e0-9614-4234-823d-eb2e13229784
-pca = fit!(machine(PCA(pratio = 1), DataFrame(pca_data, :auto)), verbosity = 0);
+pca = fit!(machine(PCA(variance_ratio = 1), DataFrame(pca_data, :auto)), verbosity = 0);
 
 # ╔═╡ c7935f29-21f3-414a-b013-a1abd0f9f502
 fitted_params(pca) # shows the loadings as columns
@@ -378,7 +378,7 @@ end
 md"### Scaling the Data Matters!!!"
 
 # ╔═╡ 9f6b1079-209f-4a24-96c8-81bdcf8bfc32
-mwine2 = machine(PCA(pratio = 1), X) |> fit!;
+mwine2 = machine(PCA(variance_ratio = 1), X) |> fit!;
 
 # ╔═╡ 7eac92b8-0639-46b8-966e-cbf44de7ee86
 let
@@ -407,7 +407,7 @@ md"An interesting property of the scores is that their covariance matrix is diag
 
 # ╔═╡ ded0e6cd-e969-47d5-81cf-e2a967bc0a34
 let
-    mach = fit!(machine(PCA(pratio = 1), DataFrame(pca_data, :auto)))
+    mach = fit!(machine(PCA(variance_ratio = 1), DataFrame(pca_data, :auto)))
     Z = MLJ.matrix(MLJ.transform(mach, pca_data))
     (ZtZ = chop.(Z'*Z),) # chop sets values close to zero to zero.
 end
@@ -493,11 +493,11 @@ let
 end
 
 # ╔═╡ 7c020b97-384d-43fc-af1c-a4bf75a6f06c
-md"cumulative proportion of variance explained $(@bind pratio Slider(.9:.001:.999, show_value = true))"
+md"cumulative proportion of variance explained $(@bind variance_ratio Slider(.9:.001:.999, show_value = true))"
 
 # ╔═╡ cddfed10-7c9c-47b0-83fc-b3322da522ed
 begin
-    first_few_pc_faces = fit!(MLJ.machine(PCA(pratio = pratio), faces[:, 1:end-1]), verbosity = 0)
+    first_few_pc_faces = fit!(MLJ.machine(PCA(variance_ratio = variance_ratio), faces[:, 1:end-1]), verbosity = 0)
     npc = size(fitted_params(first_few_pc_faces).projection, 2)
     md"Using the first ``L = ``$npc components. The compression ratio is ``\frac{n\times p}{(p+n)\times L}`` = $(round(400*64^2/((64^2 + 400)*npc), sigdigits = 2))."
 end
@@ -524,12 +524,13 @@ md"## PCA Applied to the Weather Data"
 # ╔═╡ 0943f000-a148-4470-ae5e-9d8d39cd8207
 begin
     weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
-                       DataFrame);
+                       DataFrame, limit = 5000);
     weather = select(weather, (x -> match(r"direction", x) == nothing && match(r"time", x) == nothing).(names(weather)))
 end
 
 # ╔═╡ 2e86337e-9fb8-4dd9-ac96-c1177e7ebd16
-weather_mach = fit!(machine(@pipeline(Standardizer(), PCA()), weather));
+weather_mach = fit!(machine(@pipeline(Standardizer(), PCA()), weather),
+	                verbosity = 0);
 
 # ╔═╡ 24179171-3992-4253-88a5-15ccdbb26e13
 let
@@ -666,7 +667,7 @@ md"""# Exercises
 
 ## Conceptual
 
-**Exercise 1**
+#### Exercise 1
 
 (a) The figure below shows 2-dimensional data points. Let us perform PCA on this dataset, i.e. estimate graphically the principal component loadings ``\phi_{11}, \phi_{21}, \phi_{12}, \phi_{22}``. *Hint*: start with determining graphically the direction of the first and the second principal component and normalize the direction vectors afterwards.
 
@@ -687,11 +688,11 @@ end
 
 (c) Estimate from the figure in (b) the loadings of the first two principal components and the scores of data point 35.
 
-**Exercise 2**
+#### Exercise 2
 The figures show biplots of principal component analysis applied to 30 three-dimensional points.
 
 $(Random.seed!(123); let d = DataFrame(randn(30, 2) * randn(2, 3) .+ randn(30, 3) * 1e-6, :auto)
-    p = fit!(machine(PCA(pratio = 1, mean = 0), d), verbosity = 0)
+    p = fit!(machine(PCA(variance_ratio = 1, mean = 0), d), verbosity = 0)
     gr()
     plot(biplot(p), biplot(p, pc = (1, 3)), layout = (1, 2), size = (700, 350))
 end)
@@ -703,7 +704,9 @@ end)
 (c) How large approximately is the proportion of variance explained by the third component?
 
 
-**Exercise 3** In this exercise you will explore the connection between PCA and SVD.
+#### Exercise 3
+
+In this exercise you will explore the connection between PCA and SVD.
 
 (a) In the lecture we said that the first principal component is the eigenvector ``\phi_1`` with the largest eigenvalue ``\lambda_1`` of the matrix ``X^T X``. From linear algebra you know that a real, symmetric matrix ``A`` can be diagonalized such that ``A = W \Lambda W^T`` holds, where ``\Lambda`` is a diagonal matrix that contains the eigenvalues and ``W`` is an orthogonal matrix that satisfies ``W^T W = I``, where ``I`` is the identity matrix. The columns of ``W`` are the eigenvectors of ``A``. Let us assume we have found the diagonalization ``X^T X = W \Lambda W^T``. Multiply this equation from the right with ``W`` and show that the columns of ``W`` contain the eigenvectors of ``X^T X``.
 
@@ -712,7 +715,8 @@ end)
 
 ## Applied
 
-**Exercise 1** Look at the following three artificial data sets.
+#### Exercise 4
+Look at the following three artificial data sets.
 
 ```julia
 data1 = DataFrame(randn(50, 2) * randn(2, 3), :auto)
@@ -725,7 +729,8 @@ explained for the tree datasets.
 
 (b) Perform PCA and plot the proportion of variance explained.
 
-**Exercise 2** In this exercise we look at a food consumption dataset with the relative
+#### Exercise 5
+In this exercise we look at a food consumption dataset with the relative
 consumption of certain food items in European countries. The
 numbers represent the percentage of the population consuming that food type.
 You can load the data with
@@ -743,7 +748,8 @@ PC2 and another with PC1 versus PC3. *Hint*: before applying PCA you may have to
 Pick one country that has a high score in the first component and verify that
 this country does indeed have this interpretation.
 
-**Exercise 3**
+#### Exercise 6
+
 Take a random image e.g.
 ```julia
 using FileIO, Plots

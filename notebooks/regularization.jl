@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -416,7 +416,7 @@ intercept. We would like to study L1- and L2-regularized multiple linear regress
 
 ## Applied
 
-#### Exercise 1.
+#### Exercise 3.
 Create an artificial dataset with 20 points, 4 predictors ``X_1, X_2, X_3, X_4``
 and ``Y = X_1 + \epsilon`` with ``\mathrm{Var}(\epsilon) = 0.1^2``.
 

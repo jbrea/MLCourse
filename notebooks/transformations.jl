@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -286,7 +286,8 @@ Sometimes it is reasonable to transform the output data. For example, if a metho
 "
 
 # ╔═╡ 5e6d6155-c254-4ae9-a0e1-366fc6ce6403
-weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), DataFrame);
+weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"), 
+                   DataFrame, limit = 5000);
 
 # ╔═╡ ed239411-185a-4d9f-b0ec-360400f24dc7
 normal_fit = Distributions.fit(Normal, weather.LUZ_wind_peak)
@@ -325,8 +326,11 @@ end
 md"# Exercises
 
 ## Conceptual
-1. Suppose, for a regression problem with one-dimensional input ``X`` and one-dimensional output ``Y`` we use the feature functions ``h_1(X) = X``, ``h_2(X) = (X - 1)^2I(X\ge 1)`` (where ``I`` is the indicator function, being 1 when the condition inside the brackets is true and 0 otherwise), fit the linear regression model ``Y = \beta_0 + \beta_1h_1(X) + \beta_2h_2(X) + \varepsilon,`` and obtain coefficient estimates ``\hat{\beta}_0 = 1``, ``\hat{\beta}_1 = 1``, ``\hat{\beta}_2 = -2``. Draw the estimated curve between ``X = -2`` and ``X = 2``.
-2. The following table shows one-hot encoded input for columns `mean_of_transport` (car, train, airplane, ship) and `energy_source` (petrol, electric). Indicate for each row the mean of transport and the energy source.
+#### Exercise 1
+Suppose, for a regression problem with one-dimensional input ``X`` and one-dimensional output ``Y`` we use the feature functions ``h_1(X) = X``, ``h_2(X) = (X - 1)^2\chi(X\ge 1)`` (where ``\chi`` is the indicator function, being 1 when the condition inside the brackets is true and 0 otherwise), fit the linear regression model ``Y = \beta_0 + \beta_1h_1(X) + \beta_2h_2(X) + \varepsilon,`` and obtain coefficient estimates ``\hat{\beta}_0 = 1``, ``\hat{\beta}_1 = 1``, ``\hat{\beta}_2 = -2``. Draw the estimated curve between ``X = -2`` and ``X = 2``.
+#### Exercise 2
+The following table shows one-hot encoded input for columns `mean_of_transport` (car, train, airplane, ship) and `energy_source` (petrol, electric). Indicate for each row the mean of transport and the energy source.
+
 | car | train | airplane | petrol|
 |-----|-------|----------|-------|
 | 1   | 0     | 0        |  0    |
@@ -334,16 +338,19 @@ md"# Exercises
 | 0   | 1     | 0        |  1    |
 | 0   | 0     | 0        |  0    |
 
-3. In the \"Vector Features\" section we said that the xor problem has a non-linear decision boundary in the original ``X_1, X_2`` coordinates, but a linear decision boundary in the ``H_1, H_2, H_3, H_4`` coordinates. Here we prove that ``-H_1 + H_2 + H_3 - H_4 = 0`` defines indeed a linear decision boundary that solves the xor-problem.
-    * Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 > 0`` and ``X_2 > 0``.
-    * Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 < 0`` and ``X_2 < 0``.
-    * Show that ``-H_1 + H_2 + H_3 - H_4  > 0`` for all other points.
+#### Exercise 3
+In the \"Vector Features\" section we said that the xor problem has a non-linear decision boundary in the original ``X_1, X_2`` coordinates, but a linear decision boundary in the ``H_1, H_2, H_3, H_4`` coordinates. Here we prove that ``-H_1 + H_2 + H_3 - H_4 = 0`` defines indeed a linear decision boundary that solves the xor-problem.
+* Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 > 0`` and ``X_2 > 0``.
+* Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 < 0`` and ``X_2 < 0``.
+* Show that ``-H_1 + H_2 + H_3 - H_4  > 0`` for all other points.
 
 ## Applied
-1. Load the mushroom data set `OpenML.load(24)` and determine if a linear logistic regression can correctly classify all datapoints if
+#### Exercise 4
+Load the mushroom data set `OpenML.load(24)` and determine if a linear logistic regression can correctly classify all datapoints if
    * rows with missing values are dropped.
    * rows with missing values are imputed with the most common class.
-2. You are given the following artificial dataset. The data is not linearly separable, meaning that there is no linear decision boundary that would perfectly seperate the blue from the red data points.
+#### Exercise 5
+You are given the following artificial dataset. The data is not linearly separable, meaning that there is no linear decision boundary that would perfectly seperate the blue from the red data points.
     * Find a 2-dimensional feature representation ``H_1 = f_1(X_1, X_2), H_2 = f_2(X_1, X_2)``, such that the transformed data is linearly separable.
     * Generate a similar plot as the one below for the transformed data to visualize that the decision boundary has become linear for the transformed data.
 "
