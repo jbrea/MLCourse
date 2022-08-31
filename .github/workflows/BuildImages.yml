@@ -3,9 +3,9 @@ name: Build Images
 on:
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref != 'refs/heads/main' || github.run_number }}
-  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref != 'refs/heads/main' || github.run_number }}
+#   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 
 jobs:
   build:
@@ -27,25 +27,25 @@ jobs:
           fetch-depth: 0
 
       - uses: julia-actions/setup-julia@v1
-        if: startsWith(github.ref, 'refs/tags/') || steps.changes.outputs.folder == 'true'
+#         if: startsWith(github.ref, 'refs/tags/') || steps.changes.outputs.folder == 'true'
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
 
       - name: Instantiate Environments
-        if: startsWith(github.ref, 'refs/tags/') || steps.changes.outputs.folder == 'true'
+#         if: startsWith(github.ref, 'refs/tags/') || steps.changes.outputs.folder == 'true'
         run: |
           julia --project=. -e 'import Pkg; Pkg.instantiate()'
         env:
           JULIA_PKG_PRECOMPILE_AUTO: "0"
 
       - name: Build System Image
-        if: startsWith(github.ref, 'refs/tags/')
+#         if: startsWith(github.ref, 'refs/tags/')
         run: |
           julia --project=. -e 'using MLCourse; MLCourse.create_sysimage()'
           tar -czvf depot.tar.gz --directory precompile --exclude warmup.jl .
       - uses: actions/upload-artifact@v3
-        if: startsWith(github.ref, 'refs/tags/')
+#         if: startsWith(github.ref, 'refs/tags/')
         with:
           name: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.version }}
           path: depot.tar.gz
@@ -59,7 +59,7 @@ jobs:
         run: echo "Success"
 
   release:
-    if: startsWith(github.ref, 'refs/tags/')
+#     if: startsWith(github.ref, 'refs/tags/')
     needs: [success]
     name: Release ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.version }}
     runs-on: ubuntu-latest
@@ -97,7 +97,7 @@ jobs:
           tar -czvf release/${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.version }}.tar.gz -C depot .
       - name: Release
         uses: ncipollo/release-action@v1
-        if: startsWith(github.ref, 'refs/tags/')
+#         if: startsWith(github.ref, 'refs/tags/')
         with:
           artifacts: "release/*.tar.gz"
           token: ${{ secrets.GITHUB_TOKEN }}
