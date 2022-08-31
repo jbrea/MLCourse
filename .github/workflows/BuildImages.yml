@@ -1,0 +1,115 @@
+name: Build Images
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.ref != 'refs/heads/main' || github.run_number }}
+  cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        version:
+          - '1.8'
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: julia-actions/setup-julia@v1
+        if: startsWith(github.ref, 'refs/tags/') || steps.changes.outputs.folder == 'true'
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+
+      - name: Instantiate Environments
+        if: startsWith(github.ref, 'refs/tags/') || steps.changes.outputs.folder == 'true'
+        run: |
+          julia --project=. -e 'import Pkg; Pkg.instantiate()'
+        env:
+          JULIA_PKG_PRECOMPILE_AUTO: "0"
+
+      - name: Build System Image
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          julia --project=. -e 'using MLCourse; MLCourse.create_sysimage()'
+          tar -czvf depot.tar.gz --directory precompile --exclude warmup.jl .
+      - uses: actions/upload-artifact@v3
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          name: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.version }}
+          path: depot.tar.gz
+
+  success:
+    needs: [build]
+    name: Successful Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Success
+        run: echo "Success"
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [success]
+    name: Release ${{ matrix.os }} - ${{ matrix.arch }} - ${{ matrix.version }}
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
+      matrix:
+        version:
+          - '1.8'
+        os:
+          - ubuntu-latest
+          - windows-latest
+          - macOS-latest
+        arch:
+          - x64
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.version }}
+          path: artifacts
+
+      - name: Unpack tarball
+        run: |
+          mkdir depot
+          tar -xvf artifacts/depot.tar.gz -C depot
+      - run: ls depot
+
+      - name: Change ownership of any Windows executables or DLLs.
+        run: |
+          find depot -type f -iname "*.dll" -exec chmod a+rx {} \;
+          find depot -type f -iname "*.exe" -exec chmod a+rx {} \;
+      - name: Repack tarballs
+        run: |
+          mkdir -p release
+          tar -czvf release/${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.version }}.tar.gz -C depot .
+      - name: Release
+        uses: ncipollo/release-action@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          artifacts: "release/*.tar.gz"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          prerelease: true
+
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: ${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.version }}

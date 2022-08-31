@@ -7,10 +7,12 @@ using Markdown, Base64
 include("notebooks.jl")
 
 function __init__()
+ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
 PrecompilePlutoCourse.configure(@__MODULE__,
     start_notebook = pkgdir(@__MODULE__, "index.jl"),
-    sysimage_path = pkgdir(@__MODULE__, "precompile", "mlcourse.so"),
+    sysimage_path = pkgdir(@__MODULE__, "precompile", "mlcourse.$ext"),
     warmup_file = pkgdir(@__MODULE__, "precompile", "warmup.jl"),
+    kwargs = (cpu_target="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)",)
 )
 
 @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin
