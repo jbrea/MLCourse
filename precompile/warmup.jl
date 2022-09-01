@@ -10,8 +10,13 @@ mach = fit!(machine(LinearRegressor(), X, y), verbosity = 0)
 
 predict(mach)
 
+Random.seed!(23)
+rand(Random.TaskLocalRNG())
+
 plot(rand(10), rand(10))
 scatter(rand(10), rand(10))
+plot(xlim = (0, 1), ylim = (0, 1), size = (600, 400),
+     bg = :red, framestyle = :none, legend = false)
 
 MLCourse.gradient_descent(x -> sum(abs2, x), rand(4), .1, 2)
 

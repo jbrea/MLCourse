@@ -56,7 +56,6 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 TSne = "24678dba-d5e9-5843-a4c6-250288b04835"
 Tar = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
-TextAnalysis = "a2db99b7-8b79-58f8-94bf-bbc811eef33d"
 Zygote = "e88e6eb3-aa80-5325-afca-941959d7151f"
 
 [compat]
@@ -81,7 +80,6 @@ PrecompilePlutoCourse = "0.2"
 ScientificTypes = "3"
 StatsBase = "0.33"
 StatsPlots = "0.14,0.15"
-TextAnalysis = "0.7"
 Zygote = "0.6"
 julia = "1.6"
 

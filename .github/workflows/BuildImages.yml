@@ -100,7 +100,7 @@ jobs:
 #         if: startsWith(github.ref, 'refs/tags/')
         with:
           artifacts: "release/*.tar.gz"
-          tag: "release"
+          tag: "sysimages"
           token: ${{ secrets.GITHUB_TOKEN }}
           allowUpdates: true
           prerelease: true
