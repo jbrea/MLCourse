@@ -1,0 +1,8 @@
+[[sysimage]]
+arch = "x86_64"
+git-tree-sha1 = "fc53f228c28b78ee48d62cd821e070f3b975cf4e"
+os = "linux"
+
+    [[sysimage.download]]
+    sha256 = "ae89832ef996b5dbd52e5301df6847f587cb778c4df5fee164b156a8637449dc"
+    url = "https://github.com/jbrea/MLCourse/releases/download/sysimages/ubuntu-latest-x64-1.7.tar.gz"
