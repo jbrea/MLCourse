@@ -38,6 +38,7 @@ jobs:
           julia --project=. -e 'import Pkg; Pkg.instantiate()'
         env:
           JULIA_PKG_PRECOMPILE_AUTO: "0"
+          MLCOURSE_LOCAL_SYSIMAGE:
 
       - name: Build System Image
 #         if: startsWith(github.ref, 'refs/tags/')
