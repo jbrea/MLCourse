@@ -1,6 +1,7 @@
 module MLCourse
 
 import Pkg
+using Pkg.Artifacts
 using Requires, PrecompilePlutoCourse
 using Markdown, Base64
 
@@ -8,10 +9,15 @@ include("notebooks.jl")
 
 function __init__()
 ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
+if !haskey(ENV, "MLCOURSE_LOCAL_SYSIMAGE")
+    ensure_artifact_installed("sysimage", pkgdir(@__MODULE__, "Artifacts.toml"))
+end
 PrecompilePlutoCourse.configure(@__MODULE__,
     start_notebook = pkgdir(@__MODULE__, "index.jl"),
     sysimage_path = pkgdir(@__MODULE__, "precompile", "mlcourse.$ext"),
+    sysimage_artifact = joinpath(artifact"sysimage", "mlcourse.$ext"),
     warmup_file = pkgdir(@__MODULE__, "precompile", "warmup.jl"),
+    kwargs = (cpu_target="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)",),
 #     packages = ["Pluto", "Images", "PlotlyBase", "CSV", "OpenML", "StatsBase", "ScientificTypes", "MLJLinearModels", "DataFrames", "Plots", "StatsPlots", "Distributions", "Flux", "Zygote", "ReinforcementLearning"],
 )
 

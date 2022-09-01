@@ -46,6 +46,7 @@ jobs:
           tar -czvf depot.tar.gz --directory precompile --exclude warmup.jl .
         env:
           PLOTS_HOST_DEPENDENCY_LOCAL: "false"
+          MLCOURSE_LOCAL_SYSIMAGE:
       - uses: actions/upload-artifact@v3
 #         if: startsWith(github.ref, 'refs/tags/')
         with:
