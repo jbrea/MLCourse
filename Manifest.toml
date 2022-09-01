@@ -1801,9 +1801,11 @@ version = "0.2.4"
 
 [[deps.PrecompilePlutoCourse]]
 deps = ["Distributed", "Git", "PackageCompiler", "Pkg", "Pluto"]
-git-tree-sha1 = "0e571acdcbcbc20e1c9e894ef04b923cfd515808"
+git-tree-sha1 = "b8032ae57001cf063735194dd130e6716de6c915"
+repo-rev = "96c96d7"
+repo-url = "https://github.com/jbrea/PrecompilePlutoCourse.jl.git"
 uuid = "031ef55e-ae57-4a95-aa50-04a4c1cc4953"
-version = "0.2.1"
+version = "0.2.2"
 
 [[deps.PrecompileSignatures]]
 git-tree-sha1 = "18ef344185f25ee9d51d80e179f8dad33dc48eb1"
