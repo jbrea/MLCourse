@@ -9,15 +9,10 @@ include("notebooks.jl")
 
 function __init__()
 ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
-sysimage_artifact = try
-    joinpath(artifact"sysimage", "mlcourse.$ext")
-catch
-    nothing
-end
 PrecompilePlutoCourse.configure(@__MODULE__,
     start_notebook = pkgdir(@__MODULE__, "index.jl"),
     sysimage_path = pkgdir(@__MODULE__, "precompile", "mlcourse.$ext"),
-    sysimage_artifact = sysimage_artifact,
+    sysimage_artifact = isfile(joinpath(@__DIR__, "..", "Artifacts.toml")) ? joinpath(artifact_path(Artifacts.artifact_hash("sysimage", "Artifacts.toml")), "mlcourse.$ext") : nothing,
     warmup_file = pkgdir(@__MODULE__, "precompile", "warmup.jl"),
     kwargs = (cpu_target="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)",),
 #     packages = ["Pluto", "Images", "PlotlyBase", "CSV", "OpenML", "StatsBase", "ScientificTypes", "MLJLinearModels", "DataFrames", "Plots", "StatsPlots", "Distributions", "Flux", "Zygote", "ReinforcementLearning"],
