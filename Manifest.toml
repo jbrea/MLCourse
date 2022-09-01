@@ -2,7 +2,7 @@
 
 julia_version = "1.7.3"
 manifest_format = "2.0"
-project_hash = "047ec32d8db7ffb6636912af73a69c1a26677194"
+project_hash = "90c8e017796d9e05e64ed6ce24e7923c371fd1cc"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -1327,9 +1327,9 @@ version = "0.1.6"
 
 [[deps.MLJDecisionTreeInterface]]
 deps = ["DecisionTree", "MLJModelInterface", "Random", "Tables"]
-git-tree-sha1 = "7d19b38b39e60e8724d2c13595e9a8d7e52d136c"
+git-tree-sha1 = "d0d682ef8504e1ab705f10307c587239ebb20c4d"
 uuid = "c6f25543-311c-4c74-83dc-3ea6d1015661"
-version = "0.2.4"
+version = "0.2.5"
 
 [[deps.MLJEnsembles]]
 deps = ["CategoricalArrays", "CategoricalDistributions", "ComputationalResources", "Distributed", "Distributions", "MLJBase", "MLJModelInterface", "ProgressMeter", "Random", "ScientificTypesBase", "StatsBase"]
@@ -1757,8 +1757,8 @@ version = "0.8.18"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "PlotlyBase", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Scratch", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "16e3678956141b362a8b86cd48d682651b60a201"
-repo-rev = "9d0a18b5"
+git-tree-sha1 = "08cbb0163005e155e4828a4178f9dbdbd95329c5"
+repo-rev = "cd27aa97"
 repo-url = "https://github.com/jbrea/Plots.jl.git"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.31.7"
@@ -1783,9 +1783,9 @@ version = "0.3.11"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
-git-tree-sha1 = "8d1f54886b9037091edf146b517989fc4a09efec"
+git-tree-sha1 = "a602d7b0babfca89005da04d89223b867b55319f"
 uuid = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
-version = "0.7.39"
+version = "0.7.40"
 
 [[deps.PooledArrays]]
 deps = ["DataAPI", "Future"]
