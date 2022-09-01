@@ -50,9 +50,8 @@ end
 h_training = Array(select(poly(regression_data, 12), Not(:y)))
 h_valid = Array(select(poly(regression_valid, 12), Not(:y)))
 poly_regression_loss(θ, x, y) = mean((y .- θ[1] .- x * θ[2:end]).^2)
-let x = h_training, y = polyregression.y
-    poly_regression_loss(θ) = poly_regression_loss(θ, x, y)
-end
+target = regression_data.y
+poly_regression_loss(θ) = poly_regression_loss(θ, h_training, target)
 poly_params = 1e-3 * randn(13)
 tracker5 = Tracker(poly_params)
 poly_opt = ADAMW()
