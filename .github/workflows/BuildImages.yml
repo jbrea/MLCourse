@@ -44,6 +44,8 @@ jobs:
         run: |
           julia --project=. -e 'using MLCourse; MLCourse.create_sysimage()'
           tar -czvf depot.tar.gz --directory precompile --exclude warmup.jl .
+        env:
+          PLOTS_HOST_DEPENDENCY_LOCAL: "false"
       - uses: actions/upload-artifact@v3
 #         if: startsWith(github.ref, 'refs/tags/')
         with:
