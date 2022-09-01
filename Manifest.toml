@@ -1963,11 +1963,6 @@ git-tree-sha1 = "e4957a13e69e6344620c38a6f957e8e017fc254a"
 uuid = "d607f57d-ee1e-4ba7-bcf2-7734c1e31854"
 version = "0.5.12"
 
-[[deps.RelevanceStacktrace]]
-git-tree-sha1 = "ed130fc34affe17e60b0e2ebbcac3e8b495bcb15"
-uuid = "6c8a4c8a-cd07-4735-95b7-b1ced2eaf8fd"
-version = "0.1.8"
-
 [[deps.RelocatableFolders]]
 deps = ["SHA", "Scratch"]
 git-tree-sha1 = "cdbd3b1338c72ce29d9584fdbe9e9b70eeb5adca"
