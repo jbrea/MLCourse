@@ -57,6 +57,9 @@ tracker5 = Tracker(poly_params)
 poly_opt = ADAMW()
 advanced_gradient_descent(poly_regression_loss, poly_params, poly_opt, 2, callback = tracker5)
 
+mnist = OpenML.load(554, maxbytes = 10^4) |> DataFrame;
+plot(Gray.(reshape(Array(mnist[1, 1:end-1]) ./ 255, 28, 28)'))
+
 with_logger(SimpleLogger(Logging.Warn)) do
 
 session = Pluto.ServerSession()
