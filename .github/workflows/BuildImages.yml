@@ -35,7 +35,7 @@ jobs:
       - name: Instantiate Environments
 #         if: startsWith(github.ref, 'refs/tags/') || steps.changes.outputs.folder == 'true'
         run: |
-          julia --project=. -e 'import Pkg; Pkg.instantiate()'
+          julia --project=. -e 'rm("Artifacts.toml"); import Pkg; Pkg.instantiate()'
         env:
           JULIA_PKG_PRECOMPILE_AUTO: "0"
 
