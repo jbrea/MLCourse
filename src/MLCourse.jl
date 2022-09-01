@@ -9,7 +9,7 @@ include("notebooks.jl")
 
 function __init__()
 ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
-if !haskey(ENV, "MLCOURSE_LOCAL_SYSIMAGE")
+if !haskey(ENV, "MLCOURSE_LOCAL_SYSIMAGE") || ENV["MLCOURSE_LOCAL_SYSIMAGE"] != "true"
     ensure_artifact_installed("sysimage", pkgdir(@__MODULE__, "Artifacts.toml"))
 end
 PrecompilePlutoCourse.configure(@__MODULE__,
