@@ -803,8 +803,8 @@ version = "1.12.2+1"
 
 [[deps.HTML_Entities]]
 deps = ["RelocatableFolders", "StrTables"]
-git-tree-sha1 = "e1c320188c8e909cb1c27e56028ee79fc6c2f024"
-repo-rev = "287e75f"
+git-tree-sha1 = "62c1fe39195275e5a0a8764f97c18d169d3b09ee"
+repo-rev = "a263075"
 repo-url = "https://github.com/jbrea/HTML_Entities.jl.git"
 uuid = "7693890a-d069-55fe-a829-b4a6d304f0ee"
 version = "1.0.1"
@@ -1375,8 +1375,8 @@ version = "1.6.0"
 
 [[deps.MLJModels]]
 deps = ["CategoricalArrays", "CategoricalDistributions", "Dates", "Distances", "Distributions", "InteractiveUtils", "LinearAlgebra", "MLJModelInterface", "Markdown", "OrderedCollections", "Parameters", "Pkg", "PrettyPrinting", "REPL", "Random", "RelocatableFolders", "ScientificTypes", "StatisticalTraits", "Statistics", "StatsBase", "Tables"]
-git-tree-sha1 = "23bcc53b381de6e0e93c7c7b2cc1db8b6369a6fd"
-repo-rev = "025e0e7"
+git-tree-sha1 = "f9a4e6fd45e84fdf66950b5f0dbd9a676fd70f49"
+repo-rev = "d074b5d"
 repo-url = "https://github.com/jbrea/MLJModels.jl.git"
 uuid = "d491faf4-2d78-11e9-2867-c94bc002c0b7"
 version = "0.15.10"
