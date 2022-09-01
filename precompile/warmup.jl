@@ -8,8 +8,15 @@ import MLCourse: poly
 X, y = make_regression()
 
 mach = fit!(machine(LinearRegressor(), X, y), verbosity = 0)
-
 predict(mach)
+
+training_data = DataFrame(x = [0., 2., 2.], y = [-1., 4., 3.])
+mach = machine(LinearRegressor(),         # model
+               select(training_data, :x), # input
+               training_data.y);          # output
+fit!(mach); # fit the machine
+fitted_params(mach) # show the result
+
 
 Random.seed!(23)
 Random.seed!(Random.TaskLocalRNG(), 12)
