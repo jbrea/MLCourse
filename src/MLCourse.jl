@@ -14,7 +14,7 @@ PrecompilePlutoCourse.configure(@__MODULE__,
     sysimage_path = pkgdir(@__MODULE__, "precompile", "mlcourse.$ext"),
     sysimage_artifact = isfile(joinpath(@__DIR__, "..", "Artifacts.toml")) ? joinpath(artifact_path(Artifacts.artifact_hash("sysimage", "Artifacts.toml")), "mlcourse.$ext") : nothing,
     warmup_file = pkgdir(@__MODULE__, "precompile", "warmup.jl"),
-    kwargs = (cpu_target="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)",),
+    kwargs = (cpu_target="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)", include_transitive_dependencies=false),
 #     packages = ["Pluto", "Images", "PlotlyBase", "CSV", "OpenML", "StatsBase", "ScientificTypes", "MLJLinearModels", "DataFrames", "Plots", "StatsPlots", "Distributions", "Flux", "Zygote", "ReinforcementLearning"],
 )
 
