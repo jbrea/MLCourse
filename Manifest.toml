@@ -1152,10 +1152,12 @@ uuid = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 version = "1.3.0"
 
 [[deps.Languages]]
-deps = ["InteractiveUtils", "JSON"]
-git-tree-sha1 = "b1a564061268ccc3f3397ac0982983a657d4dcb8"
+deps = ["InteractiveUtils", "JSON", "RelocatableFolders"]
+git-tree-sha1 = "a93db9279598561a86a6fbcd1a83a6f15a21e7f5"
+repo-rev = "85680e1"
+repo-url = "https://github.com/jbrea/Languages.jl.git"
 uuid = "8ef0a80b-9436-5d2c-a485-80b904378c43"
-version = "0.4.3"
+version = "0.4.4"
 
 [[deps.Latexify]]
 deps = ["Formatting", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "Printf", "Requires"]
