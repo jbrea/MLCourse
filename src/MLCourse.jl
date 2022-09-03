@@ -10,7 +10,7 @@ function rel_path(args...)
     if ispath(devpath)
         joinpath(devpath, args...)
     else
-        joinpath(@__DIR__, args...)
+        pkgdir(@__MODULE__, args...)
     end
 end
 
