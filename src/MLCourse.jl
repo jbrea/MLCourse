@@ -5,15 +5,17 @@ using Pkg.Artifacts
 using Requires, PrecompilePlutoCourse
 using Markdown, Base64
 
+rel_path(args...) = pkgdir(@__MODULE__, args...)
+
 include("notebooks.jl")
 
 function __init__()
 ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
 PrecompilePlutoCourse.configure(@__MODULE__,
-    start_notebook = pkgdir(@__MODULE__, "index.jl"),
-    sysimage_path = pkgdir(@__MODULE__, "precompile", "mlcourse.$ext"),
-    sysimage_artifact = isfile(joinpath(@__DIR__, "..", "Artifacts.toml")) ? joinpath(artifact_path(Artifacts.artifact_hash("sysimage", joinpath(@__DIR__, "..", "Artifacts.toml"))), "mlcourse.$ext") : nothing,
-    warmup_file = pkgdir(@__MODULE__, "precompile", "warmup.jl"),
+    start_notebook = rel_path("index.jl"),
+    sysimage_path = rel_path("precompile", "mlcourse.$ext"),
+    sysimage_artifact = isfile(rel_path("Artifacts.toml")) ? joinpath(artifact_path(Artifacts.artifact_hash("sysimage", rel_path("Artifacts.toml"))), "mlcourse.$ext") : nothing,
+    warmup_file = rel_path("precompile", "warmup.jl"),
     kwargs = (cpu_target="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1)", include_transitive_dependencies=false),
 #     packages = ["Pluto", "Images", "PlotlyBase", "CSV", "OpenML", "StatsBase", "ScientificTypes", "MLJLinearModels", "DataFrames", "Plots", "StatsPlots", "Distributions", "Flux", "Zygote", "ReinforcementLearning"],
 )
