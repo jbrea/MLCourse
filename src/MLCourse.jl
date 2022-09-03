@@ -5,7 +5,7 @@ using Pkg.Artifacts
 using Requires, PrecompilePlutoCourse
 using Markdown, Base64
 
-rel_path(args...) = pkgdir(@__MODULE__, args...)
+rel_path(args...) = pkgdir(joinpath(Pkg.devdir(), "MLCourse"), args...)
 
 include("notebooks.jl")
 
