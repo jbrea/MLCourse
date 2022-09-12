@@ -27,6 +27,9 @@ end
 # ╔═╡ 1c3aa1be-c58a-4eb9-a192-ddfffa8a2c56
 using TSne
 
+# ╔═╡ 6788af6e-d370-4112-bc48-46fffca724c3
+using UMAP
+
 # ╔═╡ b97724e4-d7b0-4085-b88e-eb3c5bcbe441
 begin
     using PlutoUI
@@ -552,14 +555,20 @@ let
 end
 
 # ╔═╡ d44be4c6-a409-421a-8e68-39fa752db4c0
-md"# Limitations of PCA"
+md"# Limitations of PCA as a Dimension Reduction Tool
+
+With PCA, high dimensional data can be transformed to low-dimensional data using a linear projection. The result of this is that pairwise distances are perfectly preserved between points in the plane spanned by the first two principal components and distances orthogonal to this plane are projected to zero. This can occasionally lead to unexpected results, like in the example below, where 8 point clouds are projected to five point clouds by PCA (only thanks to coloring the merged point clouds can still be distinguished).
+
+Alternative methods like t-SNE and UMAP do not try to preserve pairwise distances globally, but rather try to rearrange the data such that all point clouds are still distinguishable in the lower-dimensional space.
+"
 
 # ╔═╡ d3b769d7-ec71-4496-926a-e838c3b50c2a
 begin
     Random.seed!(123)
     eight_clouds = DataFrame(vcat([[.5 .5 20] .* randn(50, 3) .+ [x y 0]
                              for y in (-2, 2), x in (-6, -2, 2, 6)]...), :auto);
-    eight_clouds = MLJ.transform(fit!(machine(Standardizer(), eight_clouds)))
+    eight_clouds = MLJ.transform(fit!(machine(Standardizer(), eight_clouds),
+		                              verbosity = 0)) # standardizing data
 end;
 
 # ╔═╡ 67395b94-46bd-43e5-9e12-0bd921de8203
@@ -583,8 +592,26 @@ tsne_proj = tsne(Array(eight_clouds), 2, 0, 2000, 50.0, progress = false);
 let
     gr()
     scatter(tsne_proj[:, 1], tsne_proj[:, 2], legend = false,
-            c = vcat([fill(i, 50) for i in 1:8]...))
+            c = vcat([fill(i, 50) for i in 1:8]...), xlabel = "tSNE 1", ylabel = "tSNE 2")
 end
+
+# ╔═╡ c079cac4-8789-416d-bc4f-a84a3120ab65
+md"We see that tSNE correctly shows the 4 groups and also shows which groups are close to each other."
+
+# ╔═╡ ea1caedc-932a-4d13-bcb7-4c661641596d
+umap_proj = umap(Array(eight_clouds)', 2, min_dist = .5, n_neighbors = 10);
+
+# ╔═╡ 82e4dc4d-3e75-43e0-aa33-b48a76d09404
+let
+    gr()
+    scatter(umap_proj[1, :], umap_proj[2, :], legend = false,
+            c = vcat([fill(i, 50) for i in 1:8]...), xlabel = "UMAP 1", ylabel = "UMAP 2")
+end
+
+# ╔═╡ a30af1e5-eb42-4e23-bdb0-386bf76a43a4
+md"Also UMAP finds 4 clusters but some of them are strongly connected, such that it would be difficult to distinguish them without coloring.
+
+Note that the results of tSNE and UMAP change each time you run the cell! The reason is that these methods depend on some gradient descent procedure with random initialization. This is in contrast to PCA that gives always the same lower dimensional result."
 
 # ╔═╡ 716da1a0-266f-41ec-8ef3-a2593ac7b74b
 Markdown.parse("Also for real data PCA sometimes fails to find the clusters in
@@ -601,9 +628,15 @@ end
 mnist_pca = fit!(machine(PCA(maxoutdim = 2), mnist_x));
 
 let
-    mnist_proj = MLJ.transform(mnist_pca)
-    scatter(mnist_proj.x1, mnist_proj.x2, c = Int.(int(mnist_y)), legend = false,
-            xlabel = \"PC 1\", ylabel = \"PC 2\")
+	mnist_proj = MLJ.transform(mnist_pca)
+	plot()
+	for i in 0:9
+		idxs = findall(x -> x == string(i), mnist_y)
+		scatter!(mnist_proj.x1[idxs], mnist_proj.x2[idxs],
+			     markersize = 1, markerstrokewidth = 0,
+			     label = \"\$i\")
+	end
+	plot!(xlabel = \"PC 1\", ylabel = \"PC 2\", legend_position = (0.1, .95))
 end
 ```
 $(MLCourse.embed_figure("mnist_pca.png"))
@@ -616,7 +649,7 @@ clusters in the MNIST dataset.
 However, let us look at a TSne dimensionality reduction:
 
 ```julia
-tsne_proj_mnist = tsne(Array(mnist_x[1:5000, :]), 2, 50, 1000, 20)
+tsne_proj_mnist = tsne(Array(mnist_x[1:7000, :]), 2, 50, 1000, 20)
 scatter(tsne_proj_mnist[:, 1], tsne_proj_mnist[:, 2],
         c = Int.(int(mnist_y[1:5000])),
         xlabel = \"TSne 1\", ylabel = \"TSne 2\",
@@ -625,6 +658,29 @@ scatter(tsne_proj_mnist[:, 1], tsne_proj_mnist[:, 2],
 $(MLCourse.embed_figure("mnist_tsne.png"))
 
 Here the images with different class labels are more clearly grouped into different clusters.
+
+Above we ran tSNE only on 10% of the data, because tSNE requires quite some computation.
+UMAP scales better to larger datasets and takes on the order of 10 minutes to compute the dimension reduction for the whole MNIST data set.
+
+```julia
+umap_proj_mnist = umap(Array(Array(mnist_x)'), 2)
+
+let
+	plot()
+	for i in 0:9
+		idxs = findall(x -> x == string(i), mnist_y)
+		scatter!(umap_proj_mnist[1, idxs], umap_proj_mnist[2, idxs],
+			     markersize = 1, markerstrokewidth = 0,
+			     label = \"\$i\")
+	end
+	plot!(xlabel = \"UMAP 1\", ylabel = \"UMAP 2\", legend_position = -5)
+end
+```
+$(MLCourse.embed_figure("mnist_umap.png"))
+
+It is interesting to see in the figure above that the images of digits 4, 7 and 9 are projected to nearby groups (top left corner) and the groups of digits 3, 5, 8 are also nearby each other, but the groups 0, 1, 2 and 6 are clearly separated. In each group there are also some images from the wrong group.
+
+If you want to know more about tSNE and UMAP have a look e.g. at the following [blog post](https://pair-code.github.io/understanding-umap/).
 ")
 
 # ╔═╡ 3087540f-19e1-49cb-9b3b-c23207775ea7
@@ -860,6 +916,11 @@ MLCourse.footer()
 # ╠═1c3aa1be-c58a-4eb9-a192-ddfffa8a2c56
 # ╠═e4302d86-5e4f-4c56-bdca-8b4eed2af47c
 # ╟─6b319dbe-c626-4294-92b6-cab574aabfb0
+# ╟─c079cac4-8789-416d-bc4f-a84a3120ab65
+# ╠═6788af6e-d370-4112-bc48-46fffca724c3
+# ╠═ea1caedc-932a-4d13-bcb7-4c661641596d
+# ╟─82e4dc4d-3e75-43e0-aa33-b48a76d09404
+# ╟─a30af1e5-eb42-4e23-bdb0-386bf76a43a4
 # ╟─716da1a0-266f-41ec-8ef3-a2593ac7b74b
 # ╟─3087540f-19e1-49cb-9b3b-c23207775ea7
 # ╠═60c37ce2-50d7-426f-9dd8-597878425f9c
