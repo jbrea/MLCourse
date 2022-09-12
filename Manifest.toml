@@ -135,6 +135,12 @@ git-tree-sha1 = "0d7ee0a1acad90d544fa87cc3d6f463e99abb77a"
 uuid = "c9fd44ac-77b5-486c-9482-9798bd063cc6"
 version = "0.1.5"
 
+[[deps.BinaryProvider]]
+deps = ["Libdl", "Logging", "SHA"]
+git-tree-sha1 = "ecdec412a9abc8db54c0efc5548c64dfce072058"
+uuid = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
+version = "0.5.10"
+
 [[deps.BufferedStreams]]
 git-tree-sha1 = "bb065b14d7f941b8617bc323063dbe79f55d16ea"
 uuid = "e1450e63-4bb3-523b-b2a4-4ffa8c0fd77d"
@@ -323,9 +329,9 @@ version = "0.3.2"
 
 [[deps.Configurations]]
 deps = ["ExproniconLite", "OrderedCollections", "TOML"]
-git-tree-sha1 = "62a7c76dbad02fdfdaa53608104edf760938c4ca"
+git-tree-sha1 = "79e812c535bb9780ba00f3acba526bde5652eb13"
 uuid = "5218b696-f38b-4ac9-8b61-a12ec717816d"
-version = "0.17.4"
+version = "0.16.6"
 
 [[deps.ConstructionBase]]
 deps = ["LinearAlgebra"]
@@ -367,10 +373,10 @@ uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.10.0"
 
 [[deps.DataDeps]]
-deps = ["HTTP", "Libdl", "Reexport", "SHA", "p7zip_jll"]
-git-tree-sha1 = "bc0a264d3e7b3eeb0b6fc9f6481f970697f29805"
+deps = ["BinaryProvider", "HTTP", "Libdl", "Reexport", "SHA", "p7zip_jll"]
+git-tree-sha1 = "e299d8267135ef2f9c941a764006697082c1e7e8"
 uuid = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
-version = "0.7.10"
+version = "0.7.8"
 
 [[deps.DataFrames]]
 deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Reexport", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
@@ -506,9 +512,9 @@ uuid = "e2ba6199-217a-4e67-a87a-7c52f15ade04"
 version = "0.1.8"
 
 [[deps.ExproniconLite]]
-git-tree-sha1 = "07b85b02d910f90dde6b383484c5ee6c0f169fa3"
+git-tree-sha1 = "8b08cc88844e4d01db5a2405a08e9178e19e479e"
 uuid = "55351af7-c7e9-48d6-89ff-24e801d99491"
-version = "0.7.0"
+version = "0.6.13"
 
 [[deps.Extents]]
 git-tree-sha1 = "5e1e4c53fa39afe63a7d356e30452249365fba99"
@@ -804,10 +810,10 @@ uuid = "7693890a-d069-55fe-a829-b4a6d304f0ee"
 version = "1.0.1"
 
 [[deps.HTTP]]
-deps = ["Base64", "CodecZlib", "Dates", "IniFile", "Logging", "LoggingExtras", "MbedTLS", "NetworkOptions", "Random", "SimpleBufferStream", "Sockets", "URIs", "UUIDs"]
-git-tree-sha1 = "59ba44e0aa49b87a8c7a8920ec76f8afe87ed502"
+deps = ["Base64", "Dates", "IniFile", "Logging", "MbedTLS", "NetworkOptions", "Sockets", "URIs"]
+git-tree-sha1 = "0fa77022fe4b511826b39c894c90daf5fce3334a"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "1.3.3"
+version = "0.9.17"
 
 [[deps.HarfBuzz_jll]]
 deps = ["Artifacts", "Cairo_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "Graphite2_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg"]
@@ -1277,12 +1283,6 @@ version = "0.3.18"
 
 [[deps.Logging]]
 uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
-
-[[deps.LoggingExtras]]
-deps = ["Dates", "Logging"]
-git-tree-sha1 = "5d4d2d9904227b8bd66386c1138cf4d5ffa826bf"
-uuid = "e6f89c97-d47a-5376-807f-9c37f3926c36"
-version = "0.4.9"
 
 [[deps.LossFunctions]]
 deps = ["InteractiveUtils", "Markdown", "RecipesBase"]
@@ -1785,9 +1785,9 @@ version = "1.32.1"
 
 [[deps.Pluto]]
 deps = ["Base64", "Configurations", "Dates", "Distributed", "FileWatching", "FuzzyCompletions", "HTTP", "HypertextLiteral", "InteractiveUtils", "Logging", "MIMEs", "Markdown", "MsgPack", "Pkg", "PrecompileSignatures", "REPL", "RelocatableFolders", "Sockets", "TOML", "Tables", "URIs", "UUIDs"]
-git-tree-sha1 = "c189ae928e2cfc3495b13e85d9e90ddedeac0a4d"
+git-tree-sha1 = "87b0f17b2a71eb4a20b61eed34975055fe5537dd"
 uuid = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
-version = "0.19.11"
+version = "0.19.9"
 
 [[deps.PlutoPlotly]]
 deps = ["AbstractPlutoDingetjes", "Dates", "HypertextLiteral", "InteractiveUtils", "LaTeXStrings", "Markdown", "PlotlyBase", "PlutoUI", "Reexport"]
@@ -1797,9 +1797,9 @@ version = "0.3.4"
 
 [[deps.PlutoSliderServer]]
 deps = ["AbstractPlutoDingetjes", "Base64", "BetterFileWatching", "Configurations", "Distributed", "FromFile", "Git", "GitHubActions", "HTTP", "JSON", "Logging", "Pkg", "Pluto", "SHA", "Sockets", "TOML", "TerminalLoggers", "UUIDs"]
-git-tree-sha1 = "5da8e3710d6c45a019a69cd7ec68d873276bab12"
+git-tree-sha1 = "5496bc77ee81a91187dc3b9de3a32a631c562575"
 uuid = "2fc8631c-6f24-4c5b-bca7-cbb509c42db4"
-version = "0.3.12"
+version = "0.3.11"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "Markdown", "Random", "Reexport", "UUIDs"]
@@ -1821,9 +1821,7 @@ version = "0.2.4"
 
 [[deps.PrecompilePlutoCourse]]
 deps = ["Distributed", "Git", "PackageCompiler", "Pkg", "Pluto"]
-git-tree-sha1 = "b8032ae57001cf063735194dd130e6716de6c915"
-repo-rev = "96c96d7"
-repo-url = "https://github.com/jbrea/PrecompilePlutoCourse.jl.git"
+git-tree-sha1 = "4d2a6f48c9cbd98118cc006cc4f8e47b32061500"
 uuid = "031ef55e-ae57-4a95-aa50-04a4c1cc4953"
 version = "0.2.2"
 
@@ -2083,11 +2081,6 @@ deps = ["Dates", "Grisu"]
 git-tree-sha1 = "91eddf657aca81df9ae6ceb20b959ae5653ad1de"
 uuid = "992d4aef-0814-514b-bc4d-f2e9a6c4116f"
 version = "1.0.3"
-
-[[deps.SimpleBufferStream]]
-git-tree-sha1 = "874e8867b33a00e784c8a7e4b60afe9e037b74e1"
-uuid = "777ac1f9-54b0-4bf8-805c-2214025038e7"
-version = "1.1.0"
 
 [[deps.SimpleTraits]]
 deps = ["InteractiveUtils", "MacroTools"]
