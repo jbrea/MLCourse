@@ -61,7 +61,7 @@ Many packages and binaries are downloaded in the `Pkg.instantiate()` step.
 If you encounter an error message like `ERROR: Unable to automatically install
 'sysimage'` or `ERROR: failed to clone from ...` rerun `Pkg.instantiate()` a moment later.
 
-To use the at a later point notebooks, restart julia and type
+Once MLCourse is installed, you can open the notebooks in a Julia REPL anytime with
 ```julia
 julia> using Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
        using MLCourse
