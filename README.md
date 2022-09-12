@@ -30,6 +30,7 @@ Once `juliaup` is installed, please run
 juliaup add 1.7.3
 juliaup default 1.7.3
 ```
+You may need to `source ~/.bashrc` if `juliaup` is not found after installation.
 Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/mac/x64/1.7/julia-1.7.3-mac64.dmg)
 
 **Linux** users can download `juliaup` on a command line with
@@ -42,6 +43,7 @@ Once `juliaup` is installed, please run
 juliaup add 1.7.3
 juliaup default 1.7.3
 ```
+You may need to `source ~/.bashrc` if `juliaup` is not found after installation.
 Alternatively you can download and unpack [this archive](https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz)
 
 Once Julia 1.7.3 is installed, open a julia REPL and run the following commands

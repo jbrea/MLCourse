@@ -1,19 +1,19 @@
 [[sysimage]]
 arch = "x86_64"
-git-tree-sha1 = "997f34d71bb2466edc6131a34b69d7a6dbe376d2"
+git-tree-sha1 = "c02071490a44ac896da1c92ad7045450af9e588a"
 os = "linux"
 
     [[sysimage.download]]
-    sha256 = "329ea690f3ac52ab1a40415acd569ffe147024cbef21244191c4d1cbf9db4afa"
+    sha256 = "ac82d728c0d46fdcd81e47872770d3585d5a57bb6dc09cae6193f5af02cface4"
     url = "https://github.com/jbrea/MLCourse/releases/download/sysimages/ubuntu-latest-x64-1.7.tar.gz"
 
 [[sysimage]]
 arch = "x86_64"
-git-tree-sha1 = "d36be82079c77902e377f3c17598fe185e1c45e8"
+git-tree-sha1 = "664fc6f0a66cce2a88ba70021aa661be0fee1d3f"
 os = "macos"
 
     [[sysimage.download]]
-    sha256 = "b1c91b2b2be1a8882ae61229c8d73616d69b8f1e5432bc65b36a34f8c3d67693"
+    sha256 = "bf133bcfeec60246b5b1619ad7fa41c3196f50c4390851d41cb8c5be88028a5b"
     url = "https://github.com/jbrea/MLCourse/releases/download/sysimages/macOS-latest-x64-1.7.tar.gz"
 
 [[sysimage]]
