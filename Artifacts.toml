@@ -18,10 +18,10 @@ os = "macos"
 
 [[sysimage]]
 arch = "x86_64"
-git-tree-sha1 = "aafe79232a4797af8d49ee71ec1ec8490c4d7a31"
+git-tree-sha1 = "76dac446e48683e74b0ab4a2bee499a25b1a2db9"
 os = "windows"
 
     [[sysimage.download]]
-    sha256 = "3a90246c1f8fb6e8d66473163ac56bdc08fd4a923e71beaa643b982d1b0f6680"
+    sha256 = "1ed6d3bc6a4389e08a10b920a60b2763638e079e958901e45b5c369218453f15"
     url = "https://github.com/jbrea/MLCourse/releases/download/sysimages/windows-latest-x64-1.7.tar.gz"
 
