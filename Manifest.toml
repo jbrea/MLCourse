@@ -1821,9 +1821,9 @@ version = "0.2.4"
 
 [[deps.PrecompilePlutoCourse]]
 deps = ["Distributed", "Git", "PackageCompiler", "Pkg", "Pluto"]
-git-tree-sha1 = "4d2a6f48c9cbd98118cc006cc4f8e47b32061500"
+git-tree-sha1 = "467b71b594e6e9db7987092a9708462572d789d6"
 uuid = "031ef55e-ae57-4a95-aa50-04a4c1cc4953"
-version = "0.2.2"
+version = "0.2.3"
 
 [[deps.PrecompileSignatures]]
 git-tree-sha1 = "18ef344185f25ee9d51d80e179f8dad33dc48eb1"
