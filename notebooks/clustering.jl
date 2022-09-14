@@ -115,8 +115,11 @@ md"# Hierarchical Clustering"
 # ╔═╡ 872e95fd-fac0-4c39-bc65-e4cdcf0050bb
 hc = machine(HierarchicalClustering(k = 3, linkage = :complete, metric = Euclidean()))
 
+# ╔═╡ f4d74b33-e05c-445a-9d59-c91dfff97eab
+predict(hc, select(iris, Not(:class)))
+
 # ╔═╡ 2f4e3d67-d88e-4f9b-9572-6be1bc30106b
-md"From the report we can get the fitted dendrogram and a cutter object with which we can make predictions."
+md"After running the `predict` function on the data, we can get from the `report` the fitted dendrogram and a cutter object with which we can make further predictions at other heights `h` or numbers of clusters `k`."
 
 # ╔═╡ c4bde04d-23e8-4fb0-9e66-88b443a12926
 hc_report = report(hc); cutter = hc_report.cutter; dendrogram = hc_report.dendrogram;
@@ -308,6 +311,7 @@ MLCourse.footer()
 # ╟─8b458fe0-8de4-46a1-b14b-1ef430a3c0f3
 # ╟─12317841-c1f8-4022-970e-8ef613c79b78
 # ╠═872e95fd-fac0-4c39-bc65-e4cdcf0050bb
+# ╠═f4d74b33-e05c-445a-9d59-c91dfff97eab
 # ╟─2f4e3d67-d88e-4f9b-9572-6be1bc30106b
 # ╠═c4bde04d-23e8-4fb0-9e66-88b443a12926
 # ╠═84d2b372-1c4a-4cae-958c-a7a7b19f24f6
