@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.11
+# v0.19.9
 
 using Markdown
 using InteractiveUtils
@@ -733,7 +733,6 @@ MLCourse.footer()
 # ╠═bf4110a9-31a4-48a3-bd6d-85c404d0e72d
 # ╠═534681d5-71d8-402a-b455-f491cfbb353e
 # ╟─ec1c2ea5-29ce-4371-be49-08798305ff50
-# ╠═681cb7b9-f041-4aea-907e-4d85135c005a
 # ╟─f7117513-283f-4e32-a2a1-3594c794c94d
 # ╟─26d957aa-36d4-4b90-9b91-2d9d883877ea
 # ╟─4f89ceab-297f-4c2c-9029-8d2d7fad084f
