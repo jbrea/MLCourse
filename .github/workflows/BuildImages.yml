@@ -72,7 +72,7 @@ jobs:
           - '1.7'
         os:
           - ubuntu-latest
-          - windows-latest
+#           - windows-latest
           - macOS-latest
         arch:
           - x64
