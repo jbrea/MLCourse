@@ -334,13 +334,8 @@ end
 # ╔═╡ ec1c2ea5-29ce-4371-be49-08798305ff50
 Markdown.parse("Here we go: now we have a matrix of size
  $(join(size(normalized_word_counts), " x ")) as input and a vector of binary label as
- output. We will be able to use this as input in multiple logistic regression.
- For future usage we save this preprocessed representation of the spam data to
- a file.")
-
-# ╔═╡ 681cb7b9-f041-4aea-907e-4d85135c005a
-CSV.write(joinpath(dirname(pathof(MLCourse)), "..", "data", "spam_preprocessed.csv"),
-          [normalized_word_counts DataFrame(spam_or_ham = spam_or_ham)])
+ output. We will be able to use this as input in multiple logistic regression."
+)
 
 # ╔═╡ f7117513-283f-4e32-a2a1-3594c794c94d
 md"## Multiple Logistic Regression
