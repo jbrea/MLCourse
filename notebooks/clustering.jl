@@ -115,21 +115,32 @@ md"# Hierarchical Clustering"
 # ╔═╡ 872e95fd-fac0-4c39-bc65-e4cdcf0050bb
 hc = machine(HierarchicalClustering(k = 3, linkage = :complete, metric = Euclidean()))
 
-# ╔═╡ 20297924-5e09-40d2-9f7e-27e0e1b8a968
-MLJ.predict(hc, select(iris, Not(:class)))
+# ╔═╡ 2f4e3d67-d88e-4f9b-9572-6be1bc30106b
+md"From the report we can get the fitted dendrogram and a cutter object with which we can make predictions."
+
+# ╔═╡ c4bde04d-23e8-4fb0-9e66-88b443a12926
+hc_report = report(hc); cutter = hc_report.cutter; dendrogram = hc_report.dendrogram;
+
+# ╔═╡ 84d2b372-1c4a-4cae-958c-a7a7b19f24f6
+cutter(h = 2)
+
+# ╔═╡ 41e0f1e0-19a7-441e-a6ea-be0fe4678288
+cutter(k = 4)
+
+# ╔═╡ 23958c06-c037-452d-ae15-36d4d8cc9038
+md"This can be used to visualize the dendrogram and the predictions."
 
 # ╔═╡ 6a603cb6-7a1b-4a1d-9358-c4c811efa2bb
-md"h = $(@bind hclusth Slider(range(minimum(hc.model._cache.dendrogram.heights), stop = maximum(hc.model._cache.dendrogram.heights), length = 100), default = maximum(hc.model._cache.dendrogram.heights)/2))"
+md"h = $(@bind hclusth Slider(range(minimum(report(hc).dendrogram.heights), stop = maximum(report(hc).dendrogram.heights), length = 100), default = maximum(report(hc).dendrogram.heights)/2))"
 
 # ╔═╡ e266ada3-ba4d-4177-8129-f1220f293c72
 let
-    hc.model.h = hclusth
-	pred = predict(hc, select(iris, Not(:class)))
+	pred = cutter(h = hclusth)
     p1 = scatter(iris.petallength, iris.petalwidth,
                  legend = false, c = Int.(int(pred)),
                  title = "prediction", xlabel = "petal length",
                  ylabel = "petal width")
-    p2 = plot(hc.model._cache.dendrogram)
+    p2 = plot(dendrogram)
     hline!([hclusth], c = :red, w = 3)
     plot(p2, p1, layout = (1, 2), size = (700, 500))
 end
@@ -297,9 +308,13 @@ MLCourse.footer()
 # ╟─8b458fe0-8de4-46a1-b14b-1ef430a3c0f3
 # ╟─12317841-c1f8-4022-970e-8ef613c79b78
 # ╠═872e95fd-fac0-4c39-bc65-e4cdcf0050bb
-# ╠═20297924-5e09-40d2-9f7e-27e0e1b8a968
+# ╟─2f4e3d67-d88e-4f9b-9572-6be1bc30106b
+# ╠═c4bde04d-23e8-4fb0-9e66-88b443a12926
+# ╠═84d2b372-1c4a-4cae-958c-a7a7b19f24f6
+# ╠═41e0f1e0-19a7-441e-a6ea-be0fe4678288
+# ╟─23958c06-c037-452d-ae15-36d4d8cc9038
 # ╟─6a603cb6-7a1b-4a1d-9358-c4c811efa2bb
-# ╟─e266ada3-ba4d-4177-8129-f1220f293c72
+# ╠═e266ada3-ba4d-4177-8129-f1220f293c72
 # ╟─675e3a37-8044-4e8a-9821-cf2e71cf38f2
 # ╠═6d845685-ac31-4df7-9d18-f1fab6c08e3d
 # ╟─9ca4cac1-f378-42cd-ba60-d174a47e23a8
