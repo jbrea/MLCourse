@@ -3,7 +3,7 @@ Pkg.activate(joinpath(@__DIR__, ".."))
 
 using Pluto, MLCourse, MLJ, MLJLinearModels, StatsPlots, DataFrames,
       Distributions, Random, Flux, Zygote, ReinforcementLearning
-import MLCourse: poly
+import MLCourse: poly, fitted_linear_func
 
 X, y = make_regression()
 
@@ -23,7 +23,8 @@ Random.seed!(Random.TaskLocalRNG(), 12)
 rand(Random.TaskLocalRNG())
 
 plot(rand(10), rand(10))
-scatter(rand(10), rand(10))
+scatter(rand(10), rand(10), xlabel = "a", ylabel = "b", label = "data")
+plot!(fitted_linear_func(mach))
 plot(xlim = (0, 1), ylim = (0, 1), size = (600, 400),
      bg = :red, framestyle = :none, legend = false)
 
