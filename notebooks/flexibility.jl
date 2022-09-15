@@ -79,9 +79,12 @@ end
 classification_data = classification_data_generator(n = 400, rng = MersenneTwister(8))
 
 # ╔═╡ 12942fa0-efb1-11eb-01c8-6dae80c55fb8
-m2 = machine(LogisticClassifier(penalty = :none),
-             select(classification_data, Not(:y)),
-             classification_data.y) |> fit!;
+begin
+    m2 = machine(LogisticClassifier(penalty = :none),
+                 select(classification_data, Not(:y)),
+                 classification_data.y)
+    fit!(m2, verbosity = 0);
+end
 
 # ╔═╡ 12942f94-efb1-11eb-2c48-a3418b53b886
 begin
