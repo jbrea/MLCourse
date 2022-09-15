@@ -63,7 +63,10 @@ end;
 regression_data = regression_data_generator(n = 50, rng = MersenneTwister(3))
 
 # ╔═╡ 12942f6e-efb1-11eb-0a49-01a6a2d0196f
-m1 = machine(LinearRegressor(), select(regression_data, :x), regression_data.y) |> fit!;
+begin
+    m1 = machine(LinearRegressor(), select(regression_data, :x), regression_data.y)
+    fit!(m1, verbosity = 0)
+end;
 
 # ╔═╡ 12942f6e-efb1-11eb-35c0-19a7c4d6b44e
 begin
