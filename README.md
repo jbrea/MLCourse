@@ -27,7 +27,10 @@ juliaup default 1.7.3
 Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/winnt/x64/1.7/julia-1.7.3-win64.exe).
 </details>
 
-### Mac
+
+<details>
+<summary>Mac</summary>
+
 #### 1. Install juliaup
 ```
 curl -fsSL https://install.julialang.org | sh
@@ -48,8 +51,11 @@ You may need to `source ~/.bashrc` if `juliaup` is not found after installation.
 
 #### Alternative
 Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/mac/x64/1.7/julia-1.7.3-mac64.dmg)
+</details>
 
-### Linux
+<details>
+<summary>Linux</summary>
+
 #### 1. Install juliaup
 
 ```
@@ -68,9 +74,9 @@ You may need to `source ~/.bashrc` if `juliaup` is not found after installation.
 
 #### Alternative
 Alternatively you can download and unpack [this archive](https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz)
+</details>
 
-
-### Installing MLCourse
+#### 4. Installing MLCourse
 ```julia
 julia> using Pkg
        Pkg.activate(temp = true)
@@ -83,9 +89,6 @@ julia> using Pkg
 Many packages and binaries are downloaded in the `Pkg.instantiate()` step.
 If you encounter an error message like `ERROR: Unable to automatically install
 'sysimage'` or `ERROR: failed to clone from ...` rerun `Pkg.instantiate()` a moment later.
-
-or by downloading the
-binary from [this page](https://julialang.org/downloads/oldreleases/)
 
 ## Usage
 Once MLCourse is installed, you can open the notebooks in a Julia REPL anytime with
