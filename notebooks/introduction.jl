@@ -524,6 +524,14 @@ plotattr() # get some help on plotting attributes
 # ╔═╡ 034f7d4c-eacd-11eb-3960-d10d1c16075d
 plotattr(:Series)
 
+# ╔═╡ 6d7a8bb4-1006-44ef-8ce7-5439d100970a
+md"In case you don't see a terminal box below the cell above, you can use the function `with_terminal` to capture everything that would be printed to the terminal."
+
+# ╔═╡ e8a08062-b193-4425-a277-73db1d8da8ac
+with_terminal() do
+	plotattr(:Series)
+end
+
 # ╔═╡ 034f7d4c-eacd-11eb-3841-97ca37e34c9f
 plotattr(:Series, "label")
 
@@ -809,6 +817,8 @@ MLCourse.footer()
 # ╠═034f7d3a-eacd-11eb-1ef3-4f89b8e5aee9
 # ╠═034f7d44-eacd-11eb-0ab2-2f0d2caed9d6
 # ╠═034f7d4c-eacd-11eb-3960-d10d1c16075d
+# ╟─6d7a8bb4-1006-44ef-8ce7-5439d100970a
+# ╠═e8a08062-b193-4425-a277-73db1d8da8ac
 # ╠═034f7d4c-eacd-11eb-3841-97ca37e34c9f
 # ╠═034f7d58-eacd-11eb-123f-9b563a7ae27e
 # ╟─4ca1cd98-a24b-491f-b9ac-28a7daf96d50
