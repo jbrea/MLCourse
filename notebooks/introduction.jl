@@ -476,17 +476,35 @@ randn() # a sample from the normal distribution with mean 0 and variance 1
 # ╔═╡ 034f7d12-eacd-11eb-261c-a5de2f06f420
 rand((:bla, "bli", 3, 1.2))
 
+# ╔═╡ c142c7ba-3ea4-4c1b-834f-90bc6f5be36a
+md"When functions like `rand` or `randn` are called, a [pseudo-random-number generator](https://en.wikipedia.org/wiki/Pseudorandom_number_generator) works in the background to produce numbers that look random. When we want to assure reproducibility, it is best to explicitly define and use the (pseudo-)random-number generator. Standard choices are the `Xoshiro` and the `MersenneTwister` generators."
+
 # ╔═╡ 034f7d1a-eacd-11eb-1e34-21d5eef62940
-Random.seed!(123) # sets the seed of the random number generator to 123
+rng = Xoshiro(123) # creates a Xoshiro pseudo-random-number generator with seed 123
 
 # ╔═╡ 034f7d26-eacd-11eb-066c-538e5b614536
-rand()
+rand(rng)
+
+# ╔═╡ 07decfab-875e-4a02-8893-a11e494df943
+rand(rng)
 
 # ╔═╡ 034f7d30-eacd-11eb-081f-970c4daee184
-Random.seed!(123) # resets the seed
+Random.seed!(rng, 123) # resets the seed
 
 # ╔═╡ 034f7d30-eacd-11eb-0b09-7b3b9ac47570
-rand() # same result as when `rand()` was called last time.
+rand(rng) # same result as when `rand()` was called the first time.
+
+# ╔═╡ 313bf559-eca7-4eb9-bd49-c8f4b1b8234c
+md"As before, we can use this random number generator to sample from other distributions:"
+
+# ╔═╡ 7dd9b949-464a-4db9-ad61-b0753b68b92e
+rand(rng, (:bla, "bli", 3, 1.2))
+
+# ╔═╡ 0f6bd75f-34dc-4793-b0e8-6e54950aeff6
+randn(rng)
+
+# ╔═╡ 61c2ebc7-6586-4d5b-afd1-ed2b27964ebc
+rand(rng, 3, 3)
 
 # ╔═╡ 034f7d3a-eacd-11eb-3fbe-6dc4ab1efd50
 md"# Plotting
@@ -591,6 +609,11 @@ Create a data frame with 3 columns named A, B and C.
    1. Column A contains 5 random numbers sampled from a Bernoulli distribution with rate 0.3, column B contains 5 random numbers from the uniform distribution over the interval [0, 1), and column C contains 5 samples from the set `(:hip, :hop)`.
    2. Create a vector whose i'th element contains the sum of the i'th entries of columns A and B of the data frame created in 1.
    3. Select all rows with `:hop` in column C and display the resulting data frame.
+
+"""
+
+# ╔═╡ 2944de86-82fd-4409-8504-f5ea3deae21d
+md"""
 #### Exercise 2
    Very often the first version of some code does not run as it should. Therefore we need good debugging strategies. For this it is important to know how to read error messages. In this exercise we will produce different error messages and try to interpret them.
    1. Write `longfunc(1, [1, 2, 3])` in a new cell and read the error message. At the bottom of this error message you can see where the error occurred. You can click on the yellowish field with text `Other: 2` to jump to the relevant code. Based on this you should know now that `x = 1` and `y = [1, 2, 3]` are tried to be added in `longfunc`. Let us now look at the first line of the error message: it says `no method matching +(::Int64, ::Vector{Int64})`, which means that Julia doesn't know how to add the integer `x = 1` to the vector `y = [1, 2, 3]`. Now there are multiple ways to fix the error, depending on what you want. If you wanted to add `1` to every element of the vector, you could modify `longfunc` such that `tmp = x .+ y`. Try this fix. You will run into another error. Can you also fix the next error?
@@ -608,13 +631,44 @@ begin
    full_of_bugs([2, 1, -5])
 end
 ```
+"""
+
+# ╔═╡ e15d86d2-6902-4c8a-90ca-b4ed60fbab1d
+md"""
 #### Exercise 3
+The state of a Pluto notebook is usually consistent, because cells `B, C, …` that depend on a given cell `A` are reevaluated when the code or the result of cell `A` changes. However, there is one thing that can lead to unexpected behavior: functions that mutate their argument (for the afficionados, Julia uses an evaluation strategy called [call by sharing](https://en.wikipedia.org/wiki/Evaluation_strategy#Call_by_sharing)). Here is an example:
+```julia
+function multiply_by_two!(x)
+    x .*= 2
+end
+```
+1. Paste this function to a new cell.
+2. In another new cell define `my_vector = [1, 2, 3, 4]`.
+3. In the next cell run `multiply_by_two!(my_vector)`.
+4. In the next cell run `my_vector` to simply show it's value.
+5. Run the cell in step 3 multiple times. Does the cell in step 4 automatically show the updated value? What happens when you re-run the cell in step 4?
+6. A related, somewhat unexpected behavior can be observed with pseudo-random-number generators. Paste the code `rng2 = MersenneTwister(123)` in a cell and in the next cell `rand(rng2)`. Run the second cell multiple times. What do you observe? What happens when you rerun the cell that defines the pseudo-random-number generator?
+
+Remember, the exclamation mark at the end of the function name is a [convention in Julia](https://docs.julialang.org/en/v1/manual/style-guide/#bang-convention) to remind the programmer that the argument may change.
+"""
+
+# ╔═╡ dbe2c72c-bbc6-4912-af98-e8f473b7ac27
+md"""
+#### Exercise 4
    1. Use comprehension (see "Vectors, Matrices, Arrays") to create a vector with all numbers of the form ``x^y`` with ``x=1, \ldots, 10``, ``y = 2, \ldots, 7`` and ``y > x``.
    2. Compute the sum of the square root of these numbers.
-#### Exercise 4
+"""
+
+# ╔═╡ 2c527d8d-5e11-4089-ad32-355fc7ac5e10
+md"""
+#### Exercise 5
    1. Write a function that returns the smallest entry of a vector (without using the built-in function `minimum`, `argmin` or `findmin`).
    2. Test your function on a vector of 10 randomly sampled integers in the range 1 to 100.
-#### Exercise 5
+"""
+
+# ╔═╡ af94fccd-bb3e-498a-8d2a-f8e75740cd29
+md"""
+#### Exercise 6
    1. Plot the `cos` function on the interval 0 to 4π. Hint: type `\pi + [Tab]` to enter the symbol π. To learn how to place custom tick labels on the x-axis, type `xticks` in a cell and open the \"Live docs\" at the bottom-right.
    2. Add a scatter plot with 100 points whose ``x`` and ``y`` coordinates are randomly sampled from the interval ``[0, 1)`` on top of the figure with the cosine.
 """
@@ -739,10 +793,16 @@ MLCourse.footer()
 # ╠═034f7d12-eacd-11eb-1673-c94969427bbf
 # ╠═034f7d12-eacd-11eb-261c-a5de2f06f420
 # ╠═034f7d1a-eacd-11eb-1d48-591daf597cd6
+# ╟─c142c7ba-3ea4-4c1b-834f-90bc6f5be36a
 # ╠═034f7d1a-eacd-11eb-1e34-21d5eef62940
 # ╠═034f7d26-eacd-11eb-066c-538e5b614536
+# ╠═07decfab-875e-4a02-8893-a11e494df943
 # ╠═034f7d30-eacd-11eb-081f-970c4daee184
 # ╠═034f7d30-eacd-11eb-0b09-7b3b9ac47570
+# ╟─313bf559-eca7-4eb9-bd49-c8f4b1b8234c
+# ╠═7dd9b949-464a-4db9-ad61-b0753b68b92e
+# ╠═0f6bd75f-34dc-4793-b0e8-6e54950aeff6
+# ╠═61c2ebc7-6586-4d5b-afd1-ed2b27964ebc
 # ╟─034f7d3a-eacd-11eb-3fbe-6dc4ab1efd50
 # ╠═034f7d3a-eacd-11eb-1144-65f9acfcf24c
 # ╠═034f7d3a-eacd-11eb-3fbe-6dc4ab1efd56
@@ -771,6 +831,11 @@ MLCourse.footer()
 # ╠═034f7d7e-eacd-11eb-2a1b-933e1231c220
 # ╟─034f7d8a-eacd-11eb-1dc0-d99d481ab6fa
 # ╟─4a03cfae-9876-4cf0-a498-d750853191cb
+# ╟─2944de86-82fd-4409-8504-f5ea3deae21d
+# ╟─e15d86d2-6902-4c8a-90ca-b4ed60fbab1d
+# ╟─dbe2c72c-bbc6-4912-af98-e8f473b7ac27
+# ╟─2c527d8d-5e11-4089-ad32-355fc7ac5e10
+# ╟─af94fccd-bb3e-498a-8d2a-f8e75740cd29
 # ╟─d6e5fe02-21a5-486c-a237-878be1d95439
 # ╟─2b67233e-76ba-40be-81e2-787fbe5d3641
 # ╟─0314376e-ff8c-4ad0-8a4b-f94f04f31f2c
