@@ -23,8 +23,9 @@ juliaup add 1.7.3
 juliaup default 1.7.3
 ```
 
-#### Alternative
-Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/winnt/x64/1.7/julia-1.7.3-win64.exe).
+<---#### Alternative
+Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/winnt/x64/1.7/julia-1.7.3-win64.exe).--->
+
 </details>
 
 
@@ -49,8 +50,9 @@ juliaup default 1.7.3
 ```
 You may need to `source ~/.bashrc` if `juliaup` is not found after installation.
 
-#### Alternative
-Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/mac/x64/1.7/julia-1.7.3-mac64.dmg)
+<---#### Alternative
+Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/mac/x64/1.7/julia-1.7.3-mac64.dmg)--->
+
 </details>
 
 <details>
@@ -72,8 +74,9 @@ juliaup default 1.7.3
 ```
 You may need to `source ~/.bashrc` if `juliaup` is not found after installation.
 
-#### Alternative
-Alternatively you can download and unpack [this archive](https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz)
+<---#### Alternative
+Alternatively you can download and unpack [this archive](https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz)--->
+
 </details>
 
 #### 4. Installing MLCourse
