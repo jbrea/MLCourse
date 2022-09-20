@@ -8,7 +8,8 @@ You can find an interactive preview of the Pluto notebooks of this course [here]
 To use the code, we recommend downloading Julia version 1.7.3 with `juliaup`.
 
 <details>
-<summary><p>### Windows</p></summary><p>
+<summary>Windows</summary>
+
 #### 1. Install juliaup
 ```
 winget install julia -s msstore
@@ -24,7 +25,7 @@ juliaup default 1.7.3
 
 #### Alternative
 Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/winnt/x64/1.7/julia-1.7.3-win64.exe).
-</p></details>
+</details>
 
 ### Mac
 #### 1. Install juliaup
