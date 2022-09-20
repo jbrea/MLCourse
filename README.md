@@ -80,6 +80,8 @@ Alternatively you can download and unpack [this archive](https://julialang-s3.ju
 </details>
 
 #### 4. Installing MLCourse
+Once you have finished the above steps 1.-3. for your operating system, launch julia and
+run the following code to install the course material.
 ```julia
 julia> using Pkg
        Pkg.activate(temp = true)
