@@ -489,12 +489,20 @@ where we use the indicator function ``χ(\mbox{true}) = 1`` and ``χ(\mbox{false
 1. Generate an artificial dataset that corresponds to 500 experiments of dropping different feathers under different conditions. *Hints:* you can sample from a uniform distribution over the interval ``[a, b]`` using either `rand(500)*(b-a) .+ a` or `rand(Uniform(a, b), 500)` and you can sample categorical values in the same way as we did it in the first week when sampling column C in exercise 1. To implement the indicator function you can use for example the syntax `(s == :s)` and `(s == :f)`.
 2. Create a scatter plot with fluffiness of the feather on the horizontal axis and time to reach the ground on the vertical axis.
 3. Argue, why it looks like the time to reach the ground depended probabilistically on the fluffiness, although we used a deterministic function to compute the time to reach the ground.
+"""
+
+# ╔═╡ 19114da7-441a-4ada-b350-37c65a6211ee
+md"""
 #### Exercise 5
 Change the noise level ``\sigma``, the size of the training data ``n`` and the seed with the sliders of the section "Linear Regression" and observe the training and the test losses. Write down your observations when
 - ``n`` is small.
 - ``n`` is large.
 - Compare training loss and test loss when ``n`` is large for different seed values.
 - Compare for large ``n`` the test error to ``\sigma^2`` for different values of ``\sigma``.
+"""
+
+# ╔═╡ 20fe6494-2214-48e9-9c05-61a5faf9f91f
+md"""
 #### Exercise 6
 Write a data generator function that samples inputs ``x`` normally distributed
    with mean 2 and standard deviation 3. The response ``y\in\{\mbox{true, false}\}``
@@ -607,6 +615,8 @@ MLCourse.footer()
 # ╟─34c49e49-a5e7-48ad-807b-c0624a59a367
 # ╠═f63c0628-eefe-11eb-3125-077e533456d9
 # ╟─f63c0632-eefe-11eb-3b93-8549af7aaed9
+# ╟─19114da7-441a-4ada-b350-37c65a6211ee
+# ╟─20fe6494-2214-48e9-9c05-61a5faf9f91f
 # ╟─0cfbd543-8b9b-406e-b3b4-c6cafbbec212
 # ╟─11e350b2-70bd-437b-acef-af5103a6eb96
 # ╟─e3aa458a-486c-4d5b-a330-67fb68e6f516
