@@ -36,7 +36,9 @@ Alternatively you can download [this installer](https://julialang-s3.julialang.o
 ```
 curl -fsSL https://install.julialang.org | sh
 ```
-or if `brew` is available on the system
+You may need to run `source ~/.bashrc` or `source ~/.bash_profile` or `source ~/.zshrc` if `juliaup` is not found after installation.
+
+Alternatively, if `brew` is available on the system you can install juliaup with
 ```
 brew install juliaup
 ```
@@ -48,7 +50,6 @@ juliaup add 1.7.3
 ```
 juliaup default 1.7.3
 ```
-You may need to `source ~/.bashrc` if `juliaup` is not found after installation.
 
 <!---#### Alternative
 Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/mac/x64/1.7/julia-1.7.3-mac64.dmg)--->
@@ -63,7 +64,9 @@ Alternatively you can download [this installer](https://julialang-s3.julialang.o
 ```
 curl -fsSL https://install.julialang.org | sh
 ```
-Or use the AUR if you are on Arch Linux or `zypper` if you are on openSUSE Tumbleweed.
+You may need to run `source ~/.bashrc` or `source ~/.bash_profile` or `source ~/.zshrc` if `juliaup` is not found after installation.
+
+Alternatively, use the AUR if you are on Arch Linux or `zypper` if you are on openSUSE Tumbleweed.
 #### 2. Add Julia 1.7.3
 ```
 juliaup add 1.7.3
@@ -72,7 +75,6 @@ juliaup add 1.7.3
 ```
 juliaup default 1.7.3
 ```
-You may need to `source ~/.bashrc` if `juliaup` is not found after installation.
 
 <!---#### Alternative
 Alternatively you can download and unpack [this archive](https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz)--->
