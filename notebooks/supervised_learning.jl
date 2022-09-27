@@ -462,7 +462,7 @@ We have some training data ``((x_1 = 0, y_1 = -1), (x_2 = 2, y_2 = 4),
    ``p(y|x) = \frac1{\sqrt{2\pi\sigma^2}}\exp\left(-\frac{(y - \theta_0 - \theta_1 x)^2}{2\sigma^2}\right)``.
    - Write the log-likelihood function of the parameters ``\theta_0`` and ``\theta_1``
      for this data and model.
-   - Find the parameters ``\hat\theta_0`` and ``\hat\theta_1`` that maximize the log-likelihood function and compare your result to the solution we found in our blackboard example of linear regression as a loss minimizing machine.
+   - Find the parameters ``\hat\theta_0`` and ``\hat\theta_1`` that maximize the log-likelihood function. *Hint*: You do not need to solve for the optimal parameters analytically; compare the loss function you derived in the previous step to the one we obtained in the lecture in the first blackboard example and use the fact that we know the optimum for the blackboard example.
    - Show for general training data ``((x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n))`` that the log-likelihood function is maximized by the same ``\hat\theta`` that minimizes the loss function of linear regression.
 #### Exercise 2
    Explain whether each scenario is a classification or regression problem, and
