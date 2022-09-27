@@ -112,6 +112,9 @@ Our goal is to predict the wind speed in Lucerne from 5 hours old measurements.
 weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
                    DataFrame, limit = 5000)
 
+# ╔═╡ 0f475660-ccea-453d-9ee5-96e6d27bc35a
+md"The data that we loaded contains already a column with name `LUZ_wind_peak`. However, this is the measurement of the current wind peak. What we would like to do, is to predict the wind peak in 5 hours. We have hourly measurements. We can see this by looking at the `time` column; `2015010113` means the measurement was done in the 13th hour of the first of January 2015. This means that the wind peak value we would like to predict given the measurements in the first row, is contained in the 6th row of the `LUZ_wind_peak` column, etc. Therefore, we take as our response variable `y` all wind peak measurements from hour 6 to the end of the dataframe and as input data all measurements from hour 1 until 5 hours before the end of the dataframe."
+
 # ╔═╡ f63c052e-eefe-11eb-0884-7bd433ce0c5e
 y = weather.LUZ_wind_peak[6:end] # from hour 6 until the end we take all wind values
 
@@ -211,28 +214,37 @@ mach = machine(LinearRegressor(),         # model
                training_data.y);          # output
 
 # ╔═╡ f63c05ba-eefe-11eb-1b7a-21cbd9bbeb37
-fit!(mach); # fit the machine
+fit!(mach, verbosity = 0); # fit the machine
 
 # ╔═╡ f63c05c4-eefe-11eb-030e-6f7484849852
 fitted_params(mach) # show the result
 
+# ╔═╡ 813238b8-3ce3-4ce8-98f6-cbdcbd1746d6
+md"Here, the `intercept` corresponds to $\theta_0$ in the slides and `coefs[1].second` to $\theta_1$. Why do we need to write `coefs[1].second`? The coefficients returned by the `fitted_params` function are, in general, a vector of pairs (`:x => 2.25` is a pair, with first element the name of the data column this coefficient multiplies and the second element the value of the coefficient.). We can also extract these numbers, e.g."
+
+# ╔═╡ 92bf4b9c-4bda-4430-bd0f-d85e09dd5d54
+fitted_params(mach).intercept
+
+# ╔═╡ 5911642f-151b-4d28-8109-6feb4d418ddf
+fitted_params(mach).coefs[1].second # or fitted_params(mach).coefs[1][2]
+
 # ╔═╡ 25eb24a4-5414-481b-88d5-5ad50d75f8c9
-md"We can use the fitted machine and the `predict` function to compute ŷ (the predictions)."
+md"We can use the fitted machine and the `predict` function to compute $\hat y = \hat\theta_0 + \hat\theta_1 x$ (the predictions)."
 
 # ╔═╡ bd9a7214-f39e-4ae5-995a-6ec02d613fda
-predict(mach) # predictions on the training input
+predict(mach) # predictions on the training input x = [0, 2, 2]
 
 # ╔═╡ f0f6ac8f-2e61-4b08-9383-45ff5b02c5b1
-predict(mach, DataFrame(x = [0.5, 1.5])) # the second argument is the new input.
+predict(mach, DataFrame(x = [0.5, 1.5])) # the second argument is the test input x = [0.5, 1.5]
 
 # ╔═╡ 7336e7b4-a7c2-4409-8d9d-00285cf633fb
 md"Next, we define a function to compute the mean squared error for a given machine `mach` and a data set `data`."
 
 # ╔═╡ f63c05c4-eefe-11eb-2d60-f7bf7beb8118
-L(mach, data) = mean((predict(mach, select(data, :x)) .- data.y).^2);
+my_mse(mach, data) = mean((predict(mach, select(data, :x)) .- data.y).^2);
 
 # ╔═╡ f63c05ce-eefe-11eb-1ccd-c9b7714f3bd5
-L(mach, training_data) # this is the training data
+my_mse(mach, training_data) # this is the training data
 
 # ╔═╡ 8fe94709-3673-44cc-8702-83bd7e2cad51
 md"We can get the same result by squaring the result obtained with the MLJ function `rmse` (root mean squared error)."
@@ -247,8 +259,8 @@ md"For plotting we will define a new function `fitted_linear_func` that extracts
 function fitted_linear_func(mach)
     θ̂ = fitted_params(mach)
     θ̂₀ = θ̂.intercept
-    θ̂₁ = θ̂.coefs[1][2]
-    x -> θ̂₀ + θ̂₁ * x
+    θ̂₁ = θ̂.coefs[1].second
+    x -> θ̂₀ + θ̂₁ * x # an anonymous function
 end;
 
 # ╔═╡ f63c05d8-eefe-11eb-0a2e-970192b02d61
@@ -272,10 +284,10 @@ end;
 md"We can use this generator to create a large test set and compute empirically the test loss of the fitted machine."
 
 # ╔═╡ 4987ad0c-d100-4a5d-a725-12f23bcc7aa3
-L(mach, data_generator(fill(1.5, 10^4), .5)) # test loss at 1.5 for σ = 0.5
+my_mse(mach, data_generator(fill(1.5, 10^4), .5)) # test loss at 1.5 for σ = 0.5
 
 # ╔═╡ 93f529ab-a386-4746-94de-63a536b5e2aa
-L(mach, data_generator(randn(10^4), .5)) # test loss of the joint generator
+my_mse(mach, data_generator(randn(10^4), .5)) # test loss of the joint generator
 
 # ╔═╡ 673a773c-2f6b-4676-8631-49ba08ec28a7
 md"
@@ -302,7 +314,7 @@ begin
 	mach2 = machine(LinearRegressor(),
 	            select(generated_data, :x),
 	            generated_data.y)
-	fit!(mach2)
+	fit!(mach2, verbosity = 0)
 end;
 
 # ╔═╡ f63c0600-eefe-11eb-3779-df58afdb52ad
@@ -313,8 +325,8 @@ begin
 end
 
 # ╔═╡ f63c0600-eefe-11eb-0023-9d5e5ddd987e
-(training_loss = L(mach2, generated_data),
- test_loss = L(mach2, generated_test_data))
+(training_loss = my_mse(mach2, generated_data),
+ test_loss = my_mse(mach2, generated_test_data))
 
 # ╔═╡ 0e6efce9-093a-4758-a649-6cff525711a5
 md"# Distributions
@@ -400,13 +412,13 @@ mach3 = machine(LogisticClassifier(penalty = :none), # model
                 classification_data.y);              # output
 
 # ╔═╡ 9a208086-1fcd-4520-b566-ea295e934d75
-fit!(mach3);
+fit!(mach3, verbosity = 0);
 
 # ╔═╡ 1bbbb7fe-494b-4692-aaa4-e39599851327
 fitted_params(mach3)
 
 # ╔═╡ 38ccf735-5195-4e00-868f-95a895c05985
-md"In the following cell we define the loss function to compute the loss of the optimal parameters (found by the `fit!`)."
+md"In the following cell we define the log-likelihood loss function `ll` to compute the loss of the optimal parameters (found by the `fit!` function). This is the formula we derived in the slides. Note that the training data is somewhat hidden in this formula: the response of the first data point is a B (see above) at x = 0, therefore its probability is `logistic(-(θ[1] + θ[2]*0)) = logistic(-θ[1])` etc."
 
 # ╔═╡ d0c4804f-c66d-4405-a7dc-1e85974e261f
 ll(θ) = log(logistic(-θ[1])) +
@@ -486,9 +498,9 @@ In this exercise we construct an example, where the response looks noisy, if we 
 g(f, s, ρ, w) = ρ + 0.1f^2 + 0.3w + 2χ(s = \mbox{s}) + 0.5χ(s = \mbox{e})
 ```
 where we use the indicator function ``χ(\mbox{true}) = 1`` and ``χ(\mbox{false}) = 0``.
-1. Generate an artificial dataset that corresponds to 500 experiments of dropping different feathers under different conditions. *Hints:* you can sample from a uniform distribution over the interval ``[a, b]`` using either `rand(500)*(b-a) .+ a` or `rand(Uniform(a, b), 500)` and you can sample categorical values in the same way as we did it in the first week when sampling column C in exercise 1. To implement the indicator function you can use for example the syntax `(s == :s)` and `(s == :f)`.
+1. Generate an artificial dataset that corresponds to 500 experiments of dropping different feathers under different conditions. *Hints:* you can sample from a uniform distribution over the interval ``[a, b]`` using either `rand(500)*(b-a) .+ a` or `rand(Uniform(a, b), 500)` and you can sample categorical values in the same way as we did it in the first week when sampling column C in exercise 1. To implement the indicator function you can use for example the syntax `(s == :s)` and `(s == :e)`.
 2. Create a scatter plot with fluffiness of the feather on the horizontal axis and time to reach the ground on the vertical axis.
-3. Argue, why it looks like the time to reach the ground depended probabilistically on the fluffiness, although we used a deterministic function to compute the time to reach the ground.
+3. Argue, why it looks like the time to reach the ground depended probabilistically on the fluffiness, although we used a deterministic function to compute the time to reach the ground. *Optional*: If you feel courageous, use a mathematical argument (marginalization) that uses the fact that $P(t|f, s, \rho, w) = \delta(t - g(f, s, \rho, w))$ is deterministic and shows that $P(t|f)$ is a non-degenerate conditional distribution.
 """
 
 # ╔═╡ 19114da7-441a-4ada-b350-37c65a6211ee
@@ -512,7 +524,7 @@ Write a data generator function that samples inputs ``x`` normally distributed
    - Fit the data with logistic regression.
    - Look at the fitted parameters.
    - Predict the probability of class `true` on the training input
-   - Determine the class with highest predicted probability and compare the result to the labels of the training set.
+   - Determine the class with highest predicted probability and compare the result to the labels of the training set. *Hint*: use the `pdf` function.
    - Create a test set of size ``n = 10^4`` where the input is always at ``x = 4``. Estimate the average test error at ``x = 4`` using this test set. Use the negative log-likelihood as error function.
    - Compute the test error at ``x = 4`` using the fitted parameters and compare your result to the previous result. *Hint:* Have a look at the slides for how to compute the test error when the parameters of the generator and the fitted function are known.
    - Rerun your solution with different training sets of size ``n = 20`` and write down your observations.
@@ -543,6 +555,7 @@ MLCourse.footer()
 # ╠═f63c0524-eefe-11eb-3abd-63d677b12db9
 # ╟─f63c0524-eefe-11eb-3732-258d6989e217
 # ╠═f63c052e-eefe-11eb-3a14-e5e8f3d578a8
+# ╟─0f475660-ccea-453d-9ee5-96e6d27bc35a
 # ╠═f63c052e-eefe-11eb-0884-7bd433ce0c5e
 # ╠═f63c0538-eefe-11eb-2a4b-d19efe6b6689
 # ╠═f63c0538-eefe-11eb-2eca-2d8bf12fae95
@@ -566,6 +579,9 @@ MLCourse.footer()
 # ╠═f63c05ba-eefe-11eb-18b5-7522b326ab65
 # ╠═f63c05ba-eefe-11eb-1b7a-21cbd9bbeb37
 # ╠═f63c05c4-eefe-11eb-030e-6f7484849852
+# ╟─813238b8-3ce3-4ce8-98f6-cbdcbd1746d6
+# ╠═92bf4b9c-4bda-4430-bd0f-d85e09dd5d54
+# ╠═5911642f-151b-4d28-8109-6feb4d418ddf
 # ╟─25eb24a4-5414-481b-88d5-5ad50d75f8c9
 # ╠═bd9a7214-f39e-4ae5-995a-6ec02d613fda
 # ╠═f0f6ac8f-2e61-4b08-9383-45ff5b02c5b1
