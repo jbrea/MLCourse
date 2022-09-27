@@ -523,8 +523,8 @@ Write a data generator function that samples inputs ``x`` normally distributed
    - Create a training set of size ``n = 20``.
    - Fit the data with logistic regression.
    - Look at the fitted parameters.
-   - Predict the probability of class `true` on the training input
-   - Determine the class with highest predicted probability and compare the result to the labels of the training set. *Hint*: use the `pdf` function.
+   - Predict the probability of class `true` on the training input.  *Hint*: use the `pdf` function.
+   - Determine the class with highest predicted probability and compare the result to the labels of the training set.
    - Create a test set of size ``n = 10^4`` where the input is always at ``x = 4``. Estimate the average test error at ``x = 4`` using this test set. Use the negative log-likelihood as error function.
    - Compute the test error at ``x = 4`` using the fitted parameters and compare your result to the previous result. *Hint:* Have a look at the slides for how to compute the test error when the parameters of the generator and the fitted function are known.
    - Rerun your solution with different training sets of size ``n = 20`` and write down your observations.
