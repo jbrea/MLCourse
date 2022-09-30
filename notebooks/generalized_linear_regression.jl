@@ -226,52 +226,6 @@ rmse(predict(m2, select(weather_test[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
 # ╔═╡ 2724c9b7-8caa-4ba7-be5c-2a9095281cfd
 md"We see that both the training and the test error is lower, when using multiple predictors instead of just one. This also holds true if we use all the data, where the training error is 8.1 km/h and the test error is 8.9 km/h."
 
-# ╔═╡ 99a371b2-5158-4c42-8f50-329352b6c1f2
-md"# Error Decomposition
-
-In the following cells we look at error decomposition discussed in the slides.
-"
-
-# ╔═╡ f10b7cad-eda3-4ec9-99ee-d43ed013a057
-begin
-    f(x) = sin(2x) + 2*(x - .5)^3 - .5x
-    conditional_generator(x; n = 50) = f.(x) .+ .2*randn(n)
-end;
-
-# ╔═╡ 05354df5-a803-422f-87a3-1c56a34e8a48
-f̂(x) = 0.1 + x
-
-# ╔═╡ 3d77d753-b247-4ead-a385-7cbbcfc3190b
-md"The expected error of a function `f` at point `x` for our `conditional_generator` can be estimated by computing the mean squared error for many samples obtained from this generator."
-
-# ╔═╡ 9e61b4c3-1a9f-41a7-9882-25ed797a7b8d
-expected_error(f, x) = mean((conditional_generator(x, n = 10^6) .- f(x)).^2);
-
-# ╔═╡ c6a59b85-d031-4ad4-9e24-691494d08cde
-expected_error(f̂, .1) # estimated total expected error
-
-# ╔═╡ e50b8196-e804-473a-b3b5-e22fdb9d2f45
-(f(.1) - f̂(.1))^2 # reducible error
-
-# ╔═╡ f413ea94-36ca-4afc-8ca8-9a7e88101980
-expected_error(f, .1) # estimated irreducible error
-
-# ╔═╡ 2bfa1a57-b171-44c3-b0d7-b8dda48d26d7
-md"Instead of using estimates for the irreducible error we could just compute it in this simple example: it is ``\sigma^2 = 0.04``. In the figure below we look at the expected, reducible and irreducible errors as a function of ``x``."
-
-# ╔═╡ dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
-let x = rand(100), grid = 0:.05:1
-    p1 = scatter(x, vcat(conditional_generator.(x, n = 1)...), label = "samples")
-    plot!(f, label = "f")
-    plot!(f̂, label = "f̂")
-    p2 = plot(grid, expected_error.(f̂, grid), label = "expected error f̂", w = 3)
-    plot!(grid, (f.(grid) .- f̂.(grid)).^2, label = "reducible error", w = 3)
-    hline!([.2^2], label = "irreducible error", ylims = (0, .15), w = 3, xlabel = "x")
-    plot(p1, p2, layout = (2, 1), legend = :right, ylabel = "y")
-end
-
-# ╔═╡ db2c6bd4-ee6f-4ba9-b6ec-e7cf94389f93
-md"With machine learning we cannot remove the irreducible error. But in cases where accurate prediction is the goal, we should try to minimize the reducible error for all inputs ``x`` we care about."
 
 # ╔═╡ ad5b293d-c0f4-4693-84f4-88308639a501
 md"# Logistic Regression
@@ -640,24 +594,27 @@ Suppose we have a data set with three predictors, ``X_1`` = Final Grade, ``X_2``
 Suppose we collect data for a group of students in a machine learning class with variables ``X_1 =`` hours studied, ``X_2 =`` grade in statistics class, and ``Y =`` receive a 6 in the machine learning class. We fit a logistic regression and produce estimated coefficients, ``\hat{\beta}_0 = -6``, ``\hat{\beta}_1 = 0.025``, ``\hat{\beta}_2 = 1``.
    - Estimate the probability that a student who studies for 75 hours and had a 4 in the statistics class gets a 6 in the machine learning class.
    - How many hours would the above student need to study to have a 50% chance of getting an 6 in the machine learning class?
-3. In this exercise we will derive the loss function implicitly defined by maximum likelihood estimation of the parameters in a classification setting with multiple classes. Remember that the input ``f(x)`` of the softmax function ``s`` is a vector-valued function. Here we assume a linear function ``f`` and write the ``i``th component of this function as ``f_i(x) = \theta_{i0} + \theta_{i1}x_1 + \cdots + \theta_{ip}x_p``. Note that each component ``i`` has now its own parameters ``\theta_{i0}`` to ``\theta_{ip}``. Using matrix multiplication we can also write ``f(x) = \theta x`` where ``\theta = \left(\begin{array}{ccc}\theta_{10} & \cdots & \theta_{1p}\\\vdots & \ddots & \cdots\\\theta_{K0} & \cdots & \theta_{Kp}\end{array}\right)`` is a ``K\times(p+1)`` dimensional matrix and ``x = (1, x_1, x_2, \ldots, x_p)`` is a column vector of length ``p+1``.
+#### Exercise 3
+In this exercise we will derive the loss function implicitly defined by maximum likelihood estimation of the parameters in a classification setting with multiple classes. Remember that the input ``f(x)`` of the softmax function ``s`` is a vector-valued function. Here we assume a linear function ``f`` and write the ``i``th component of this function as ``f_i(x) = \theta_{i0} + \theta_{i1}x_1 + \cdots + \theta_{ip}x_p``. Note that each component ``i`` has now its own parameters ``\theta_{i0}`` to ``\theta_{ip}``. Using matrix multiplication we can also write ``f(x) = \theta x`` where ``\theta = \left(\begin{array}{ccc}\theta_{10} & \cdots & \theta_{1p}\\\vdots & \ddots & \cdots\\\theta_{K0} & \cdots & \theta_{Kp}\end{array}\right)`` is a ``K\times(p+1)`` dimensional matrix and ``x = (1, x_1, x_2, \ldots, x_p)`` is a column vector of length ``p+1``.
     - Write the log-likelihood function for a classification problem with ``K`` classes. *Hint*: to simplify the notation we can use the convention ``s_y(f(x)) = P(y|x)`` to write the conditional probability of class ``y`` given input ``x``. This convention makes sense when the classes are identified by the integers ``1, 2, \ldots, K``; in this case ``s_y(f(x))`` is the ``y``th component of ``s(f(x))``. Otherwise we would could specify a mapping from classes ``C_1, C_2, \ldots, C_K`` to the integers ``1, 2, \ldots, K`` for this convention to make sense.
     - Assume now ``K = 3`` and ``p = 2``. Explicitly write the loss function for the training set ``\mathcal D = ((x_1 = (0, 0), y_1 = C), (x_2 = (3, 0), y_2 = A), (x_3 = (0, 2), y_3 = B))``.
     - Assume ``K = 2`` and ``p = 1`` and set ``\theta_{20} = 0`` and ``\theta_{21} = 0``. Show that we recover standard logistic regression in this case. *Hint*: show that ``s_1(f(x)) = \sigma(f_1(x))`` and ``s_2(f(x)) = 1 - \sigma(f_1(x))``, where ``s`` is the softmax function and ``\sigma(x) = 1/(1 + e^{-x})`` is the logistic function.
     - Show that one can always set ``\theta_{K0}, \theta_{K1}, \ldots, \theta_{Kp}`` to zero. *Hint* Show that the softmax function with the transformed parameters ``\tilde\theta_{ij}=\theta_{ij} - \theta_{Kj}`` has the same value as the softmax function in the original parameters.
 
 ## Applied
-#### Exercise 3
+#### Exercise 4
 In the multiple linear regression of the weather data set above we used all
    available predictors. We do not know if all of them are relevant. In this exercise our aim is to find models with fewer predictors and quantify the loss in prediction accuracy.
 - Systematically search for the model with at most 2 predictors that has the lowest test rmse. *Hint* write a function `train_and_evaluate` that takes the training and the test data as input as well as an array of two predictors; remember that `data[:, [\"A\", \"B\"]]` returns a sub-dataframe with columns \"A\" and \"B\". This function should fit a `LinearRegressor` on the training set with those two predictors and return the test rmse for the two predictors. To get a list of all pairs of predictors you can use something like `predictors = setdiff(names(train), ["time", "LUZ_wind_peak"]); predictor_pairs = [[p1, p2] for p1 in predictors, p2 in predictors if p1 != p2 && p1 > p2]`
 - How much higher is the test error compared to the fit with all available predictors?
 - How many models did you have to fit to find your result above?
 - How many models would you have to fit to find the best model with at most 5 predictors? *Hint* the function `binomial` may be useful.
-#### Exercise 4
-- Read the section on [scientific types in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types).
-- Coerce the `count` variable of the bike sharing data to `Continuous` and fit a linear model (`LinearRegressor`) with predictors `:temp` and `:humidity`. Compare the predictions of this model with the ones from the `LinearCountRegressor` and comment on the differences.
 #### Exercise 5
+- Read the section on [scientific types in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types).
+- Coerce the `count` variable of the bike sharing data to `Continuous` and fit a linear model (`LinearRegressor`) with predictors `:temp` and `:humidity`. 
+Create a scatter plot with the true counts `bikesharing.count` on the x-axis and the predicted mode (`predict_mode`) of the counts for the Poisson model and the linear regression model on the y-axis. If the model perfectly captures the data, the plotted points should lie on the diagonal; you can add `plot!(identity)` to the figure to display the diagonal.
+Comment on the differences you see in the plot between the Poisson model and the linear regression model.
+#### Exercise 6
 In this exercise we perform linear classification of the MNIST handwritten digits
    dataset.
    - Load the MNIST data set with `using OpenML; mnist = OpenML.load(554) |> DataFrame; dropmissing!(mnist);`
@@ -713,17 +670,6 @@ MLCourse.footer()
 # ╠═2d25fbb6-dc9b-40ad-bdce-4c952cdad077
 # ╠═c9f10ace-3299-45fb-b98d-023a35dd405a
 # ╟─2724c9b7-8caa-4ba7-be5c-2a9095281cfd
-# ╟─99a371b2-5158-4c42-8f50-329352b6c1f2
-# ╠═f10b7cad-eda3-4ec9-99ee-d43ed013a057
-# ╠═05354df5-a803-422f-87a3-1c56a34e8a48
-# ╟─3d77d753-b247-4ead-a385-7cbbcfc3190b
-# ╠═9e61b4c3-1a9f-41a7-9882-25ed797a7b8d
-# ╠═c6a59b85-d031-4ad4-9e24-691494d08cde
-# ╠═e50b8196-e804-473a-b3b5-e22fdb9d2f45
-# ╠═f413ea94-36ca-4afc-8ca8-9a7e88101980
-# ╟─2bfa1a57-b171-44c3-b0d7-b8dda48d26d7
-# ╟─dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
-# ╟─db2c6bd4-ee6f-4ba9-b6ec-e7cf94389f93
 # ╟─ad5b293d-c0f4-4693-84f4-88308639a501
 # ╠═210b977d-7136-407f-a1c9-eeea869d0312
 # ╠═72969aca-b203-4d83-8923-74e523aa1c01

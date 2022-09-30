@@ -48,6 +48,9 @@ md"In this notebook we have a first look at some data sets and the MLJ machine l
 # ╔═╡ f63c04e8-eefe-11eb-1a14-8305504a6f1c
 mnist = OpenML.load(554, maxbytes = 10^5) |> DataFrame;
 
+# ╔═╡ 4d88feca-602a-44a6-8828-676918e37840
+mnist
+
 # ╔═╡ f63c04f2-eefe-11eb-2562-e530426e4300
 md"With the keyword argument `maxbytes = 10^5`, we load only a small fraction of the dataset. We can load the full dataset by omitting this argument or setting it to `maxbytes = typemax(Int)`. With the semicolon we omit the output of a cell.
 "
@@ -542,6 +545,7 @@ MLCourse.footer()
 # ╟─f63c04dc-eefe-11eb-1e24-1d02a686920a
 # ╠═f63c04e8-eefe-11eb-39f6-83b31ebe73e7
 # ╠═f63c04e8-eefe-11eb-1a14-8305504a6f1c
+# ╠═4d88feca-602a-44a6-8828-676918e37840
 # ╟─f63c04f2-eefe-11eb-2562-e530426e4300
 # ╠═f63c04f2-eefe-11eb-3ceb-ff1e36a2a302
 # ╠═f63c04fc-eefe-11eb-35b6-5345dda134e7

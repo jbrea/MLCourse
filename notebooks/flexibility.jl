@@ -331,6 +331,50 @@ We find a misclassification rate of approximately 3%. This is clearly better tha
 approximately 7.8% obtained with Multinomial Logistic Regression.
 "
 
+# ╔═╡ 99a371b2-5158-4c42-8f50-329352b6c1f2
+md"# Error Decomposition
+
+In the following cells we look at error decomposition discussed in the slides.
+"
+
+# ╔═╡ f10b7cad-eda3-4ec9-99ee-d43ed013a057
+conditional_generator(x; n = 50) = f.(x) .+ .2*randn(n)
+
+# ╔═╡ 05354df5-a803-422f-87a3-1c56a34e8a48
+f̂(x) = 0.1 + x
+
+# ╔═╡ 3d77d753-b247-4ead-a385-7cbbcfc3190b
+md"The expected error of a function `f` at point `x` for our `conditional_generator` can be estimated by computing the mean squared error for many samples obtained from this generator."
+
+# ╔═╡ 9e61b4c3-1a9f-41a7-9882-25ed797a7b8d
+expected_error(f, x) = mean((conditional_generator(x, n = 10^6) .- f(x)).^2);
+
+# ╔═╡ c6a59b85-d031-4ad4-9e24-691494d08cde
+expected_error(f̂, .1) # estimated total expected error
+
+# ╔═╡ e50b8196-e804-473a-b3b5-e22fdb9d2f45
+(f(.1) - f̂(.1))^2 # reducible error
+
+# ╔═╡ f413ea94-36ca-4afc-8ca8-9a7e88101980
+expected_error(f, .1) # estimated irreducible error
+
+# ╔═╡ 2bfa1a57-b171-44c3-b0d7-b8dda48d26d7
+md"Instead of using estimates for the irreducible error we could just compute it in this simple example: it is ``\sigma^2 = 0.04``. In the figure below we look at the expected, reducible and irreducible errors as a function of ``x``."
+
+# ╔═╡ dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
+let x = rand(100), grid = 0:.05:1
+    p1 = scatter(x, vcat(conditional_generator.(x, n = 1)...), label = "samples")
+    plot!(f, label = "f")
+    plot!(f̂, label = "f̂")
+    p2 = plot(grid, expected_error.(f̂, grid), label = "expected error f̂", w = 3)
+    plot!(grid, (f.(grid) .- f̂.(grid)).^2, label = "reducible error", w = 3)
+    hline!([.2^2], label = "irreducible error", ylims = (0, .4), w = 3, xlabel = "x")
+    plot(p1, p2, layout = (2, 1), legend = :topleft, ylabel = "y")
+end
+
+# ╔═╡ db2c6bd4-ee6f-4ba9-b6ec-e7cf94389f93
+md"With machine learning we cannot remove the irreducible error. But in cases where accurate prediction is the goal, we should try to minimize the reducible error for all inputs ``x`` we care about."
+
 # ╔═╡ f6093c98-7e89-48ba-95c9-4d1f60a25033
 md"# Bias-Variance Decomposition
 
@@ -471,6 +515,17 @@ MLCourse.footer()
 # ╟─12942fc8-efb1-11eb-0c02-0150ef55ae98
 # ╟─0a57f15b-c292-4c64-986d-f046260da66e
 # ╟─cc8ed1de-beab-43e5-979e-e83df23f96ae
+# ╟─99a371b2-5158-4c42-8f50-329352b6c1f2
+# ╠═f10b7cad-eda3-4ec9-99ee-d43ed013a057
+# ╠═05354df5-a803-422f-87a3-1c56a34e8a48
+# ╟─3d77d753-b247-4ead-a385-7cbbcfc3190b
+# ╠═9e61b4c3-1a9f-41a7-9882-25ed797a7b8d
+# ╠═c6a59b85-d031-4ad4-9e24-691494d08cde
+# ╠═e50b8196-e804-473a-b3b5-e22fdb9d2f45
+# ╠═f413ea94-36ca-4afc-8ca8-9a7e88101980
+# ╟─2bfa1a57-b171-44c3-b0d7-b8dda48d26d7
+# ╟─dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
+# ╟─db2c6bd4-ee6f-4ba9-b6ec-e7cf94389f93
 # ╟─f6093c98-7e89-48ba-95c9-4d1f60a25033
 # ╠═376d62fc-2859-422d-9944-bd9c7929f942
 # ╟─021f812a-b52a-46a3-b81a-fa1bfefff295
