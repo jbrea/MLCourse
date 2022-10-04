@@ -209,7 +209,7 @@ m2 = machine(LinearRegressor(),
 fit!(m2, verbosity = 0);
 
 # ╔═╡ fac51c63-f227-49ac-89f9-205bf03e7c08
-md"Let us have a look at the fitted parameters. For example, we can conclude that an increase of pressure in Luzern by 1hPa correlates with a decrease of almost 3km/h of the expected wind peaks - everything else being the same. This result is consistent with our expectation that high pressure locally is usually accompanied by good weather without strong winds. On the other hand, an increase of pressure in Genève by 1hPa correlates with an increase of more than 3km/h of the expected wind peaks. This result is also consistent with our expectations, given that stormy west wind weather occurs usually when there is a pressure gradient from south west to north east of Switzerland. Note also that the parameter for pressure in Pully (50 km north east from Genève) is -2km/h⋅hPa, i.e. when the pressure in Pully is the same as in Genève these two contributions to the prediction almost compensate each other."
+md"Let us have a look at the fitted parameters. For example, we can conclude that an increase of pressure in Luzern by 1hPa correlates with a decrease of almost 2km/h of the expected wind peaks - everything else being the same. This result is consistent with our expectation that high pressure locally is usually accompanied by good weather without strong winds. On the other hand, an increase of pressure in Genève by 1hPa correlates with an increase of more than 5km/h of the expected wind peaks. This result is also consistent with our expectations, given that stormy west wind weather occurs usually when there is a pressure gradient from south west to north east of Switzerland. Note also that the parameter for pressure in Pully (50 km north east from Genève) is -4.4km/h⋅hPa, i.e. when the pressure in Pully is the same as in Genève these two contributions to the prediction almost compensate each other."
 
 # ╔═╡ 618ef3c7-0fda-4970-88e8-1dac195545de
 sort!(DataFrame(predictor = names(select(weather, Not([:LUZ_wind_peak, :time]))),
@@ -242,6 +242,9 @@ representation of our emails:
     predictors (one for each word in the lexicon) with ``x_{ij}`` measuring how
     often word ``j`` appears in document ``i``, normalized by the number of
     lexicon words in each email (such that the elements in every row sum to 1).
+
+The code in this section is a bit advanced and it can be skipped at first reading.
+The important point to remember here is that one may need to do quite some preprocessing of the raw data in order to apply certain machine learning methods to the data. Later in the course, we will see that one can apply other machine learning methods directly on the character-level representation of the emails.
 "
 
 # ╔═╡ 210b977d-7136-407f-a1c9-eeea869d0312
@@ -310,12 +313,6 @@ and the samples.
 decision threshold = $(@bind thresh Slider(.01:.01:1, default = .5, show_value = true))
 "
 
-# ╔═╡ 26d957aa-36d4-4b90-9b91-2d9d883877ea
-begin
-	Random.seed!(123)
-	samples = (X1 = 6 * rand(200) .- 3, X2 = 6 * rand(200) .- 3)
-end;
-
 # ╔═╡ fd4165dc-c3e3-4c4c-9605-167b5b4416da
 md"## Confusion Matrix, ROC and AUC"
 
@@ -341,9 +338,16 @@ begin
     end
 end;
 
+# ╔═╡ 26d957aa-36d4-4b90-9b91-2d9d883877ea
+begin
+	Random.seed!(123)
+	samples = (X1 = 6 * rand(200) .- 3, X2 = 6 * rand(200) .- 3)
+    f(x1, x2, θ₀ = θ₀, θ₁ = θ₁, θ₂ = θ₂) = logistic(θ₀ + θ₁ * x1 + θ₂ * x2)
+end;
+
 # ╔═╡ 4f89ceab-297f-4c2c-9029-8d2d7fad084f
-let f(x1, x2) = logistic(θ₀ + θ₁ * x1 + θ₂ * x2)
-    Random.seed!(17)
+let 
+	Random.seed!(17)
     xgrid = -3:.25:3; ygrid = -3:.25:3
     wireframe = [[PP.scatter3d(x = fill(x, length(ygrid)),
                                y = ygrid, z = f.(x, ygrid),
@@ -595,11 +599,11 @@ Suppose we collect data for a group of students in a machine learning class with
    - Estimate the probability that a student who studies for 75 hours and had a 4 in the statistics class gets a 6 in the machine learning class.
    - How many hours would the above student need to study to have a 50% chance of getting an 6 in the machine learning class?
 #### Exercise 3
-In this exercise we will derive the loss function implicitly defined by maximum likelihood estimation of the parameters in a classification setting with multiple classes. Remember that the input ``f(x)`` of the softmax function ``s`` is a vector-valued function. Here we assume a linear function ``f`` and write the ``i``th component of this function as ``f_i(x) = \theta_{i0} + \theta_{i1}x_1 + \cdots + \theta_{ip}x_p``. Note that each component ``i`` has now its own parameters ``\theta_{i0}`` to ``\theta_{ip}``. Using matrix multiplication we can also write ``f(x) = \theta x`` where ``\theta = \left(\begin{array}{ccc}\theta_{10} & \cdots & \theta_{1p}\\\vdots & \ddots & \cdots\\\theta_{K0} & \cdots & \theta_{Kp}\end{array}\right)`` is a ``K\times(p+1)`` dimensional matrix and ``x = (1, x_1, x_2, \ldots, x_p)`` is a column vector of length ``p+1``.
-    - Write the log-likelihood function for a classification problem with ``K`` classes. *Hint*: to simplify the notation we can use the convention ``s_y(f(x)) = P(y|x)`` to write the conditional probability of class ``y`` given input ``x``. This convention makes sense when the classes are identified by the integers ``1, 2, \ldots, K``; in this case ``s_y(f(x))`` is the ``y``th component of ``s(f(x))``. Otherwise we would could specify a mapping from classes ``C_1, C_2, \ldots, C_K`` to the integers ``1, 2, \ldots, K`` for this convention to make sense.
-    - Assume now ``K = 3`` and ``p = 2``. Explicitly write the loss function for the training set ``\mathcal D = ((x_1 = (0, 0), y_1 = C), (x_2 = (3, 0), y_2 = A), (x_3 = (0, 2), y_3 = B))``.
-    - Assume ``K = 2`` and ``p = 1`` and set ``\theta_{20} = 0`` and ``\theta_{21} = 0``. Show that we recover standard logistic regression in this case. *Hint*: show that ``s_1(f(x)) = \sigma(f_1(x))`` and ``s_2(f(x)) = 1 - \sigma(f_1(x))``, where ``s`` is the softmax function and ``\sigma(x) = 1/(1 + e^{-x})`` is the logistic function.
-    - Show that one can always set ``\theta_{K0}, \theta_{K1}, \ldots, \theta_{Kp}`` to zero. *Hint* Show that the softmax function with the transformed parameters ``\tilde\theta_{ij}=\theta_{ij} - \theta_{Kj}`` has the same value as the softmax function in the original parameters.
+In this exercise we will familiarize ourselves with the loss function implicitly defined by maximum likelihood estimation of the parameters in a classification setting with multiple classes. Remember that the input ``f(x)`` of the softmax function ``s`` is a vector-valued function. Here we assume a linear function ``f`` and write the ``i``th component of this function as ``f_i(x) = \theta_{i0} + \theta_{i1}x_1 + \cdots + \theta_{ip}x_p``. Note that each component ``i`` has now its own parameters ``\theta_{i0}`` to ``\theta_{ip}``. Using matrix multiplication we can also write ``f(x) = \theta x`` where ``\theta = \left(\begin{array}{ccc}\theta_{10} & \cdots & \theta_{1p}\\\vdots & \ddots & \cdots\\\theta_{K0} & \cdots & \theta_{Kp}\end{array}\right)`` is a ``K\times(p+1)`` dimensional matrix and ``x = (1, x_1, x_2, \ldots, x_p)`` is a column vector of length ``p+1``.
+- Write the log-likelihood function for a classification problem with ``n`` data points, ``p`` input dimensions and ``K`` classes and simplify the expression as much as you can. *Hint*: to simplify the notation we can use the convention ``s_y(f(x)) = P(y|x)`` to write the conditional probability of class ``y`` given input ``x`` and $\theta_{y_ij}$ for the parameter in the $y_i$th row and $j$th column of the parameter matrix. This convention makes sense when the classes are identified by the integers ``1, 2, \ldots, K``; in this case ``s_y(f(x))`` is the ``y``th component of ``s(f(x))``. Otherwise we would could specify a mapping from classes ``C_1, C_2, \ldots, C_K`` to the integers ``1, 2, \ldots, K`` for this convention to make sense.
+- Assume now ``K = 3`` and ``p = 2``. Explicitly write the loss function for the training set ``\mathcal D = ((x_1 = (0, 0), y_1 = C), (x_2 = (3, 0), y_2 = A), (x_3 = (0, 2), y_3 = B))``. *Hint:* Choose yourselve a mapping from classes ``A, B, C`` to indices ``1, 2, 3``.
+- Assume ``K = 2`` and ``p = 1`` and set ``\theta_{20} = 0`` and ``\theta_{21} = 0``. Show that we recover standard logistic regression in this case. *Hint*: show that ``s_1(f(x)) = \sigma(f_1(x))`` and ``s_2(f(x)) = 1 - \sigma(f_1(x))``, where ``s`` is the softmax function and ``\sigma(x) = 1/(1 + e^{-x})`` is the logistic function.
+- Show that one can always set ``\theta_{K0}, \theta_{K1}, \ldots, \theta_{Kp}`` to zero. *Hint* Show that the softmax function with the transformed parameters ``\tilde\theta_{ij}=\theta_{ij} - \theta_{Kj}`` has the same value as the softmax function in the original parameters.
 
 ## Applied
 #### Exercise 4
@@ -609,11 +613,19 @@ In the multiple linear regression of the weather data set above we used all
 - How much higher is the test error compared to the fit with all available predictors?
 - How many models did you have to fit to find your result above?
 - How many models would you have to fit to find the best model with at most 5 predictors? *Hint* the function `binomial` may be useful.
+"""
+
+# ╔═╡ b3a2cc60-f58c-4d07-93fc-19c80a6dd4da
+md"""
 #### Exercise 5
 - Read the section on [scientific types in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types).
 - Coerce the `count` variable of the bike sharing data to `Continuous` and fit a linear model (`LinearRegressor`) with predictors `:temp` and `:humidity`. 
-Create a scatter plot with the true counts `bikesharing.count` on the x-axis and the predicted mode (`predict_mode`) of the counts for the Poisson model and the linear regression model on the y-axis. If the model perfectly captures the data, the plotted points should lie on the diagonal; you can add `plot!(identity)` to the figure to display the diagonal.
+Create a scatter plot with the true counts `bikesharing.count` on the x-axis and the predicted mode (`predict_mode`) of the counts for the linear regression model and the Poisson model on the y-axis. If the model perfectly captures the data, the plotted points should lie on the diagonal; you can add `plot!(identity)` to the figure to display the diagonal.
 Comment on the differences you see in the plot between the Poisson model and the linear regression model.
+"""
+
+# ╔═╡ a52e3700-db5b-439e-9e43-0cde9a283c38
+md"""
 #### Exercise 6
 In this exercise we perform linear classification of the MNIST handwritten digits
    dataset.
@@ -624,6 +636,7 @@ In this exercise we perform linear classification of the MNIST handwritten digit
    - Compute the misclassification rate and the confusion matrix on the training set.
    - Use as test data rows 60001 to 70000 and compute the misclassification rate
      and the confusion matrix on this test set.
+   - Plot some of the correctly classified test images.
    - Plot some of the wrongly classified training and test images.
      Are they also difficult for you to classify?
 """
@@ -729,5 +742,7 @@ MLCourse.footer()
 # ╠═b8bb7c85-0be8-4a87-96da-4e1b37aea96d
 # ╠═d3d7fa67-ca7d-46e1-b705-e30ec9b09f6a
 # ╟─8b0451bf-59b0-4e71-be84-549e23b5bfe7
+# ╟─b3a2cc60-f58c-4d07-93fc-19c80a6dd4da
+# ╟─a52e3700-db5b-439e-9e43-0cde9a283c38
 # ╟─20c5c7bc-664f-4c04-8215-8f3a9a2095c9
 # ╟─7f08fcaa-000d-422d-80b4-e58a2f489d74
