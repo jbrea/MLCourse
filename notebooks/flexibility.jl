@@ -41,20 +41,28 @@ with two predictors.
 In this section we will see that standard linear regression or classification is not flexible enough to fit the artifical data sets.
 "
 
+# ╔═╡ eb6a04cc-4455-487f-9857-7c3875b67cc7
+md"In this cell we can control the noise level of the data generating process for the regression task; σ\_gen for the regression task is the standard deviation of the conditional Gaussian distribution and s\_gen is the steepness of the logistic function in the data generating process of the classification task.
+
+σ\_gen = $(@bind σ_gen Slider(.01:.01:.3, default = .1, show_value = true))
+
+s\_gen = $(@bind s_gen Slider(5:50, default = 20, show_value = true))
+"
+
 # ╔═╡ 12942f5a-efb1-11eb-399a-a1300d636217
 begin
     f(x) = .3 * sin(10x) + .7x
     # f(x) = .0015*(12x-6)^4 -.035(12x-6)^2 + .5x + .2  # an alternative
 	σ(x) = 1 / (1 + exp(-x))
-    function regression_data_generator(; n, rng = Random.GLOBAL_RNG)
+    function regression_data_generator(; n, σ = σ_gen, rng = Random.GLOBAL_RNG)
         x = rand(rng, n)
-        DataFrame(x = x, y = f.(x) .+ .1*randn(rng, n))
+        DataFrame(x = x, y = f.(x) .+ σ*randn(rng, n))
     end
-    function classification_data_generator(; n, rng = Random.GLOBAL_RNG)
+    function classification_data_generator(; n, s = s_gen, rng = Random.GLOBAL_RNG)
         X1 = rand(rng, n)
         X2 = rand(rng, n)
         df = DataFrame(X1 = X1, X2 = X2,
-                       y = categorical(σ.(20(f.(X1) .- X2)) .> rand(rng, n),
+                       y = categorical(σ.(s*(f.(X1) .- X2)) .> rand(rng, n),
 					                   levels = [false, true], ordered = true))
     end
 end;
@@ -171,17 +179,6 @@ md"## Polynomial Classification"
 MLJ.transform(machine(Polynomial(degree = 2, predictors = (:X1, :X2))),
 	          classification_data)
 
-# ╔═╡ 59acced5-16eb-49b8-8cf2-0c43a88d838e
-md"degree = $(@bind degree2 Slider(1:17, default = 3, show_value = true))"
-
-# ╔═╡ 2fa54070-e261-462d-bd63-c225b92fa876
-m4 = machine(Polynomial(degree = degree2, predictors = (:X1, :X2)) |> LogisticClassifier(penalty = :none),
-             select(classification_data, Not(:y)),
-             classification_data.y);
-
-# ╔═╡ e0acbf00-f6de-483b-902b-31db99298da7
-fit!(m4, verbosity = 0);
-
 # ╔═╡ 16f0d1b3-bd97-407d-9a79-25b0fb05bbeb
 begin
     classification_test_data = classification_data_generator(n = 10^4)
@@ -195,12 +192,23 @@ begin
                    end
                    for d in 1:17]...)
     c_irred_error = let data = classification_test_data,
-                        p = σ.(20(f.(data.X1) .- data.X2))
+                        p = σ.(s_gen * (f.(data.X1) .- data.X2))
         mean(log_loss(UnivariateFinite([false, true], p,
 			                            augment = true, pool = missing),
 			 data.y))
     end
 end;
+
+# ╔═╡ 59acced5-16eb-49b8-8cf2-0c43a88d838e
+md"degree = $(@bind degree2 Slider(1:17, default = 3, show_value = true))"
+
+# ╔═╡ 2fa54070-e261-462d-bd63-c225b92fa876
+m4 = machine(Polynomial(degree = degree2, predictors = (:X1, :X2)) |> LogisticClassifier(penalty = :none),
+             select(classification_data, Not(:y)),
+             classification_data.y);
+
+# ╔═╡ e0acbf00-f6de-483b-902b-31db99298da7
+fit!(m4, verbosity = 0);
 
 # ╔═╡ ed62cb94-8187-4d50-a6f9-6967893dd021
 begin
@@ -220,6 +228,22 @@ begin
                 label = nothing, style = :dash, xlabel = "flexibility (degree)", ylabel = "negative loglikelihood")
     plot(p7, p8, layout = (1, 2), size = (700, 400))
 end
+
+# ╔═╡ 3fa49ea1-df82-472c-914b-0a67e7412b2c
+let
+	fprs_l, tprs_l, _ = roc(predict(m2, select(classification_test_data, Not(:y))), classification_test_data.y)
+	fprs_p, tprs_p, _ = roc(predict(m4, select(classification_test_data, Not(:y))), classification_test_data.y)
+	p = σ.(s_gen*(f.(classification_test_data.X1) .- classification_test_data.X2))
+	fprs_o, tprs_o, _ = roc(UnivariateFinite.(Ref([false, true]), p, augment = true, pool = missing), classification_test_data.y)
+	plot(fprs_l, tprs_l, label = "linear classifier",
+		legend_position = :bottomright, ylabel = "true positive rate",
+	    xlabel = "false positive rate", title = "ROC curve")
+	plot!(fprs_p, tprs_p, label = "polynomial classifier degree $degree2")
+	plot!(fprs_o, tprs_o, label = "classification based on probability of the data generating process")
+end
+
+# ╔═╡ a782d80e-50d6-4178-ae59-0ee603e1cb02
+md"The area under the ROC curve (AUC) of the linear classifier is small, because the decision boundary is not flexible enough and therefore many samples lie on the wrong side of the decision boundary. A polynomial classifier almost approaches the optimal classifier (use the slider above to show the ROC curve for different degrees). Note that the optimal classifier does not have an AUC of 1, because the data generating process is noisy. Change the steepness of the sigmoid of the data generating process with the slider at the top of this notebook to observe the effect it has on the optimal ROC curve!"
 
 # ╔═╡ 5c984615-f123-47fc-8330-66694ab1cb9f
 md"# K-Nearest-Neighbor Regression
@@ -337,8 +361,11 @@ md"# Error Decomposition
 In the following cells we look at error decomposition discussed in the slides.
 "
 
+# ╔═╡ 50eb5fb6-e094-41d3-90d1-5d8d1be3be6d
+md"σ\_noise = $(@bind σ_noise Slider(.01:.01:.5, default = .2, show_value = true))"
+
 # ╔═╡ f10b7cad-eda3-4ec9-99ee-d43ed013a057
-conditional_generator(x; n = 50) = f.(x) .+ .2*randn(n)
+conditional_generator(x; n = 50) = f.(x) .+ σ_noise*randn(n)
 
 # ╔═╡ 05354df5-a803-422f-87a3-1c56a34e8a48
 f̂(x) = 0.1 + x
@@ -350,16 +377,16 @@ md"The expected error of a function `f` at point `x` for our `conditional_genera
 expected_error(f, x) = mean((conditional_generator(x, n = 10^6) .- f(x)).^2);
 
 # ╔═╡ c6a59b85-d031-4ad4-9e24-691494d08cde
-expected_error(f̂, .1) # estimated total expected error
+expected_error(f̂, 0.1) # estimated total expected error at 0.1
 
 # ╔═╡ e50b8196-e804-473a-b3b5-e22fdb9d2f45
 (f(.1) - f̂(.1))^2 # reducible error
 
 # ╔═╡ f413ea94-36ca-4afc-8ca8-9a7e88101980
-expected_error(f, .1) # estimated irreducible error
+expected_error(f, 0.1) # estimated irreducible error
 
 # ╔═╡ 2bfa1a57-b171-44c3-b0d7-b8dda48d26d7
-md"Instead of using estimates for the irreducible error we could just compute it in this simple example: it is ``\sigma^2 = 0.04``. In the figure below we look at the expected, reducible and irreducible errors as a function of ``x``."
+md"Instead of using estimates for the irreducible error we could just compute it in this simple example: it is σ\_noise² = $(round(σ_noise^2, sigdigits = 4)) (we used σ\_noise = $(σ_noise) in the `conditional_generator` above). In the figure below we look at the expected, reducible and irreducible errors as a function of ``x``."
 
 # ╔═╡ dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
 let x = rand(100), grid = 0:.05:1
@@ -368,12 +395,12 @@ let x = rand(100), grid = 0:.05:1
     plot!(f̂, label = "f̂")
     p2 = plot(grid, expected_error.(f̂, grid), label = "expected error f̂", w = 3)
     plot!(grid, (f.(grid) .- f̂.(grid)).^2, label = "reducible error", w = 3)
-    hline!([.2^2], label = "irreducible error", ylims = (0, .4), w = 3, xlabel = "x")
+    hline!([σ_noise^2], label = "irreducible error", ylims = (0, .6), w = 3, xlabel = "x")
     plot(p1, p2, layout = (2, 1), legend = :topleft, ylabel = "y")
 end
 
 # ╔═╡ db2c6bd4-ee6f-4ba9-b6ec-e7cf94389f93
-md"With machine learning we cannot remove the irreducible error. But in cases where accurate prediction is the goal, we should try to minimize the reducible error for all inputs ``x`` we care about."
+md"With machine learning we cannot remove the irreducible error. The irreducible noise is a property of the data generating process. But in cases where accurate prediction is the goal, we should try to minimize the reducible error for all inputs ``x`` we care about."
 
 # ╔═╡ f6093c98-7e89-48ba-95c9-4d1f60a25033
 md"# Bias-Variance Decomposition
@@ -429,7 +456,7 @@ md"# Exercises
 #### Exercise 1
 For each of example below, indicate whether we would generally expect the performance of a flexible statistical learning method to be better or worse than an inflexible method. Justify your answer.
 + The sample size n is extremely large, and the number of predictors ``p`` is small.
-+ The number of predictors ``p`` is extremely large, and the number of observations ```n`` is small.
++ The number of predictors ``p`` is extremely large, and the number of observations ``n`` is small.
 + The relationship between the predictors and response is highly non-linear.
 + The variance of the error terms, i.e. ``\sigma^2 = Var(\epsilon)``, is extremely high.
 #### Exercise 2
@@ -456,18 +483,22 @@ Suppose that we take a data set with mutually distinct inputs ``x_i\neq x_j`` fo
 ## Applied
 #### Exercise 5
 Apply K-nearest neighbors regression to the weather data set. Use as input all predictors except `:time` and `:LUZ_wind_peak`.
-    * Compute the training and the test loss for ``K = 5, 10, 20, 50, 100``.
-    * Which value of the hyper-parameter ``K`` should we prefer to make predictions on new data?
-    * Should we prefer K-nearest neighbors with optimal ``K`` or multiple linear regression to make predictions on new data? *Hint*: Remember that we found a training error (RMSE) of approximately 8.1 and a test error of 8.9.
+* Compute the training and the test loss for ``K = 5, 10, 20, 50, 100``.
+* Which value of the hyper-parameter ``K`` should we prefer to make predictions on new data?
+* Should we prefer K-nearest neighbors with optimal ``K`` or multiple linear regression to make predictions on new data? *Hint*: Remember that we found a training error (RMSE) of approximately 8.1 and a test error of 8.9.
+"
+
+# ╔═╡ c98a4d29-4dfe-4ca4-a2f1-5342788da6c0
+md"
 #### Exercise 6
 In this exercise we review the error-decomposition and the bias-variance decomposition.
 * Write a data generator where the mean of the output depends through the non-linear function ``f(x) = x^2 * \sin(x) + 4 * \tanh(10x)`` on the input and normally distributed noise ``\epsilon`` with mean 0 and standard deviation 1.5.
     * Take the linear function ``\hat f(x) = 2x`` and estimate its reducible error at input point ``x = 0`` and at input point ``x = 2`` in two ways:
         * Using directly ``f``.
-        * Using ``10^5`` samples from the data generator and your knowledge about the irreducible error.
+        * Using ``10^5`` samples from the data generator. *Hint:* Use the samples to estimate the irreducible error and then use the error decomposition formula to compute the reducible error.
     * Generate ``10^4`` training sets of 100 data points with input ``x`` normally distributed with standard deviation 2 and mean 0 and estimate the bias of linear regression at ``x = 4``  in two ways:
         * Using directly ``f``.
-        * Using ``10^4`` samples from the data generator, your knowledge about the irreducible error and your estimate of the variance of linear regression.
+        * Using ``10^4`` samples from the data generator. *Hint:* Use again the samples to estimate the irreducible error and use the bias-variance decomposition formula to compute the bias.
 "
 
 # ╔═╡ efda845a-4390-40bc-bdf2-89e555d3b1b2
@@ -479,6 +510,7 @@ MLCourse.footer()
 # ╔═╡ Cell order:
 # ╟─12942f50-efb1-11eb-01c0-055b6be166e0
 # ╠═8fa836a6-1133-4a54-b996-a02083fc6bba
+# ╟─eb6a04cc-4455-487f-9857-7c3875b67cc7
 # ╠═12942f5a-efb1-11eb-399a-a1300d636217
 # ╠═12942f62-efb1-11eb-3f59-f981bc32f308
 # ╠═12942f6e-efb1-11eb-0a49-01a6a2d0196f
@@ -498,11 +530,13 @@ MLCourse.footer()
 # ╠═cfcb8f61-af91-40dd-951a-09e8dbf17e30
 # ╟─edfb269d-677e-4687-8bff-0aa9ae6e64c3
 # ╠═5ea1b31d-91e5-4c8f-93d6-5d31816fdbf5
-# ╟─59acced5-16eb-49b8-8cf2-0c43a88d838e
 # ╠═2fa54070-e261-462d-bd63-c225b92fa876
 # ╠═e0acbf00-f6de-483b-902b-31db99298da7
 # ╟─ed62cb94-8187-4d50-a6f9-6967893dd021
-# ╠═16f0d1b3-bd97-407d-9a79-25b0fb05bbeb
+# ╟─16f0d1b3-bd97-407d-9a79-25b0fb05bbeb
+# ╟─59acced5-16eb-49b8-8cf2-0c43a88d838e
+# ╟─3fa49ea1-df82-472c-914b-0a67e7412b2c
+# ╟─a782d80e-50d6-4178-ae59-0ee603e1cb02
 # ╟─5c984615-f123-47fc-8330-66694ab1cb9f
 # ╠═269a609c-74af-4e7e-86df-e2279096a7a6
 # ╠═12942f82-efb1-11eb-2827-df957759b02c
@@ -516,6 +550,7 @@ MLCourse.footer()
 # ╟─0a57f15b-c292-4c64-986d-f046260da66e
 # ╟─cc8ed1de-beab-43e5-979e-e83df23f96ae
 # ╟─99a371b2-5158-4c42-8f50-329352b6c1f2
+# ╟─50eb5fb6-e094-41d3-90d1-5d8d1be3be6d
 # ╠═f10b7cad-eda3-4ec9-99ee-d43ed013a057
 # ╠═05354df5-a803-422f-87a3-1c56a34e8a48
 # ╟─3d77d753-b247-4ead-a385-7cbbcfc3190b
@@ -533,6 +568,7 @@ MLCourse.footer()
 # ╠═bdaa48d6-30bb-4d04-b5dd-cc1825cb69e3
 # ╟─5ac9bcb4-c5a5-4b53-bb45-73dde74b7f60
 # ╟─ae86ee9c-3645-43d2-9a42-79658521c3fb
+# ╟─c98a4d29-4dfe-4ca4-a2f1-5342788da6c0
 # ╟─efda845a-4390-40bc-bdf2-89e555d3b1b2
 # ╟─12942f34-efb1-11eb-3eb4-c1a38396cfb8
 # ╟─2320f424-7652-4e9f-83ef-fc011b722dcc
