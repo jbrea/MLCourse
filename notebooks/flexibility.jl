@@ -454,7 +454,7 @@ md"# Exercises
 
 ## Conceptual
 #### Exercise 1
-For each of example below, indicate whether we would generally expect the performance of a flexible statistical learning method to be better or worse than an inflexible method. Justify your answer.
+For each example below, indicate whether we would generally expect the performance of a flexible statistical learning method to be better or worse than an inflexible method. Justify your answer.
 + The sample size n is extremely large, and the number of predictors ``p`` is small.
 + The number of predictors ``p`` is extremely large, and the number of observations ``n`` is small.
 + The relationship between the predictors and response is highly non-linear.
