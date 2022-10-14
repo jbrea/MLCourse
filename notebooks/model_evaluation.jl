@@ -394,16 +394,24 @@ Take the `classification_data` in our notebook on
    cross-validation the optimal number ``k`` of neighbors of kNN
    classification, using the AUC measure. Hint: `MLJ` has the builtin function `auc`.
    Plot the validation AUC for ``k = 1, \ldots, 50``.
-#### Exercise 5
-With the same data as in the previous exercise, use the `MLJ` function `estimate!` and a self tuning machine to estimate with the validation set approach the test error of kNN classifier whose hyper-parameter is tuned with 5 fold cross-validation. Use one quarter of the data for the test set.
-#### Exercise 6
-In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download a dataset with `using OpenML; cars = DataFrame(OpenML.load(455))`. In the cleaning step we will remove all rows that contain missing values (you can use the function `dropmissing`). We select the machine learning methods polynomial regression and k nearest neighbors regression and we take as measure the `rmse`. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found.
 "
 
 # 1. Perform k-nearest neighbors regression on data generated with our `data_generator`
 #    defined in the first cell of this notebook and find the optimal number k of neighbors
 #    with k-fold cross validation.
 
+
+# ╔═╡ 186fa41b-5e74-4191-bc2d-e8d865606fc1
+md"
+#### Exercise 5
+With the same data as in the previous exercise, use the `MLJ` function `estimate!` and a self tuning machine to estimate with the validation set approach the test error of kNN classifier whose hyper-parameter is tuned with 5 fold cross-validation. Use one quarter of the data for the test set.
+"
+
+# ╔═╡ 6f3fea58-8587-4b03-a11a-bac8a46abe67
+md"
+#### Exercise 6
+In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download a dataset with `using OpenML; cars = DataFrame(OpenML.load(455))`. In the cleaning step we will remove all rows that contain missing values (you can use the function `dropmissing`). We select the machine learning methods polynomial regression and k nearest neighbors regression and we take as measure the `rmse`. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found.
+"
 
 # ╔═╡ 0651292e-3f4e-4263-8235-4caa563403ec
 MLCourse.footer()
@@ -465,6 +473,8 @@ MLCourse.footer()
 # ╟─eba90af0-bf67-48f8-8d3c-f831b4fc289a
 # ╠═c8d26ab6-86ec-4b37-9540-0f785fd8cdc2
 # ╟─ee89c448-1e69-4fd1-a4b8-7297a09f2685
+# ╟─186fa41b-5e74-4191-bc2d-e8d865606fc1
+# ╟─6f3fea58-8587-4b03-a11a-bac8a46abe67
 # ╟─c693088f-7f80-4cdd-b9b5-65a50da732ac
 # ╟─e1077092-f72a-42af-b6e0-a616f938cba8
 # ╟─0651292e-3f4e-4263-8235-4caa563403ec
