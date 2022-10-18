@@ -349,7 +349,10 @@ In the \"Vector Features\" section we said that the xor problem has a non-linear
 Load the mushroom data set `OpenML.load(24)` and determine if a linear logistic regression can correctly classify all datapoints if
    * rows with missing values are dropped.
    * rows with missing values are imputed with the most common class.
-#### Exercise 5
+"
+
+# ╔═╡ f706c1fa-6cf1-4b12-b0c3-09565af33fd7
+md"#### Exercise 5
 You are given the following artificial dataset. The data is not linearly separable, meaning that there is no linear decision boundary that would perfectly seperate the blue from the red data points.
     * Find a 2-dimensional feature representation ``H_1 = f_1(X_1, X_2), H_2 = f_2(X_1, X_2)``, such that the transformed data is linearly separable.
     * Generate a similar plot as the one below for the transformed data to visualize that the decision boundary has become linear for the transformed data.
@@ -441,6 +444,7 @@ MLCourse.footer()
 # ╠═74f5178c-a308-4184-bc94-4a04f6f9ffdc
 # ╟─62491145-48b9-4ac5-8e7b-0676e9616fe9
 # ╟─04397866-4e00-46d2-bda4-0a61cf34e780
+# ╟─f706c1fa-6cf1-4b12-b0c3-09565af33fd7
 # ╠═9a0e0bf7-44e6-4385-ac46-9a6a8e4245bb
 # ╠═6f4427a0-18eb-4637-a19a-ec9aa7b6fda8
 # ╟─e688a9de-2dba-4fab-b4e6-9803c5361a62

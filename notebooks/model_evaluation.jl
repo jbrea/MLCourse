@@ -303,15 +303,23 @@ Finding good hyper-parameters (tuning) is such an important step in the process 
 begin
     model = Polynomial() |> LinearRegressor()
     data2 = data_generator(seed = 2, n = 100)
-    self_tuning_model = TunedModel(model = model,
-                                   resampling = CV(nfolds = 10),
-                                   tuning = Grid(),
+    self_tuning_model = TunedModel(model = model, # the model to be tuned
+                                   resampling = CV(nfolds = 10), # how to evaluate
                                    range = range(model, :(polynomial.degree),
-                                                 values = 1:17),
-                                   measure = rmse)
+                                                 values = 1:17), # see below
+                                   measure = rmse) # evaluation measure
     self_tuning_mach = machine(self_tuning_model, select(data2, :x), data2.y)
 	fit!(self_tuning_mach, verbosity = 0)
 end
+
+# ╔═╡ a41302ae-e2d8-4e5d-8dac-198bed16217b
+md"The `range(model, :hyper, values = ...)` function in the cell above returns a `NominalRange(polynomial.degree = 1, 2, 3, ...)` to the tuner. This specifies the degrees of the polynomial that should be tested during tuning.
+
+In general, for any given model you may first want to find out, how the parameters are called that you would like to tune. This can be done by inspecting the model.
+In the output below you see that the model is a `DeterministicPipeline`, with a `polynomial` and a `linear_regressor`. To tune the degree of the `polynomial` we choose `:(polynomial.degree) in the range function above."
+
+# ╔═╡ 7cab21da-6ccc-474a-adb6-a544ba7269e8
+model
 
 # ╔═╡ d72609a1-f93f-4ca6-8759-727662233e97
 md"The self-tuned model actually found the true degree 3 for this data set, as we can see from the report of the tuned machine. The estimated test error can also be found in the report under `best_history_entry.measurement`."
@@ -404,13 +412,13 @@ Take the `classification_data` in our notebook on
 # ╔═╡ 186fa41b-5e74-4191-bc2d-e8d865606fc1
 md"
 #### Exercise 5
-With the same data as in the previous exercise, use the `MLJ` function `estimate!` and a self tuning machine to estimate with the validation set approach the test error of kNN classifier whose hyper-parameter is tuned with 5 fold cross-validation. Use one quarter of the data for the test set.
+With the same data as in the previous exercise, use the `MLJ` function `evaluate!` and a self tuning machine to estimate with the validation set approach the test error of kNN classifier whose hyper-parameter is tuned with 5 fold cross-validation. Use one quarter of the data for the test set.
 "
 
 # ╔═╡ 6f3fea58-8587-4b03-a11a-bac8a46abe67
 md"
 #### Exercise 6
-In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download a dataset with `using OpenML; cars = DataFrame(OpenML.load(455))`. In the cleaning step we will remove all rows that contain missing values (you can use the function `dropmissing`). We select the machine learning methods polynomial regression and k nearest neighbors regression and we take as measure the `rmse`. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found.
+In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download a dataset with `using OpenML; cars = DataFrame(OpenML.load(455))`. In the cleaning step we will remove all rows that contain missing values (you can use the function `dropmissing`). We select the machine learning methods polynomial regression and k nearest neighbors regression and we take as measure the `rmse`. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found. *Hint:* use `TuningModels` and the `range` function (see examples above) to tune the hyper-parameters.
 "
 
 # ╔═╡ 0651292e-3f4e-4263-8235-4caa563403ec
@@ -464,6 +472,8 @@ MLCourse.footer()
 # ╠═42511b31-6d70-495e-8362-01a29143b96e
 # ╟─29683c99-6a6a-4f65-bea2-d592895d887e
 # ╠═f93f20db-4fed-481f-b085-ca744b68fa8f
+# ╟─a41302ae-e2d8-4e5d-8dac-198bed16217b
+# ╠═7cab21da-6ccc-474a-adb6-a544ba7269e8
 # ╟─d72609a1-f93f-4ca6-8759-727662233e97
 # ╠═59245b3e-ddfc-46c4-ba44-86ce191672ae
 # ╟─f8b48f50-09cb-498a-89d1-9ac9b5722d0c

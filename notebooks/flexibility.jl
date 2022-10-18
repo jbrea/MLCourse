@@ -164,7 +164,7 @@ begin
     plot!(1:17, plosses[2, :], color = :red, label = "test loss")
     hline!([minimum(plosses[2, :])], color = :red,
            label = "minimal test loss", style = :dash)
-    hline!([.1^2], color = :green, style = :dash, label = "irreducible error")
+    hline!([σ_gen^2], color = :green, style = :dash, label = "irreducible error")
     scatter!([degree], [plosses[1, degree]], color = :blue, label = nothing)
     scatter!([degree], [plosses[2, degree]], color = :red, label = nothing)
     vline!([argmin(plosses[2, :])], color = :red,
@@ -279,7 +279,7 @@ begin
     plot!(1 ./ (1:50), losses[2, :], color = :red, label = "test loss")
     hline!([minimum(losses[2, :])], color = :red,
            label = "minimal test loss", style = :dash)
-    hline!([.1^2], color = :green, style = :dash, label = "irreducible error")
+    hline!([σ_gen^2], color = :green, style = :dash, label = "irreducible error")
     scatter!([1 / K], [losses[1, K]], color = :blue, label = nothing)
     scatter!([1 / K], [losses[2, K]], color = :red, label = nothing)
     p2 = vline!([1 / argmin(losses[2, :])], color = :red,
@@ -445,8 +445,8 @@ begin
 	plot!(result.degree, result.test_loss_mean, label = "test loss", w = 2)
     plot!(result.degree, result.bias, label = "bias^2", w = 2)
     plot!(result.degree, result.variance, label = "variance", w = 2)
-    plot!(result.degree, result.variance .+ result.bias .+ .1^2, label = "bias^2 + variance + Var(ϵ)", color = :black, w = 2, linestyle = :dash)
-    hline!([.1^2], label = "Var(ϵ)")
+    plot!(result.degree, result.variance .+ result.bias .+ σ_gen^2, label = "bias^2 + variance + Var(ϵ)", color = :black, w = 2, linestyle = :dash)
+    hline!([σ_gen^2], label = "Var(ϵ)")
 end
 
 # ╔═╡ ae86ee9c-3645-43d2-9a42-79658521c3fb
