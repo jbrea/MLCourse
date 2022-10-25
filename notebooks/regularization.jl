@@ -206,7 +206,7 @@ begin
 end;
 
 # ╔═╡ 3d50111b-3a08-4a41-96ce-d77a8e37275d
-md"degree = $(@bind degree Slider(0:20, show_value = true, default = 20))
+md"degree = $(@bind degree Slider(1:20, show_value = true, default = 20))
 
 $(@bind lambda Slider(-14:.1:.5, default = -4))
 "
@@ -226,6 +226,9 @@ let X = select(regression_data, Not(:y)), y = regression_data.y
           label = "fit", w = 3, c = :red, legend = :topleft)
     annotate!([(.28, .6, "reducible error ≈ $(round(mean((pred .- f.(grid)).^2), sigdigits = 3))")])
 end
+
+# ╔═╡ 566be5a7-3eae-4c26-ab6d-605dcf08a57d
+md"In the cell below we use a `TunedModel` to find with cross validation the best polynomial degree and the best regularization constant for ridge regression. Nore how we can just replace the `LinearRegressor()` by a `RidgeRegressor()` in the usual model for polynomial regression (previously we used `Polynomial() |> LinearRegressor()`)."
 
 # ╔═╡ fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
 begin
@@ -256,8 +259,16 @@ Main.PlutoRunner.approx_size(p::Plots.Plot) = try
                 0
             end
 
+# ╔═╡ 7b4daae4-20d3-4992-94e9-46882e47b840
+md"The result of the self-tuning machine can be visualized with the `plot` function. In the plot **at the top**, we see the root mean square error estimated with cross-validation for different values of the polynomial degree. We see, for example, that for low polynomial degrees (below degree 4) the self-tuning machine did not find any low errors. For every degree we see multiple blue points, because the self-tuning machine tried for every degree multiple values for the regularization constant.
+In the plot **at the right** we see the root mean squared error as for different values of the regularization constant `lambda`. We see, for example, that for high regression values (above ``10^{-6}``) the self-tuning machine did not find any low errors. Again, we see multiple blue points for every value of the regularization constant, because multiple polynomial degrees were tested (the line of blue values at the top of the figure is probably produced by low polynomial degrees). In the plot **at the bottom left** we see with a color-and-size code the loss for different values of polynomial degree and regularization constant lambda. The smaller and darker the circle, the lower the error."
+
 # ╔═╡ f5057d4a-1103-4728-becc-287d93d682ba
 plot(self_tuning_mach)
+
+# ╔═╡ adfe4bb8-f3db-4557-b5d8-6efc33f5e321
+md"With the report function we can have a look at the best hyper-parameter values (`polynomial.degree`= $(report(self_tuning_mach).best_model.polynomial.degree) and 
+ `ridge_regressor.lambda` = $(report(self_tuning_mach).best_model.ridge_regressor.lambda)) found by the self-tuning machine."
 
 # ╔═╡ bd54bfcd-f682-4b74-8a44-35463d421491
 report(self_tuning_mach)
@@ -283,11 +294,11 @@ We load here the preprocessed spam data.
 
 # ╔═╡ 8e542a48-ed28-4297-b2e8-d6a755a5fdf9
 begin
-    spam_train = CSV.read(joinpath(dirname(pathof(MLCourse)), "..", "data",
+    spam_train = CSV.read(joinpath(Pkg.devdir(), "MLCourse", "data",
                                    "spam_preprocessed.csv"), DataFrame)
 	spam_train.spam_or_ham = String.(spam_train.spam_or_ham)
     coerce!(spam_train, :spam_or_ham => OrderedFactor)
-    spam_test = CSV.read(joinpath(dirname(pathof(MLCourse)), "..", "data",
+    spam_test = CSV.read(joinpath(Pkg.devdir(), "MLCourse", "data",
                                   "spam_preprocessed_test.csv"), DataFrame)
 	spam_test.spam_or_ham = String.(spam_test.spam_or_ham)
     coerce!(spam_test, :spam_or_ham => OrderedFactor)
@@ -417,13 +428,31 @@ intercept. We would like to study L1- and L2-regularized multiple linear regress
 ## Applied
 
 #### Exercise 3.
-Create an artificial dataset with 20 points, 4 predictors ``X_1, X_2, X_3, X_4``
+Create an artificial dataset with 100 points, 4 predictors ``X_1, X_2, X_3, X_4``
 and ``Y = X_1 + \epsilon`` with ``\mathrm{Var}(\epsilon) = 0.1^2``.
 
-1. Find with cross-validation and the lasso the best model.
-2. Find with cross-validation and the ridge regression the best model.
-3. Which of the two best models has the lowest reducible error?
-4. Repeat the above 3 steps on an artificial data set with 20 points and 4 predictors with ``Y = 10X_1 + X_2 + .1 * X_3 + .01 * X_4 + \epsilon``.
+You can use the following function to create the dataset
+```julia
+function data_generator(β; rng = Xoshiro(1), n = 100)
+    X = randn(rng, n, 4)
+    Y = X * β .+ randn(rng, n) * 0.1
+    data = DataFrame(X, :auto)
+    data.y = Y
+    data
+end
+data1 = data_generator([1, 0, 0, 0])
+```
+
+1. Find with 20-fold cross-validation and the lasso the best model. *Hint:* use a self-tuning machine.
+2. Find with 20-fold cross-validation and the ridge regression the best model.
+3. Which of the two best models has the lowest test error? *Hint:* use a large test set with ``10^6`` points and a different random seed and the `rmse` loss, e.g.
+```julia
+test_data1 = data_generator([1, 0, 0, 0], rng = Xoshiro(1234), n = 10^6);
+function average_test_error(mach, test_data)
+    MLJ.rmse(predict(mach, select(test_data, Not(:y))), test_data.y)
+end
+```
+4. Repeat the above 3 steps on an artificial data set with 100 points and 4 predictors with ``Y = 10X_1 + X_2 + .1 * X_3 + .01 * X_4 + \epsilon``.
 "
 
 # ╔═╡ e04c5e8a-15f8-44a8-845d-60acaf795813
@@ -459,9 +488,12 @@ MLCourse.footer()
 # ╟─3d50111b-3a08-4a41-96ce-d77a8e37275d
 # ╟─a54e3439-69b8-41c8-bfe0-4575795fb9b8
 # ╟─bdbf0dfd-8da5-4e54-89c4-ef4d6b3796ce
+# ╟─566be5a7-3eae-4c26-ab6d-605dcf08a57d
 # ╠═fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
 # ╟─13979da4-3d27-4c57-8f7e-f79a5343d46f
+# ╟─7b4daae4-20d3-4992-94e9-46882e47b840
 # ╠═f5057d4a-1103-4728-becc-287d93d682ba
+# ╟─adfe4bb8-f3db-4557-b5d8-6efc33f5e321
 # ╠═bd54bfcd-f682-4b74-8a44-35463d421491
 # ╟─596fd0f2-eee0-46ca-a203-e7cbac6f9788
 # ╟─8e170a5a-9c46-413e-895d-796e178b69df
