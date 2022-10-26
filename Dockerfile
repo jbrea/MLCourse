@@ -10,8 +10,7 @@ RUN useradd -ms /bin/bash MLCourse
 WORKDIR /home/MLCourse
 # run the rest of commands as MLCourse user
 USER MLCourse
-RUN rm -rf /home/MLCourse/*
-RUN git clone https://github.com/jbrea/MLCourse .
+RUN git clone https://github.com/jbrea/MLCourse /home/MLCourse
 # copy the contents of the github repository into /home/MLCourse
 # COPY --chown=MLCourse . /home/MLCourse
 ENV html_export=true
