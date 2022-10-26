@@ -3,7 +3,7 @@ FROM julia:1.7.3
 # HTTP port
 EXPOSE 8000
 RUN apt-get update -y && apt-get upgrade -y
-RUN apt-get install git
+RUN apt-get install git -y
 # add a new user called "MLCourse"
 RUN useradd -ms /bin/bash MLCourse
 # set the current directory
