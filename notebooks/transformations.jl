@@ -372,7 +372,7 @@ scatter(cldata.x1, cldata.x2,
 
 # ╔═╡ a81db4a1-e561-4796-896c-26133a8efc60
 md"#### Exercise 6 (optional)
-In Exercise 5 of \"Generalized Linear Regression\" we fitted the bike sharing data using only `:temp` and `:humidity` as predictors. The quality of the fit was not good at all. Here we try to improve the fit by including more predictors. Many predictors can be treated as categorical, e.g. even the `:hour`, which is actually an ordered, periodic integer, can be treated as categorical to give the linear model a lot of flexibility. Try out different transformations of the input until you find a linear Poisson model that fits the data clearly better than what we had in the previous Exercise. You can measure quality of fit by looking at the same plot as in the previous exercise or by using cross-validation.
+In Exercise 5 of \"Generalized Linear Regression\" we fitted the bike sharing data using only `:temp` and `:humidity` as predictors. The quality of the fit was not good. Here we try to improve the fit by including more predictors. Many predictors can be treated as categorical, e.g. even the `:hour`, which is actually an ordered, periodic integer, can be treated as categorical to give the linear model a lot of flexibility. Try out different transformations of the input until you find a linear Poisson model that fits the data clearly better than what we had in the previous Exercise. You can measure quality of fit by looking at the same plot as in the previous exercise or by using cross-validation.
 "
 
 # ╔═╡ 951f6957-0ff7-4b2e-ba91-1b69122bbe47
