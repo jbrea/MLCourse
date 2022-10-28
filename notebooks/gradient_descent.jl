@@ -389,8 +389,12 @@ end
 ```
 
 (b) Calculate with paper and pencil the negative log-likelihood loss. Apply transformations to the negative log-likelihood function to obtain a good loss function for gradient descent based on the practical considerations in the slides.
+The solution you should find is
+```math
+\tilde L = \frac1{n} \sum_{i=1}^n |y_i - x_i^T\beta|.
+```
 
-(c) Write the code to compute the loss on the training set for a given
+(c) Write a function to compute the loss on the training set for a given
 parameter vector. *Hint:* use matrix multiplication, e.g. `data.x * β`.
 
 (d) Perform gradient descent on the training set. Plot the learning curve to see
