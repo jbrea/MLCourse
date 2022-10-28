@@ -421,8 +421,8 @@ Assume ``x_{ii} = 1`` and ``x_{ij} = 0`` for all ``i\neq j`` and arbitrary value
 intercept. We would like to study L1- and L2-regularized multiple linear regression.
 
 1. Write the mean squared error loss once with L1 regularization and once with L2 regularization for this setting and the fomulation of regularization with regularization constant ``\lambda``.
-2. Show that in the case of L2 regularization the estimated coefficients take the form ``\hat \beta_j = y_j/(1 + \lambda)``.
-3. Show that in the case of L1 regularization the estimated coefficients take the form ``\hat \beta_j = y_j - \lambda/2``, if ``y_j > \lambda/2``, ``\hat \beta_j = y_j + \lambda/2``, if ``y_j < -\lambda/2`` and ``\hat \beta_j = 0`` otherwise.
+2. Show that in the case of L2 regularization the estimated coefficients take the form ``\hat \beta_j = y_j/(1 + n\lambda)``.
+3. Show that in the case of L1 regularization the estimated coefficients take the form ``\hat \beta_j = y_j - \lambda \cdot n/2``, if ``y_j > \lambda\cdot n/2``, ``\hat \beta_j = y_j + \lambda\cdot n/2``, if ``y_j < -\lambda\cdot n/2`` and ``\hat \beta_j = 0`` otherwise.
 4. Write a brief summary on how the estimated coefficients ``\hat \beta_j`` are changed relative to the unregularized solution for both kinds of regularization.
 
 ## Applied
