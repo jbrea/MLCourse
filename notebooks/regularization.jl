@@ -410,7 +410,7 @@ as \"adding a regularization term to the cost function\". For example, given the
 \|\beta\|_1`` and choose a value for ``\lambda`` instead of the size ``s`` of the
 allowed area.
 
-1. Derive how ``\lambda`` in the second formulation depends on ``s`` in the first formulation for ridge regression with standardized one-dimensional input. *Hint:* use the analytical solution at the top of this notebook, the fact that ``\langle x \rangle = 0`` and ``\langle x^2\rangle = 0`` and note that ``\beta_0^2 + \beta_1^2 = s``, if the solution lies on the boundary.
+1. Derive how ``\lambda`` in the second formulation depends on ``s`` in the first formulation for ridge regression with standardized one-dimensional input. *Hint:* use the analytical solution at the top of this notebook, the fact that ``\langle x \rangle = 0`` and ``\langle x^2\rangle = 1`` and note that ``\beta_0^2 + \beta_1^2 = s``, if the solution lies on the boundary.
 1. Argue, why choosing ``\lambda = 0`` in the second formulation is equivalent to choosing a sufficiently large ``s`` in the first formulation.
 2. Argue, why choosing ``\lambda = \infty`` in the second formulation is equivalent to choosing ``s = 0`` in the first formulation.
 
