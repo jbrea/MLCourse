@@ -56,7 +56,7 @@ md"β₀⁽⁰⁾ = $(@bind b0 Slider(-3.:.1:3., show_value = true, default = 0.
 
 β₁⁽⁰⁾ = $(@bind b1 Slider(-3.:.1:3., show_value = true, default = -3.))
 
-η = $(@bind η Slider(.01:.01:2, show_value = true))
+η = $(@bind η Slider(.01:.01:2, default = .05, show_value = true))
 
 step t = $(@bind t Slider(0:100, show_value = true))
 "
@@ -75,7 +75,8 @@ let
                  legend = :bottomright,
                  xlabel = "x", ylabel = "y", label = "training data")
     plot!(x -> lin_reg_path[t+1]' * [1, x], c = :red, w = 2, label = "current fit")
-    p2 = contour(-3:.1:3, -3:.1:3, lin_reg_loss, cbar = false, aspect_ratio = 1)
+    p2 = contour(-3:.1:3, -3:.1:3,
+                 lin_reg_loss, cbar = false, aspect_ratio = 1)
     scatter!(first.(lin_reg_path), last.(lin_reg_path), markersize = 1, c = :red, label = nothing)
     scatter!([lin_reg_path[t+1][1]], [lin_reg_path[t+1][2]], label = nothing,
              markersize = 4, c = :red, xlabel = "β₀", ylabel = "β₁")
@@ -213,7 +214,7 @@ In each step of stochastic gradient descent (SGD) the gradient is computed only 
 "
 
 # ╔═╡ 75528011-05d9-47dc-a37b-e6bb6be52c25
-md"η = $(@bind η_st Slider(.01:.01:.1, show_value = true))
+md"η = $(@bind η_st Slider(.01:.01:.2, default = .1, show_value = true))
 
 step t = $(@bind t5 Slider(0:100, show_value = true))
 "
@@ -256,6 +257,7 @@ let path = tracker_st.path,
     plot!(x -> path[t5+1]' * [1, x], c = :red, w = 2,
           label = "current fit")
     p2 = contour(-3:.1:3, -3:.1:3, lin_reg_loss, cbar = false,
+                 xlabel = "β₀", ylabel = "β₁",
                  linestyle = :dash, c = :black, aspect_ratio = 1)
     for i in 1:4
         contour!(-3:.1:3, -3:.1:3, lin_reg_loss_b(i), cbar = false, w = 2,
@@ -297,24 +299,29 @@ begin
 	advanced_gradient_descent(mse, params4, opt, 10^4, callback = tracker4)
 end
 
+# ╔═╡ 7b57c3f0-ef5a-4dd7-946f-72c8dde2ae8f
+md"t = $(@bind t6 Slider(1:10^4, show_value = true))"
+
 # ╔═╡ 166472c5-c0f4-4261-a476-4c9b0f82abd6
 let special_path = tracker3.path, special_path2 = tracker4.path
     p1 = plot(f, label = "orginal function", xlabel = "x", ylabel = "y",
               ylim = (-1.3, 1.2))
-    plot!(x -> f(x, special_path2[t3]), label = "current fit")
-    th = round.(special_path2[t3], digits = 2)
+    plot!(x -> f(x, special_path2[t6]), label = "current fit")
+    th = round.(special_path2[t6], digits = 2)
     annotate!([(0, -1.1, text("f̂(x) = $(th[1]) * sin($(th[2])x + $(th[3])) + $(th[4]) * sin($(th[5])x + $(th[6]))", pointsize = 7))])
     losses2 = mse.(special_path2)
     losses = mse.(special_path)
     p2 = plot(0:10^4, losses2, label = "learning curve", c = :black, yscale = :log10)
     plot!(0:10^4, losses, label = "GD learning curve", c = :black, linestyle = :dot)
-    scatter!([t3], [losses2[t3]], label = "current loss", xlabel = "t", ylabel = "loss", legend = :bottomleft)
+    scatter!([t6], [losses2[t6]], label = "current loss", xlabel = "t", ylabel = "loss", legend = :bottomleft)
     plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
 
 
 # ╔═╡ 08a9418f-786e-4992-b1a5-04cf9060f8fe
-md"# Early Stopping as Regularization"
+md"# Early Stopping as Regularization
+
+In early stopping we start (stochastic) gradient descent with smart parameter values, keep track of training and validation loss throughout gradient descent and stop gradient descent, when the validation loss reached the smallest value. The effect of early stopping is similar to regularization: the parameter values found at early stopping have usually a smaller norm than the parameter values with the lowest training error."
 
 # ╔═╡ dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
 begin
@@ -323,7 +330,7 @@ begin
         x = range(0, 1, length = n)
         DataFrame(x = x, y = g.(x) .+ .1*randn(rng, n))
     end
-    regression_data = regression_data_generator(n = 10, seed = 8)
+    regression_data = regression_data_generator(n = 10, seed = 10)
 	regression_valid = regression_data_generator(n = 50, seed = 123)
 end;
 
@@ -351,7 +358,7 @@ let poly_path = tracker5.path
     grid = 0:.01:1
     θ = poly_path[t4 + 1]
     pred =  Array(poly((x = grid,), 12)) * θ[2:end] .+ θ[1]
-    plot!(grid, pred,
+    plot!(grid, pred, xlabel = "input", ylabel = "output",
           label = "fit", w = 3, c = :red, legend = :topleft)
     losses = poly_regression_loss.(poly_path, Ref(h_training), Ref(regression_data.y))
     losses_v = poly_regression_loss.(poly_path, Ref(h_valid), Ref(regression_valid.y))
@@ -359,7 +366,8 @@ let poly_path = tracker5.path
               c = :blue, label = "training loss")
     scatter!([t4], [losses[t4 + 1]], c = :blue, label = nothing)
     plot!(0:length(poly_path)-1, losses_v, c = :red, label = "validation loss")
-    scatter!([t4], [losses_v[t4 + 1]], c = :red, label = nothing)
+    scatter!([t4], [losses_v[t4 + 1]], c = :red, label = nothing,
+		     xlabel = "t", ylabel = "loss")
     vmin, idx = findmin(losses_v)
     vline!([idx], c = :red, linestyle = :dash, label = nothing)
     hline!([vmin], c = :red, linestyle = :dash, label = nothing)
@@ -394,7 +402,7 @@ The solution you should find is
 \tilde L = \frac1{n} \sum_{i=1}^n |y_i - x_i^T\beta|.
 ```
 
-(c) Write a function to compute the loss on the training set for a given
+(c) Code a function to compute the loss on the training set for a given
 parameter vector. *Hint:* use matrix multiplication, e.g. `data.x * β`.
 
 (d) Perform gradient descent on the training set. Plot the learning curve to see
@@ -447,6 +455,7 @@ MLCourse.footer()
 # ╟─913cf5ee-ca1e-4063-bd34-6cccd0cc548b
 # ╠═2739fb52-fb1b-46d6-9708-e24bfdc459e2
 # ╠═eb289254-7167-4183-a4d0-52f68be66b04
+# ╟─7b57c3f0-ef5a-4dd7-946f-72c8dde2ae8f
 # ╟─166472c5-c0f4-4261-a476-4c9b0f82abd6
 # ╟─08a9418f-786e-4992-b1a5-04cf9060f8fe
 # ╠═dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
