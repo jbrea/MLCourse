@@ -160,6 +160,58 @@ begin
 	(training_misclassification_rate = mean(lin_pred .!= xor_data.y),)
 end
 
+# ╔═╡ 1c13dd1a-83ce-47e7-98b5-b6a0d8d2426f
+md"Now we transform the data to the vector features discussed in the slides."
+
+# ╔═╡ 3da4ce70-d4ab-4d9b-841d-d1f3fb385b81
+xor_data_h = DataFrame(H1 = max.(0, xor_data.X1 + xor_data.X2),
+	                   H2 = max.(0, xor_data.X1 - xor_data.X2),
+	                   H3 = max.(0, -xor_data.X1 + xor_data.X2),
+	                   H4 = max.(0, -xor_data.X1 - xor_data.X2),
+                       y = xor_data.y)
+
+# ╔═╡ d73c777a-f993-4ef8-a3f5-8f6717920436
+md"... and we find that the training misclassification rate becomes 0 with this feature representation."
+
+# ╔═╡ 60689196-ca58-4937-8999-4e6f6cd7bdbc
+begin
+	lin_mach_h = fit!(machine(LogisticClassifier(penalty = :none),
+			                  select(xor_data_h, Not(:y)),
+			                  xor_data_h.y))
+	lin_pred_h = predict_mode(lin_mach_h, select(xor_data_h, Not(:y)))
+	(training_misclassification_rate_h = mean(lin_pred_h .!= xor_data_h.y),)
+end
+
+# ╔═╡ 7b30adf0-e0dc-4932-af16-d57cd06d9b49
+md"We could also do the same transformation with the following function that accepts arbitrary vectors as vector features."
+
+# ╔═╡ a7f12901-e155-4f61-b252-c5af6669bfee
+function vector_features(data, vectors...)
+	q = length(vectors) # number of vector features
+	names = [Symbol("H", i) for i in 1:q]
+	feature_representation = [max.(0, data.X1 * v[1] .+ data.X2 * v[2])
+		                      for v in vectors]
+	DataFrame(feature_representation, names)
+end
+
+# ╔═╡ 9a1c58f6-b464-481c-a0b8-50105ee428e8
+md"With this function we find exactly the same feature representation."
+
+# ╔═╡ ad2cd0c5-e308-4911-aba9-3b56eda8a2e2
+transformed_xor_input = vector_features(xor_data, [1, 1], [1, -1], [-1, 1], [-1, -1])
+
+# ╔═╡ 2adc3653-5f36-43ce-8db4-6d4b21692544
+md"And, of course, again training misclassification rate 0."
+
+# ╔═╡ 1b8239fb-3894-47d6-87bf-4592b2fd078d
+begin
+	lin_mach_f = fit!(machine(LogisticClassifier(penalty = :none),
+			                  transformed_xor_input,
+			                  xor_data.y))
+	lin_pred_f = predict_mode(lin_mach_f, transformed_xor_input)
+	(training_misclassification_rate = mean(lin_pred_f .!= xor_data.y),)
+end
+
 # ╔═╡ aa002263-4dc8-4238-ab27-a9094947600c
 md"## Data Cleaning
 
@@ -257,27 +309,6 @@ end
 
 # ╔═╡ 75dda04c-c0af-4a05-b840-91f5c1aea53c
 (mean(st_data.x), std(st_data.x))
-
-# ╔═╡ a7f12901-e155-4f61-b252-c5af6669bfee
-function vector_features(data, vectors...)
-	q = length(vectors) # number of vector features
-	names = [Symbol("H", i) for i in 1:q]
-	feature_representation = [max.(0, data.X1 * v[1] .+ data.X2 * v[2])
-		                      for v in vectors]
-	DataFrame(feature_representation, names)
-end
-
-# ╔═╡ ad2cd0c5-e308-4911-aba9-3b56eda8a2e2
-transformed_xor_input = vector_features(xor_data, [1, 1], [1, -1], [-1, 1], [-1, -1])
-
-# ╔═╡ 1b8239fb-3894-47d6-87bf-4592b2fd078d
-begin
-	lin_mach_f = fit!(machine(LogisticClassifier(penalty = :none),
-			                  transformed_xor_input,
-			                  xor_data.y))
-	lin_pred_f = predict_mode(lin_mach_f, transformed_xor_input)
-	(training_misclassification_rate = mean(lin_pred_f .!= xor_data.y),)
-end
 
 # ╔═╡ cfcad2d7-7dd9-43fe-9633-7ce9e51e1e27
 md"# Transformations of the Output
@@ -409,6 +440,16 @@ MLCourse.footer()
 # ╠═ebe38042-5160-469b-8c07-484b7c019063
 # ╟─fa7cf2ae-9777-4ba9-9fe0-df545b94c5d8
 # ╠═99d3ae30-6bc2-47bf-adc4-1cc1d3ff178d
+# ╟─1c13dd1a-83ce-47e7-98b5-b6a0d8d2426f
+# ╠═3da4ce70-d4ab-4d9b-841d-d1f3fb385b81
+# ╟─d73c777a-f993-4ef8-a3f5-8f6717920436
+# ╠═60689196-ca58-4937-8999-4e6f6cd7bdbc
+# ╟─7b30adf0-e0dc-4932-af16-d57cd06d9b49
+# ╠═a7f12901-e155-4f61-b252-c5af6669bfee
+# ╟─9a1c58f6-b464-481c-a0b8-50105ee428e8
+# ╠═ad2cd0c5-e308-4911-aba9-3b56eda8a2e2
+# ╟─2adc3653-5f36-43ce-8db4-6d4b21692544
+# ╠═1b8239fb-3894-47d6-87bf-4592b2fd078d
 # ╟─aa002263-4dc8-4238-ab27-a9094947600c
 # ╠═c7dab115-b990-4760-85d0-4214d33ada5d
 # ╟─e88f9e54-f86c-4d3a-80d7-1a9c5006476a
@@ -436,9 +477,6 @@ MLCourse.footer()
 # ╠═cc550977-1f37-4ad1-8170-d6150cc01a9c
 # ╠═f099be37-82d2-4031-955c-6a797c8400f2
 # ╠═75dda04c-c0af-4a05-b840-91f5c1aea53c
-# ╠═a7f12901-e155-4f61-b252-c5af6669bfee
-# ╠═ad2cd0c5-e308-4911-aba9-3b56eda8a2e2
-# ╠═1b8239fb-3894-47d6-87bf-4592b2fd078d
 # ╟─cfcad2d7-7dd9-43fe-9633-7ce9e51e1e27
 # ╠═5e6d6155-c254-4ae9-a0e1-366fc6ce6403
 # ╠═ed239411-185a-4d9f-b0ec-360400f24dc7
