@@ -19,7 +19,6 @@ begin
     using Pkg
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
     using MLJ, MLJLinearModels, Plots, LinearAlgebra, Zygote, Flux, Random, DataFrames, Distributions, MLCourse
-    import MLCourse: poly
 end
 
 # ╔═╡ e03882f9-843e-4552-90b1-c47b6cbba19b
@@ -336,8 +335,8 @@ end;
 
 # ╔═╡ c72dc506-fb1d-42ee-83cf-cc49753ecd4f
 begin
-    h_training = Array(select(poly(regression_data, 12), Not(:y)))
-    h_valid = Array(select(poly(regression_valid, 12), Not(:y)))
+    h_training = Array(select(MLCourse.poly(regression_data, 12), Not(:y)))
+    h_valid = Array(select(MLCourse.poly(regression_valid, 12), Not(:y)))
     poly_regression_loss(θ, x, y) = mean((y .- θ[1] .- x * θ[2:end]).^2)
     target = regression_data.y
     poly_regression_loss(θ) = poly_regression_loss(θ, h_training, target)
@@ -357,7 +356,7 @@ let poly_path = tracker5.path
     plot!(g, label = "generator", c = :green, w = 2)
     grid = 0:.01:1
     θ = poly_path[t4 + 1]
-    pred =  Array(poly((x = grid,), 12)) * θ[2:end] .+ θ[1]
+    pred =  Array(MLCourse.poly((x = grid,), 12)) * θ[2:end] .+ θ[1]
     plot!(grid, pred, xlabel = "input", ylabel = "output",
           label = "fit", w = 3, c = :red, legend = :topleft)
     losses = poly_regression_loss.(poly_path, Ref(h_training), Ref(regression_data.y))
