@@ -40,7 +40,7 @@ function spline_features(data, degree, knots)
 	q = length(knots) + degree
 	names = [Symbol("H", i) for i in 1:q]      # create the feature names
 	features = [data[:, 1] .^ d for d in 1:degree] # compute the first features
-	append!(features, [max.(0, (data[:, 1] .- k).^degree)
+	append!(features, [(max.(0, data[:, 1] .- k)).^degree
 		               for k in knots])        # remaining features
 	DataFrame(features, names)
 end
@@ -370,7 +370,7 @@ The following table shows one-hot encoded input for columns `mean_of_transport` 
 | 0   | 0     | 0        |  0    |
 
 #### Exercise 3 (optional)
-In the \"Vector Features\" section we said that the xor problem has a non-linear decision boundary in the original ``X_1, X_2`` coordinates, but a linear decision boundary in the ``H_1, H_2, H_3, H_4`` coordinates. Here we prove that ``-H_1 + H_2 + H_3 - H_4 = 0`` defines indeed a linear decision boundary that solves the xor-problem.
+In the \"Vector Features\" section we said that the xor problem has a non-linear decision boundary in the original ``X_1, X_2`` coordinates, but a linear decision boundary in the ``H_1, H_2, H_3, H_4`` coordinates, with ``H_i = \max(0, w_i^TX)`` and we use the vector features ``w_1 = [1, 1]``, ``w_2 = [1, -1]``, ``w_3 = [-1, 1]`` and ``w_4 = [-1, -1]``. Here we prove that ``-H_1 + H_2 + H_3 - H_4 = 0`` defines indeed a linear decision boundary that solves the xor-problem.
 * Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 > 0`` and ``X_2 > 0``.
 * Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 < 0`` and ``X_2 < 0``.
 * Show that ``-H_1 + H_2 + H_3 - H_4  > 0`` for all other points.
