@@ -524,7 +524,7 @@ To get a feeling for the kind of functions of one predictor can be fitted with n
                 with ``c_1 =  \frac{a_1 - a_2}{b_2 - b_1} < c_2 = \frac{a_2 - a_3}{b_3 - b_2}``. Express ``a_1, a_2, a_3`` and ``b_1, b_2, b_3`` in terms of the network weights. There are multiple solutions; find one of them.
 #### Exercise 2
 Consider a neural network with two hidden layers: ``p = 4`` input units, ``2`` units in the first hidden layer, ``3`` units in the second hidden layer, and a single output.
-- Draw a picture of the network.
+- Draw the network with the input neurons, the hidden neurons, the output neuron and all connections.
 - How many parameters are there?
 - Assume the output of this network is the mean of a conditional normal distribution. Write the negative log-likelihood loss using matrix notation.
 #### Exercise 3
