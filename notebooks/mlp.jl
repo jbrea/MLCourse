@@ -33,6 +33,8 @@ end
 md"# Solving the XOR Problem with Learned Feature Vectors
 
 In the following example we define a loss function that learns the features (weights of the hidden neurons) and the \"regression coefficients\" (output weights) with gradient descent.
+
+First, we generate the data set.
 "
 
 # ╔═╡ fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
@@ -49,6 +51,9 @@ begin
     xor_target = xor_data.y
 end;
 
+# ╔═╡ a908176b-319a-445d-9f33-6271c2ef6149
+md"Now we define a neural network with one hidden layer of 4 relu-neurons and the negative log-likelihood loss function."
+
 # ╔═╡ a2539e77-943e-464c-9ad3-c8542eab36ab
 begin
     f(x, w₁, w₂, w₃, w₄, β) = β[1] * relu.(x * w₁) .+
@@ -58,10 +63,13 @@ begin
                               β[5]
     f(x, θ) = f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
     function log_reg_loss(θ)
-        p = σ.(f(xor_input, θ))
+        p = σ.(f(xor_input, θ)) # sigmoid
         -mean(@. xor_target * log(p) + (1 - xor_target) * log(1 - p))
     end
-end
+end;
+
+# ╔═╡ 235c6588-8210-4b8e-812c-537a72ce950f
+md"Now we can run gradient descent. The initial parameters θ₀ depend on a pseudo-random number generator whose seed can be set in the dropdown menu below."
 
 # ╔═╡ 258a3459-3fef-4655-830c-3bdf11eb282d
 md"seed = $(@bind(seed, Select([string(i) for i in 1:20])))
@@ -69,87 +77,8 @@ md"seed = $(@bind(seed, Select([string(i) for i in 1:20])))
 t = $(@bind t Slider(1:10^2))
 "
 
-# ╔═╡ 49c2b3a1-50c0-4fb9-a06b-2de7be216702
-begin
-    Random.seed!(Meta.parse(seed))
-    θ₀ = .1 * randn(13)
-    path = [copy(θ₀)]
-    MLCourse.gradient_descent(log_reg_loss, θ₀, .05, 10^4,
-                              callback = x -> push!(path, copy(x)))
-end;
-
 # ╔═╡ 9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
 md"The green arrows in the figure above are the weights w₁, …, w₄ of the four (hidden) neurons. The coloring of the dots is based on classification at decision threshold 0.5, i.e. if the activation of the output neuron is above 0.5 for a given input point, this point is classified as red (green, otherwise). Note that the initial configuration of the green vectors depends on the initialization of gradient descent and therefore on the seed. For some seeds the optimal solution to the xor-problem is not found by gradient descent."
-
-# ╔═╡ b650ddb4-5854-4862-ba26-0bf92f77c3df
-begin
-    idxs = min.(max.(1:100, floor.(Int, 1.097.^(1:100))), 10^4)
-    losses = log_reg_loss.(path[idxs])
-end;
-
-# ╔═╡ 16d0808e-4094-46ff-8f92-1ed21aa6191b
-let idx = idxs[t]
-    θ = path[idx]
-    prediction = σ.(f(xor_input, θ)) .> .5
-    p1 = scatter(xor_data.X1, xor_data.X2, c = prediction .+ 1,
-                 xlim = (-1.5, 1.5), ylim = (-1.5, 1.5),
-                 xlabel = "X1", ylabel = "X2")
-    for i in 1:4
-        plot!([0, θ[i*2 - 1]], [0, θ[i*2]], c = :green, w = 3, arrow = true)
-    end
-    hline!([0], c = :black)
-    vline!([0], c = :black)
-    p2 = plot(idxs, losses, ylim = (0, 1), xscale = :log10, xlabel = "gradient descent step t",
-              ylabel = "loss", title = "learning curve")
-    scatter!([idxs[t]], [losses[t]], c = :red)
-    plot(p1, p2, layout = (1, 2), size = (700, 400), legend = false)
-end
-
-# ╔═╡ 8c54bfb2-54c5-4777-ad53-97926da97f7e
-Markdown.parse("
-## Avoiding Local Minima with Overparametrization
-The following code fits 10 times with different initial guesses for the
-parameters an MLP with 4 hidden neurons and 10 times an MLP with 10 hidden
-neurons to our xor data. We see that training and test accuracy is better for
-the larger network. The reason is that gradient descent for the the larger
-network does not get stuck in suboptimal solutions.
-
-Because it takes a bit of time to run the code, it is included here in text form.
-Copy-paste it to a cell to run it.
-```julia
-begin
-    using MLJFlux
-    function fit_xor(n_hidden)
-        x = select(xor_data, Not(:y))
-        y = coerce(xor_data.y, Binary)
-        builder = MLJFlux.Short(n_hidden = n_hidden,
-                                dropout = 0,
-                                σ = relu)
-        mach = machine(NeuralNetworkClassifier(builder = builder,
-                                               batch_size = 32,
-                                               epochs = 10^4),
-                       x, y) |> fit!
-        xor_test = xor_generator(n = 10^4)
-        x_test = select(xor_test, Not(:y))
-        y_test = coerce(xor_test.y, Binary)
-        DataFrame(n_hidden = n_hidden,
-                  training_accuracy = mean(predict_mode(mach, x) .== y),
-                  test_accuracy = mean(predict_mode(mach, x_test) .== y_test))
-    end
-    xor_results = vcat([fit_xor(n_hidden) for n_hidden in [4, 10], _ in 1:10]...)
-    @df xor_results dotplot(:n_hidden, :training_accuracy,
-                            xlabel = \"number of hidden units\",
-                            ylabel = \"accuracy\",
-                            label = \"training\",
-                            yrange = (.5, 1.01),
-                            aspect_ratio = 20,
-                            legend = :bottomright,
-                            xticks = [4, 10])
-    @df xor_results dotplot!(:n_hidden, :test_accuracy, label = \"test\")
-end
-```
-$(MLCourse.embed_figure("overparametrized.png"))
-")
 
 # ╔═╡ 5c2154ef-2a35-4d91-959d-f72100049894
 md"# Multilayer Perceptrons
@@ -305,6 +234,174 @@ let x = -5:.1:5
          py, layout = (2, 1), markersize = 2, markerstrokewidth = 0,
                  xlabel = "x₁", ylabel = "x₂", legend = false, aspect_ratio = 1)
 end
+
+# ╔═╡ 14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
+md"# Classification with MLPs
+
+## Fitting MNIST
+
+The following code to fit the MNIST data with a multilayer perceptron takes a
+few minutes to run.
+
+```julia
+mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
+    coerce!(df, :class => Multiclass)
+    coerce!(df, Count => MLJ.Continuous)
+    Float32.(df[:, 1:end-1] ./ 255),
+    df.class
+end
+mnist_mach = machine(NeuralNetworkClassifier(
+                         builder = MLJFlux.@builder(Chain(Dense(n_in, 100, relu),
+                                                          Dense(100, n_out))),
+                         batch_size = 32,
+                         epochs = 20),
+                      mnist_x[1:60000, :],
+                      mnist_y[1:60000])
+fit!(mnist_mach, verbosity = 2)
+mean(predict_mode(mnist_mach, mnist_x[60001:70000, :]) .!= mnist_y[60001:70000])
+```
+The result is a misclassification rate of approximately 2.2%, which is better
+than our first nearest-neigbor result. Additionally, prediction of the class
+for new images is much faster than with nearest neighbor approaches, because the
+information about the training data is stored in the weights of the neural network
+and no explicit comparison with all training images is required.
+"
+
+# ╔═╡ 2f034d19-1c00-4a10-a880-99436ab00957
+md"# Exercises
+
+## Conceptual
+#### Exercise 1
+To get a feeling for the kind of functions of one predictor can be fitted with neural networks, we will draw ``y`` as a function of ``x`` for some values of the weights. It may be helpful to sketch this neural network with the input neuron, the hidden neurons and the output neuron and label the connections with the weights.
+* Draw in the same figure ``a_1^{(1)} = g(w_{10}^{(1)} + w_{11}^{(1)} x)``, ``a_2^{(1)}=g(w_{20}^{(1)} + w_{21}^{(1)} x)`` and ``\bar y = w_0^{(2)} + w_1^{(2)}a_1^{(1)} +  w_2^{(2)}a_2^{(1)}`` as a function of ``x``. Use ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = 1``, ``w_{20}^{(1)} = - 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1`` and use the rectified linear activation function ``g = \mbox{relu}``. At which ``x``-values does the slope change? Give the answer in terms of the weights.
+* Draw a similar graph for ``w_{11}^{(1)} < 0`` and ``w_{10}^{(1)}/w_{11}^{(1)}<w_{20}^{(1)}/w_{21}^{(1)}``, e.g. with ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = -1``, ``w_{20}^{(1)} = 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1``.
+* How does the graph above change, if ``w_1^{(2)} = -2`` and ``w_2^{(2)} = -1``?
+* Let us assume we add more neurons to the same hidden layer, i.e. we have ``a_1^{(1)}, \ldots, a_{d^{(1)}}^{(1)}`` activations in the first layer. How would the graph look differently in this case? Draw a sketch and describe in one sentence the qualitative difference.
+* Let us assume we add instead more hidden layers with relu-activations. Would the graph of this neural network look qualitatively different from the ones we have drawn so far in this exercise?
+* (optional) Show that a neural network with one hidden layer of 3 relu-neurons can perfectly fit any continuous piece-wise linear function of the form ``y = \left\{\begin{array}{ll} a_1 + b_1 x & x < c_1 \\ a_2 + b_2 x & c_1 \leq x < c_2 \\ a_3 + b_3 x & c_2 \leq x \end{array}\right. \hspace{1cm}  ``
+                with ``c_1 =  \frac{a_1 - a_2}{b_2 - b_1} < c_2 = \frac{a_2 - a_3}{b_3 - b_2}``. Express ``a_1, a_2, a_3`` and ``b_1, b_2, b_3`` in terms of the network weights. There are multiple solutions; find one of them.
+#### Exercise 2
+Consider a neural network with two hidden layers: ``p = 4`` input units, ``2`` units in the first hidden layer, ``3`` units in the second hidden layer, and a single output.
+- Draw the network with the input neurons, the hidden neurons, the output neuron and all connections.
+- How many parameters are there?
+- Assume the output of this network is the mean of a conditional normal distribution. Write the negative log-likelihood loss using matrix notation.
+#### Exercise 3
+Let us assume you want to predict the proportion ``y`` of citizens voting for one of two parties based on 113 different features that depend e.g. on the voting history, income distribution or demographics (see e.g. [here](https://www.ozy.com/news-and-politics/the-forecast-the-methodology-behind-our-2020-election-model/379778/) for an actual example). Because the proportion is a number between 0 and 1, it is reasonable to model it as a sample from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) ``p(y|\alpha, \beta) = \frac{y^{\alpha - 1}(1-y)^{\beta - 1}}{B(\alpha, \beta)}``, where ``\alpha>0`` and ``\beta>0`` are shape parameters and ``B`` is the beta function. Let us assume you want to model the dependence of the shape parameters on ``x`` with a neural network.
+* How many input units should this neural network have?
+* How many output units should this neural network have?
+* What kind of activation function would you choose for the output layer?
+* Which loss function would you use to estimate the network parameters?
+* What is the advantage of using a beta distribution instead of trying to predict directly the expected proportion with a neural network, which has a single sigmoid output unit?
+#### Exercise 4
+(Optional) Grant Sanderson has some beautiful [videos about neural networks](https://www.3blue1brown.com/topics/neural-networks). Have a look at them, if you are interested.
+
+## Applied
+#### Exercise 5
+In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `OpenML.describe_dataset(505)`. The first 100 columns of this data set contain measurements of near infrared absorbance at different frequencies for different pieces of meat. *Hint:* you can select all these columns based on name with `select(data, r\"absorbance\")` (The \"r\" in this command stands for Regex and it means that all columns with name containing the word \"absorbance\" should be selected). The column `:fat` contains the fat content of each piece of meat. You can either use a validation set approach with the first 172 data points for training and (cross-)validation and the rest of the data points as a test set or you can take a nested cross-validation approach (for the neural network this may take some time to run). Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline.
+- Have a look at the raw data by e.g. checking if there are missing values and looking at a correlation plot.
+- Fit some multiple linear regression models (with e.g. regularization constants tuned with cross-valdiation), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content.
+- Fit some neural network model (with 2 hyper-paramters of your choice tuned by cross-validation; warning: it may take quite some time to fit if you use a high number for `nfolds`), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content.
+    * *Hint 1:* standardization of input and output matters.
+    * *Hint 2:* If you want to tune neural network parameters in a pipeline you can access them in the `range` function, for example, as `:(neural_network_regressor.builder.dropout)`.
+"
+
+
+# ╔═╡ 7c6951e8-726a-4181-b15f-b629a2835d03
+MLCourse.list_notebooks(@__FILE__)
+
+# ╔═╡ 825c40e9-de99-4829-aad0-0c5c901df5e9
+begin 
+	struct Tracker{T} # structure definition with parametric type
+		path::T
+	end
+	Tracker(x::T) where T = Tracker{Vector{T}}([copy(x)]) # constructor
+	(t::Tracker)(x) = push!(t.path, copy(x))        # making the object callable
+	
+function MLCourse.embed_figure(name)
+    "![](data:img/png; base64,
+         $(open(MLCourse.base64encode,
+                joinpath(Pkg.devdir(), "MLCourse", "notebooks", "figures", name)))))"
+end
+end;
+
+# ╔═╡ 49c2b3a1-50c0-4fb9-a06b-2de7be216702
+begin
+    Random.seed!(Meta.parse(seed))
+    θ₀ = .1 * randn(13)
+    tracker = Tracker(θ₀)
+    MLCourse.gradient_descent(log_reg_loss, θ₀, .05, 10^4,
+                              callback = tracker)
+end;
+
+# ╔═╡ b650ddb4-5854-4862-ba26-0bf92f77c3df
+begin
+    idxs = min.(max.(1:100, floor.(Int, (1e4^(1/100)).^(1:100))), 10^5)
+    losses = log_reg_loss.(tracker.path[idxs])
+end;
+
+# ╔═╡ 16d0808e-4094-46ff-8f92-1ed21aa6191b
+let idx = idxs[t], path = tracker.path
+    θ = path[idx]
+    prediction = σ.(f(xor_input, θ)) .> .5
+    p1 = scatter(xor_data.X1, xor_data.X2, c = prediction .+ 1,
+                 xlim = (-1.5, 1.5), ylim = (-1.5, 1.5),
+                 xlabel = "X1", ylabel = "X2")
+    for i in 1:4
+        plot!([0, θ[i*2 - 1]], [0, θ[i*2]], c = :green, w = 3, arrow = true)
+    end
+    hline!([0], c = :black)
+    vline!([0], c = :black)
+    p2 = plot(idxs, losses, xscale = :log10, xlabel = "gradient descent step t",
+              ylabel = "loss", title = "learning curve")
+    scatter!([idxs[t]], [losses[t]], c = :red)
+    plot(p1, p2, layout = (1, 2), size = (700, 400), legend = false)
+end
+
+# ╔═╡ 8c54bfb2-54c5-4777-ad53-97926da97f7e
+Markdown.parse("
+## Avoiding Local Minima with Overparametrization
+The following code fits 10 times with different initial guesses for the
+parameters an MLP with 4 hidden neurons and 10 times an MLP with 10 hidden
+neurons to our xor data. We see that training and test accuracy is better for
+the larger network. The reason is that gradient descent for the the larger
+network does not get stuck in suboptimal solutions.
+
+Because it takes a bit of time to run the code, it is included here in text form.
+Copy-paste it to a cell to run it.
+```julia
+begin
+    using MLJFlux
+    function fit_xor(n_hidden)
+        x = select(xor_data, Not(:y))
+        y = coerce(xor_data.y, Binary)
+        builder = MLJFlux.Short(n_hidden = n_hidden,
+                                dropout = 0,
+                                σ = relu)
+        mach = machine(NeuralNetworkClassifier(builder = builder,
+                                               batch_size = 32,
+                                               epochs = 10^4),
+                       x, y) |> fit!
+        xor_test = xor_generator(n = 10^4)
+        x_test = select(xor_test, Not(:y))
+        y_test = coerce(xor_test.y, Binary)
+        DataFrame(n_hidden = n_hidden,
+                  training_accuracy = mean(predict_mode(mach, x) .== y),
+                  test_accuracy = mean(predict_mode(mach, x_test) .== y_test))
+    end
+    xor_results = vcat([fit_xor(n_hidden) for n_hidden in [4, 10], _ in 1:10]...)
+    @df xor_results dotplot(:n_hidden, :training_accuracy,
+                            xlabel = \"number of hidden units\",
+                            ylabel = \"accuracy\",
+                            label = \"training\",
+                            yrange = (.5, 1.01),
+                            aspect_ratio = 20,
+                            legend = :bottomright,
+                            xticks = [4, 10])
+    @df xor_results dotplot!(:n_hidden, :test_accuracy, label = \"test\")
+end
+```
+$(MLCourse.embed_figure("overparametrized.png"))
+")
 
 # ╔═╡ 9d3e7643-34fd-40ee-b442-9d2a434f30e0
 Markdown.parse("""# Regression with MLPs
@@ -477,77 +574,6 @@ end
 $(MLCourse.embed_figure("poly.png"))
 ")
 
-# ╔═╡ 14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
-md"# Classification with MLPs
-
-## Fitting MNIST
-
-The following code to fit the MNIST data with a multilayer perceptron takes a
-few minutes to run.
-
-```julia
-mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
-    coerce!(df, :class => Multiclass)
-    coerce!(df, Count => MLJ.Continuous)
-    Float32.(df[:, 1:end-1] ./ 255),
-    df.class
-end
-mnist_mach = machine(NeuralNetworkClassifier(
-                         builder = MLJFlux.@builder(Chain(Dense(n_in, 100, relu),
-                                                          Dense(100, n_out))),
-                         batch_size = 32,
-                         epochs = 20),
-                      mnist_x[1:60000, :],
-                      mnist_y[1:60000])
-fit!(mnist_mach, verbosity = 2)
-mean(predict_mode(mnist_mach, mnist_x[60001:70000, :]) .!= mnist_y[60001:70000])
-```
-The result is a misclassification rate of approximately 2.2%, which is better
-than our first nearest-neigbor result. Additionally, prediction of the class
-for new images is much faster than with nearest neighbor approaches, because the
-information about the training data is stored in the weights of the neural network
-and no explicit comparison with all training images is required.
-"
-
-# ╔═╡ 2f034d19-1c00-4a10-a880-99436ab00957
-md"# Exercises
-
-## Conceptual
-#### Exercise 1
-To get a feeling for the kind of functions of one predictor can be fitted with neural networks, we will draw ``y`` as a function of ``x`` for some values of the weights. It may be helpful to sketch this neural network with the input neuron, the hidden neurons and the output neuron and label the connections with the weights.
-* Draw in the same figure ``a_1^{(1)} = g(w_{10}^{(1)} + w_{11}^{(1)} x)``, ``a_2^{(1)}=g(w_{20}^{(1)} + w_{21}^{(1)} x)`` and ``\bar y = w_0^{(2)} + w_1^{(2)}a_1^{(1)} +  w_2^{(2)}a_2^{(1)}`` as a function of ``x``. Use ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = 1``, ``w_{20}^{(1)} = - 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1`` and use the rectified linear activation function ``g = \mbox{relu}``. At which ``x``-values does the slope change? Give the answer in terms of the weights.
-* Draw a similar graph for ``w_{11}^{(1)} < 0`` and ``w_{10}^{(1)}/w_{11}^{(1)}<w_{20}^{(1)}/w_{21}^{(1)}``, e.g. with ``w_{10}^{(1)} = 0``, ``w_{11}^{(1)} = -1``, ``w_{20}^{(1)} = 2``, ``w_{21}^{(1)} = 2``,  ``w_0^{(2)} = 1``, ``w_1^{(2)} = 2``, ``w_2^{(2)} = 1``.
-* How does the graph above change, if ``w_1^{(2)} = -2`` and ``w_2^{(2)} = -1``?
-* Let us assume we add more neurons to the same hidden layer, i.e. we have ``a_1^{(1)}, \ldots, a_{d^{(1)}}^{(1)}`` activations in the first layer. How would the graph look differently in this case? Draw a sketch and describe in one sentence the qualitative difference.
-* Let us assume we add instead more hidden layers with relu-activations. Would the graph of this neural network look qualitatively different from the ones we have drawn so far in this exercise?
-* (optional) Show that a neural network with one hidden layer of 3 relu-neurons can perfectly fit any continuous piece-wise linear function of the form ``y = \left\{\begin{array}{ll} a_1 + b_1 x & x < c_1 \\ a_2 + b_2 x & c_1 \leq x < c_2 \\ a_3 + b_3 x & c_2 \leq x \end{array}\right. \hspace{1cm}  ``
-                with ``c_1 =  \frac{a_1 - a_2}{b_2 - b_1} < c_2 = \frac{a_2 - a_3}{b_3 - b_2}``. Express ``a_1, a_2, a_3`` and ``b_1, b_2, b_3`` in terms of the network weights. There are multiple solutions; find one of them.
-#### Exercise 2
-Consider a neural network with two hidden layers: ``p = 4`` input units, ``2`` units in the first hidden layer, ``3`` units in the second hidden layer, and a single output.
-- Draw the network with the input neurons, the hidden neurons, the output neuron and all connections.
-- How many parameters are there?
-- Assume the output of this network is the mean of a conditional normal distribution. Write the negative log-likelihood loss using matrix notation.
-#### Exercise 3
-Let us assume you want to predict the proportion ``y`` of citizens voting for one of two parties based on 113 different features that depend e.g. on the voting history, income distribution or demographics (see e.g. [here](https://www.ozy.com/news-and-politics/the-forecast-the-methodology-behind-our-2020-election-model/379778/) for an actual example). Because the proportion is a number between 0 and 1, it is reasonable to model it as a sample from a [beta distribution](https://en.wikipedia.org/wiki/Beta_distribution) ``p(y) = \frac{y^{\alpha - 1}(1-y)^{\beta - 1}}{B(\alpha, \beta)}``, where ``\alpha>0`` and ``\beta>0`` are shape parameters and ``B`` is the beta function. You want parametrize the conditional distribution of proportions ``y`` given predictors ``x`` with a neural network.
-* How many input units should this neural network have?
-* How many output units should this neural network have?
-* What kind of activation function would you choose for the output layer?
-* Which loss function would you use to estimate the network parameters?
-#### Exercise 4
-(Optional) Grant Sanderson has some beautiful [videos about neural networks](https://www.3blue1brown.com/topics/neural-networks). Have a look at them, if you are interested.
-
-## Applied
-#### Exercise 5
-In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `OpenML.describe_dataset(505)`. The first 100 columns of this data set contain measurements of near infrared absorbance at different frequencies for different pieces of meat. *Hint:* you can select all these columns based on name with `select(data, r\"absorbance\")` (The \"r\" in this command stands for Regex and it means that all columns with name containing the word \"absorbance\" should be selected). The column `:fat` contains the fat content of each piece of meat. We will use the first 172 data points for training and validation and the rest of the data points as a test set. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline.
-- Have a look at the raw data by e.g. checking if there are missing values and looking at a correlation plot.
-- Fit some multiple linear regression models (with e.g. regularization constants tuned with cross-valdiation), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content.
-- Fit some neural network model (with 2 hyper-paramters of your choice tuned by cross-validation; warning: it may take quite some time to fit if you use a high number for `nfolds`), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content. *Hint 1:* standardization of input and output matters. *Hint 2:* If you want to tune some neural network parameters in a pipeline you can usually access them in the `range` function as `:(neural_network_regressor.builder.dropout)`, for example.
-"
-
-
-# ╔═╡ 7c6951e8-726a-4181-b15f-b629a2835d03
-MLCourse.list_notebooks(@__FILE__)
-
 # ╔═╡ 8c72c4b5-452d-4ba3-903b-866cac1c799d
 MLCourse.footer()
 
@@ -556,7 +582,9 @@ MLCourse.footer()
 # ╟─c95ad296-5191-4f72-a7d7-87ddebc43a65
 # ╠═fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
 # ╠═ea7fc5b6-79cc-4cc5-820e-5c55da83207e
+# ╟─a908176b-319a-445d-9f33-6271c2ef6149
 # ╠═a2539e77-943e-464c-9ad3-c8542eab36ab
+# ╟─235c6588-8210-4b8e-812c-537a72ce950f
 # ╠═49c2b3a1-50c0-4fb9-a06b-2de7be216702
 # ╟─258a3459-3fef-4655-830c-3bdf11eb282d
 # ╟─16d0808e-4094-46ff-8f92-1ed21aa6191b
@@ -577,5 +605,6 @@ MLCourse.footer()
 # ╟─14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
 # ╟─2f034d19-1c00-4a10-a880-99436ab00957
 # ╟─7c6951e8-726a-4181-b15f-b629a2835d03
+# ╟─825c40e9-de99-4829-aad0-0c5c901df5e9
 # ╟─83e2c454-042f-11ec-32f7-d9b38eeb7769
 # ╟─8c72c4b5-452d-4ba3-903b-866cac1c799d
