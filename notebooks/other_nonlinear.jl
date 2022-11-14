@@ -424,8 +424,6 @@ end
 # - a convolutional network with 10 filters of size ``3\\times3\\times3`` stride 1 padding 1 followed by a dense hidden layer of 10 neurons.
 # - a convolution network with a first convolutional layer with 20 filters of size ``5\\times5\\times3`` padding 2 stride 5, a second convolutional layer with 10 filters of size ``3\\times3\\times20``, stride 2 padding 1, followed by a dense hidden layer of 10 neurons.
 
-
-
 # ╔═╡ 2bbf9876-0676-11ec-3985-73f4dcaea02f
 Markdown.parse("# Exercises
 ## Conceptual
