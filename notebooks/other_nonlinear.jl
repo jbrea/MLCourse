@@ -17,6 +17,11 @@ using MLJLIBSVMInterface, Random, Plots
 # ╔═╡ 01a467a5-7389-44d1-984d-244dfb1ea39f
 begin
     using MLCourse
+    function MLCourse.embed_figure(name)
+        "![](data:img/png; base64,
+             $(open(MLCourse.base64encode,
+                    joinpath(Pkg.devdir(), "MLCourse", "notebooks", "figures", name))))"
+    end
     MLCourse.list_notebooks(@__FILE__)
 end
 
@@ -399,6 +404,28 @@ let grid = MLCourse.grid(-5:.5:11.5, -9:.5:12, names = (:x1, :x2))
 	scatter!(X.x1, X.x2, c = Int.(int.(y)), xlabel = "x₁", ylabel = "x₂")
 end
 
+# ╔═╡ 9c30b5d2-6ad4-4d4c-9013-57d2f7cd2d0e
+# Old exercises
+# ## Conceptual
+# #### Exercise 1
+# Here below is an image (with padding 1 already applied). We would like to process it with a convolutional network with one convolution layer with two ``3 \\times 3`` filters (depicted below the image), stride 1 and relu non-linearity.
+# - Determine the width, height and depth of the volume after the convolutional layer.
+# - Compute the output of the convolutional layer assuming the two biases to be zero.
+# $(MLCourse.embed_figure("conv_exercise.png"))
+# #### Exercise 2
+# Given a volume of width ``n``, height ``n`` and depth ``c`` and a convolutional layer with ``k`` filters of size ``f\\times f\\times c`` with stride ``s`` and padding ``p``.
+# - Convince yourself that this convolution layer has an output volume of size ``\\left( \\left\\lfloor\\frac{n + 2p - f}{s}\\right\\rfloor + 1\\right)\\times \\left( \\left\\lfloor\\frac{n + 2p - f}{s}\\right\\rfloor + 1\\right)\\times k\\, .``
+# - Flux knows the padding option `pad = SamePad()`. It means that the output volume should have the same x and y dimension as the input volume. In this exercise we compute the padding needed this option.  What padding ``p`` do you have to choose for a given ``n`` and ``f`` such that the input and output volumes have the same width and depth for stride ``s=1``. Check you result for the special case of ``n=4`` and ``f=3``.
+# - Compute the number of weights and biases of this convolutional layer.
+# - Compute the number of weights and biases for a dense layer (standard MLP layer) that has the same number of activations as this convolutional layer. Is the number of parameters larger for the dense layer or the convolutional layer?
+# #### Exercise 3
+# You are given a dataset with RGB color images with ``100\\times100`` pixels that you would like to classify into 20 different classes. Compute for the following neural network architectures the number of parameters (weights and biases).
+# - a multilayer perceptron with one hidden layer of 100 neurons.
+# - a convolutional network with 10 filters of size ``3\\times3\\times3`` stride 1 padding 1 followed by a dense hidden layer of 10 neurons.
+# - a convolution network with a first convolutional layer with 20 filters of size ``5\\times5\\times3`` padding 2 stride 5, a second convolutional layer with 10 filters of size ``3\\times3\\times20``, stride 2 padding 1, followed by a dense hidden layer of 10 neurons.
+
+
+
 # ╔═╡ 2bbf9876-0676-11ec-3985-73f4dcaea02f
 Markdown.parse("# Exercises
 ## Conceptual
@@ -407,23 +434,17 @@ Here below is an image (with padding 1 already applied). We would like to proces
 - Determine the width, height and depth of the volume after the convolutional layer.
 - Compute the output of the convolutional layer assuming the two biases to be zero.
 $(MLCourse.embed_figure("conv_exercise.png"))
+
 #### Exercise 2
-Given a volume of width ``n``, height ``n`` and depth ``c`` and a convolutional layer with ``k`` filters of size ``f\\times f\\times c`` with stride ``s`` and padding ``p``.
-- Convince yourself that this convolution layer has an output volume of size ``\\left( \\left\\lfloor\\frac{n + 2p - f}{s}\\right\\rfloor + 1\\right)\\times \\left( \\left\\lfloor\\frac{n + 2p - f}{s}\\right\\rfloor + 1\\right)\\times k\\, .``
-- Flux knows the padding option `pad = SamePad()`. It means that the output volume should have the same x and y dimension as the input volume. In this exercise we compute the padding needed this option.  What padding ``p`` do you have to choose for a given ``n`` and ``f`` such that the input and output volumes have the same width and depth for stride ``s=1``. Check you result for the special case of ``n=4`` and ``f=3``.
-- Compute the number of weights and biases of this convolutional layer.
-- Compute the number of weights and biases for a dense layer (standard MLP layer) that has the same number of activations as this convolutional layer. Is the number of parameters larger for the dense layer or the convolutional layer?
-#### Exercise 3
-You are given a dataset with RGB color images with ``100\\times100`` pixels that you would like to classify into 20 different classes. Compute for the following neural network architectures the number of parameters (weights and biases).
-- a multilayer perceptron with one hidden layer of 100 neurons.
-- a convolutional network with 10 filters of size ``3\\times3\\times3`` stride 1 padding 1 followed by a dense hidden layer of 10 neurons.
-- a convolution network with a first convolutional layer with 20 filters of size ``5\\times5\\times3`` padding 2 stride 5, a second convolutional layer with 10 filters of size ``3\\times3\\times20``, stride 2 padding 1, followed by a dense hidden layer of 10 neurons.
+* Sketch the tree corresponding to the partition of the predictor space illustrated in the left-hand panel of the figure below. The num- bers inside the boxes indicate the mean of Y within each region.
+* Create a diagram similar to the left-hand panel of the figure below, using the tree illustrated in the right-hand panel. You should divide up the predictor space into the correct regions, and indicate the mean for each region.
+$(MLCourse.embed_figure("trees3.png"))
 
 ## Applied
-#### Exercise 4
+#### Exercise 3
 In this exercise our goal is to find a good machine learning model to classify images of Zalando's articles. You can load a description of the so-called Fashion-MNIST data set with `OpenML.describe_dataset(40996)` and load the data set with `OpenML.load(40996)`. Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline. Hints: cleaning is not necessary, but plotting some examples is advisable; linear classification is a good starting point for a first benchmark, but you should also explore other models like random forests (`RandomForestClassifier`), multilayer perceptrons (`NeuralNetworkClassifier`) and convolutional neural networks (`ImageClassifer`) and play manually a bit with their hyper-parameters (proper tuning with `TunedModel` may be too time-intensive). To reduce the computation time, we will only use the first 5000 images of the full dataset for training and we will not do cross-validation here but instead use samples 5001 to 10000 as a validation set to estimate the classification accuracy. *Hint:* you can use the resampling strategy `Holdout` for model tuning and evaluation.
-#### Exercise 5
-(optional) Use a recurrent neural network to classify emails in our spam dataset.
+#### (optional) Exercise 4
+Use a recurrent neural network to classify emails in our spam dataset.
 ")
 
 # ╔═╡ 3bd0ed27-7d3b-4036-87a4-2dd0e2874b58
@@ -462,6 +483,7 @@ MLCourse.footer()
 # ╠═3a7fa61a-69e0-4082-9bb2-13df40089bb2
 # ╠═4729c124-c2f8-442d-8f2f-f8e75bee7e40
 # ╠═a48c53e8-99f7-4b54-9a80-0be243b4cddb
+# ╟─9c30b5d2-6ad4-4d4c-9013-57d2f7cd2d0e
 # ╟─2bbf9876-0676-11ec-3985-73f4dcaea02f
 # ╟─01a467a5-7389-44d1-984d-244dfb1ea39f
 # ╟─64bac944-8008-498d-a89b-b9f8ee54aa98
