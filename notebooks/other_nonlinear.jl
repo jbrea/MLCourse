@@ -428,7 +428,7 @@ end
 Markdown.parse("# Exercises
 ## Conceptual
 #### Exercise 1
-Here below is an image (with padding 1 already applied). We would like to process it with a convolutional network with one convolution layer with two ``3 \\times 3`` filters (depicted below the image), stride 1 and relu non-linearity.
+Here below is an image (with padding 1 already applied; padding 1 means that one row/column of zeros is added to the top and bottom/left and right of the original image.). We would like to process it with a convolutional network with one convolution layer with two ``3 \\times 3`` filters (depicted below the image), stride 1 and relu non-linearity (stride 1 means that the filter moves 1 position between each application, as in the formula in the slides).
 - Determine the width, height and depth of the volume after the convolutional layer.
 - Compute the output of the convolutional layer assuming the two biases to be zero.
 $(MLCourse.embed_figure("conv_exercise.png"))
