@@ -27,6 +27,11 @@ end
 # ╔═╡ 7b013132-0ee2-11ec-1dd2-25a9f16f0568
 begin
     using PlutoUI
+    function MLCourse.embed_figure(name)
+        "![](data:img/png; base64,
+             $(open(MLCourse.base64encode,
+                    joinpath(Pkg.devdir(), "MLCourse", "notebooks", "figures", name))))"
+    end
     PlutoUI.TableOfContents()
 end
 
@@ -44,14 +49,18 @@ end
 iris.class
 
 # ╔═╡ 1ebd74bc-4479-41d2-aba4-934cdd2b778a
-@df iris cornerplot([:sepallength :sepalwidth :petallength :petalwidth],
-                    compact = true)
+@df iris corrplot([:sepallength :sepalwidth :petallength :petalwidth],
+                    compact = true, fillcolor=cgrad())
 
 # ╔═╡ 472f0d57-cf50-4c3d-b251-dcf2f7c121c2
 md"Number of clusters $(@bind nclust Slider(2:8, show_value = true))"
 
 # ╔═╡ d1c88a44-be52-4b0e-bc23-cca00d10ffb6
-mach1 = fit!(machine(KMeans(k = nclust), select(iris, Not(:class)))); # nclust is defined by the slider value above
+begin
+    # nclust is defined by the slider value above
+    mach1 = machine(KMeans(k = nclust), select(iris, Not(:class)))
+    fit!(mach1, verbosity = 0)
+end
 
 # ╔═╡ 4df24b22-47a7-446a-8e27-9f2031a75764
 prediction = MLJ.predict(mach1, select(iris, Not(:class)));
