@@ -53,7 +53,10 @@ iris.class
                     compact = true, fillcolor=cgrad())
 
 # ╔═╡ 472f0d57-cf50-4c3d-b251-dcf2f7c121c2
-md"Number of clusters $(@bind nclust Slider(2:8, show_value = true))"
+md"Number of clusters $(@bind nclust Slider(2:8, show_value = true))
+
+If you want to dive a bit deeper into some quantitative approaches that are used to select the number of clusters please have a look at [this wikipedia article](https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set) or this [opinionated tutorial](https://towardsdatascience.com/silhouette-method-better-than-elbow-method-to-find-optimal-clusters-378d62ff6891).
+"
 
 # ╔═╡ d1c88a44-be52-4b0e-bc23-cca00d10ffb6
 begin
