@@ -915,7 +915,7 @@ explained for the tree datasets.
 
 (b) Perform PCA and plot the proportion of variance explained.
 
-#### Exercise 5
+#### Exercise 5 (optional)
 In this exercise we look at a food consumption dataset with the relative
 consumption of certain food items in European countries. The
 numbers represent the percentage of the population consuming that food type.
@@ -934,7 +934,7 @@ PC2 and another with PC1 versus PC3. *Hint*: before applying PCA you may have to
 Pick one country that has a high score in the first component and verify that
 this country does indeed have this interpretation.
 
-#### Exercise 6
+#### Exercise 6 (optional)
 
 Take a random image e.g.
 ```julia
