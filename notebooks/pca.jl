@@ -33,6 +33,11 @@ using UMAP
 # ╔═╡ b97724e4-d7b0-4085-b88e-eb3c5bcbe441
 begin
     using PlutoUI
+    function MLCourse.embed_figure(name)
+        "![](data:img/png; base64,
+             $(open(MLCourse.base64encode,
+                    joinpath(Pkg.devdir(), "MLCourse", "notebooks", "figures", name))))"
+    end
     PlutoUI.TableOfContents()
 end
 
