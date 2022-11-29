@@ -184,12 +184,12 @@ md"The `PCA` function in `MLJ` has three important keyword arguments as explaine
 md"The report of a `PCA` machine returns the number of dimensions `indim` of the data. the number of computed principal components `outdim`, the total variance `tvar` and the `mean` of the data set, together with the variances `principalvars` along the computed principal components. The sum of the variances `principalvars` is given in `tprincipalvar` and the rest in `tresidualvar = tvar - tprincipalvar`. If you change the `variance_ratio` to a lower value above you will see that not all principal components are computed."
 
 # ╔═╡ ecc77003-c138-4ea9-93a7-27df46aa1e89
-md"Biplots are useful to see loadings and scores at the same time. The scores of each data point are given by the coordinates of the numbers plotted in gray when reading the bottom and the left axis. For example, the score for point 22 would be approximately (0, 4.8). The loadings are given by the red labels (not the tips of the arrows) when reading the top and the right axis. For examples the loadings of the first principal component are approximately (0.95, 0.1, 0.28) (see also `fitted_params` above)."
+md"Biplots are useful to see loadings and scores at the same time. The scores of each data point are given by the coordinates of the numbers plotted in gray when reading the bottom and the left axis. For example, the score for point 22 would be approximately (0, 4.8). The loadings are given by the red labels (not the tips of the arrows) when reading the top and the right axis. For examples the loadings of the first principal component are approximately (0.65, 0.09, 0.76) (see also `fitted_params` above)."
 
 # ╔═╡ 18ad4980-2960-4ea9-8c9a-bf17cd3546ff
 function data_generator(; seed = 71,  N = 100, rng = MersenneTwister(seed))
 	h = [2.5 1.5 .8] .* randn(rng, N, 3)
-    a1 = rand(); a2 = rand()
+    a1 = rand(rng); a2 = rand(rng)
 	G = [1 0 0
          0 cos(a1) -sin(a1)
          0 sin(a1) cos(a1)] * [cos(a2) 0 sin(a2)
@@ -995,7 +995,7 @@ MLCourse.footer()
 # ╟─ecc77003-c138-4ea9-93a7-27df46aa1e89
 # ╠═89406c26-7cba-4dd2-a6a3-8d572b440e01
 # ╟─743477bb-6cf0-419e-814b-e774738e8d89
-# ╟─18ad4980-2960-4ea9-8c9a-bf17cd3546ff
+# ╠═18ad4980-2960-4ea9-8c9a-bf17cd3546ff
 # ╟─4a8188a0-c809-4014-9fef-cf6b5f830b1b
 # ╟─df9a5e8d-0692-44e4-8fd0-43e8643c4b7c
 # ╟─d3e5ca43-f70e-4a11-a3c9-fc0755179e4c
