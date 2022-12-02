@@ -97,6 +97,8 @@ md"Now we let this agent play the game for 10^6 episodes and learn the Q-values 
 # ╔═╡ 95ee4cf6-afd8-4979-b907-10d13aa3b079
 md"# Markov Decision Processes
 
+In this section we assume that all the transition probabilities and all rewards are known. Then the only problem to solve is to find in each state the optimal policy. This optimal policy can be found with a fixed-point iteration called \"policy iteration\", where one starts with an arbitrary policy and iterates a policy improvement step until the optimal policy is found.
+
 ## A Side-Remark about Fixed-Point Iteration
 
 Some equations can be nicely solved by a fixed point iteration.
@@ -186,7 +188,7 @@ Although there is less often a guard in the blue room, there is less reward to g
 # ╔═╡ dc7c5cb0-30b2-4427-8aeb-f312a88effd1
 md"# Q-Learning
 
-Q-learning is an alternative method for updating Q-values that relies on the idea that ``Q(s_t, a_t)`` for the optimal policy can be estimated by knowing ``r_t`` and ``\max_a Q(s_{t+1}, a)``.
+Q-learning is an alternative method for updating Q-values that relies on the idea that ``Q(s_t, a_t)`` for the optimal policy can be estimated by knowing ``r_t`` and ``\max_a Q(s_{t+1}, a)``. In Q-learning the transition probabilities and rewards are unknown and the optimal policy has to be found while exploring the environment.
 "
 
 # ╔═╡ e39227c8-8148-43cb-9351-774682b65646
