@@ -4,6 +4,7 @@ import Pkg
 using Pkg.Artifacts
 using Requires, PrecompilePlutoCourse
 using Markdown, Base64
+using HypertextLiteral, PyCall
 
 function rel_path(args...)
     devpath = joinpath(Pkg.devdir(), "MLCourse")
@@ -15,8 +16,20 @@ function rel_path(args...)
 end
 
 include("notebooks.jl")
+export @mlcode, mlstring
 
 function __init__()
+if isdefined(Main, :PlutoRunner) && isdefined(Main.PlutoRunner, :embed_display)
+    global embed_display = Main.PlutoRunner.embed_display
+    py"""
+import warnings
+import matplotlib.pyplot as plt
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    plt.rcParams.update({'backend' : 'Agg'})
+"""
+end
+
 ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
 PrecompilePlutoCourse.configure(@__MODULE__,
     start_notebook = rel_path("index.jl"),
@@ -184,7 +197,7 @@ function fitted_linear_func(mach)
 end;
 
 _grid(x, y) = (repeat(x, length(y)), repeat(y, inner = length(x)))
-function grid(x, y; names = (:X, :Y), output_format = NamedTuple)
+function grid2D(x, y; names = (:X, :Y), output_format = NamedTuple)
     t = NamedTuple{names}(_grid(x, y))
     output_format(t)
 end

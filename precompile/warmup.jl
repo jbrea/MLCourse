@@ -1,6 +1,6 @@
 using Pkg, Logging
 Pkg.activate(joinpath(@__DIR__, ".."))
-using Pluto, Random
+using Pluto, Random, MLJ, DataFrames, Plots, Zygote, MLCourse
 
 # using Pluto, MLCourse, MLJ, MLJLinearModels, StatsPlots, DataFrames,
 #       Distributions, Random, Flux, Zygote, ReinforcementLearning
