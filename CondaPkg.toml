@@ -1,0 +1,6 @@
+[deps]
+scikit-learn = ""
+openml = ""
+pandas = ""
+matplotlib = ""
+numpy = ""

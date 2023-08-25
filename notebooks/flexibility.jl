@@ -20,9 +20,10 @@ using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 end
-using Revise, MLCourse, HypertextLiteral, PyCall, Plots, Random, MLJ, MLJLinearModels, DataFrames, Statistics, NearestNeighborModels
+using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, Statistics, NearestNeighborModels
 import MLCourse: fitted_linear_func
 import PlutoPlotly as PP
+const M = MLCourse.JlMod
 MLCourse.CSS_STYLE
 end
 
@@ -52,9 +53,10 @@ In this section we will see that standard linear regression or classification is
 "
 
 # ╔═╡ 12942f5a-efb1-11eb-399a-a1300d636217
-@mlcode(
+mlcode(
 """
 using DataFrames, Random
+
 f(x) = .3 * sin(10x) + .7x
 # f(x) = .0015*(12x-6)^4 -.035(12x-6)^2 + .5x + .2  # an alternative
 σ(x) = 1 / (1 + exp(-x))
@@ -71,7 +73,27 @@ function classification_data_generator(; n, s = 20, rng = Random.GLOBAL_RNG)
 end
 """
 ,
-py"""
+"""
+import pandas as pd
+import numpy as np
+import random
+
+def f(x):
+    return 0.3 * np.sin(10*x) + 0.7*x
+
+def sigma(x):
+    return 1 / (1 + np.exp(-x))
+
+def regression_data_generator(n, sigma=0.1, rng=random):
+    x = rng.rand(n)
+    y = f(x) + sigma * rng.randn(n)
+    return pd.DataFrame({'x': x, 'y': y})
+
+def classification_data_generator(n, s=20, rng=random):
+    X1 = rng.rand(n)
+    X2 = rng.rand(n)
+    y = (sigma(s * (f(X1) - X2)) > rng.rand(n)).astype(int)
+    return pd.DataFrame({'X1': X1, 'X2': X2, 'y': y})
 """
 ;
 showoutput = false,
@@ -112,8 +134,8 @@ md"Control the noise level of the data generator with this slider:
 
 # ╔═╡ 12942f62-efb1-11eb-3f59-f981bc32f308
 begin
-MLCourse.eval(:(regression_data = regression_data_generator(n = 50, σ = $σ_gen, rng = $(Random.MersenneTwister(3)))))
-regression_data = MLCourse.regression_data
+MLCourse._eval(:(regression_data = regression_data_generator(n = 50, σ = $σ_gen, rng = $(Random.MersenneTwister(3)))))
+regression_data = M.regression_data
 end
 
 # ╔═╡ 12942f6e-efb1-11eb-0a49-01a6a2d0196f
@@ -157,7 +179,7 @@ end;
 
 # ╔═╡ cfcb8f61-af91-40dd-951a-09e8dbf17e30
 begin
-    regression_test_data = MLCourse.regression_data_generator(n = 10^4, σ = σ_gen)
+    regression_test_data = M.regression_data_generator(n = 10^4, σ = σ_gen)
     plosses = hcat([let m = fit!(machine(Polynomial(degree = d) |> LinearRegressor(),
                                          select(regression_data, Not(:y)),
                                          regression_data.y), verbosity = 0)
@@ -168,12 +190,12 @@ begin
 end;
 
 # ╔═╡ 6fa9b644-d4a6-4c53-9146-9d978207bfd0
-begin
+let f = M.f
     scatter(regression_data.x, regression_data.y, label = "training data")
     p5 = plot!(0:.01:1, predict(m3, (x = 0:.01:1,)), w = 3,
 		       xlabel = "X", ylabel = "Y",
                label = "$degree-polynomial regression", legend = :topleft)
-	plot!(MLCourse.f, color = :green, label = "data generator", w = 2)
+	plot!(f, color = :green, label = "data generator", w = 2)
     p6 = plot(1:17, plosses[1, :], color = :blue, label = "training loss")
     plot!(1:17, plosses[2, :], color = :red, label = "test loss")
     hline!([minimum(plosses[2, :])], color = :red,
@@ -194,7 +216,7 @@ $(mlstring(md"Because this is not a commonly used machine learning method, there
 """
 
 # ╔═╡ e9b0ea86-a5f5-43fa-aa16-5a0240f298dd
-@mlcode(
+mlcode(
 """
 using MLJ, MLJLinearModels, DataFrames
 
@@ -253,7 +275,7 @@ m3 = machine(Polynomial(degree = 4) |> LinearRegressor(),
 fit!(m3, verbosity = 0)
 """
 ,
-py"""
+"""
 """
 ;
 showoutput = false
@@ -287,8 +309,8 @@ s\_gen = $(@bind s_gen Slider(5:50, default = 20, show_value = true))
 
 # ╔═╡ 12942f94-efb1-11eb-234e-51492b51e583
 begin
-MLCourse.eval(:(classification_data = classification_data_generator(n = 400, s = $s_gen, rng = $(MersenneTwister(8)))))
-classification_data = MLCourse.classification_data
+MLCourse._eval(:(classification_data = classification_data_generator(n = 400, s = $s_gen, rng = $(MersenneTwister(8)))))
+classification_data = M.classification_data
 end
 
 # ╔═╡ 12942fa0-efb1-11eb-01c8-6dae80c55fb8
@@ -321,7 +343,7 @@ md"The area under the ROC curve (AUC) of the linear classifier is small, because
 
 # ╔═╡ 16f0d1b3-bd97-407d-9a79-25b0fb05bbeb
 begin
-    classification_test_data = MLCourse.classification_data_generator(n = 10^4)
+    classification_test_data = M.classification_data_generator(n = 10^4)
     cplosses = hcat([let m = fit!(machine(Polynomial(degree = d,
                                                      predictors = (:X1, :X2)) |>
                                           LogisticClassifier(penalty = :none),
@@ -332,7 +354,7 @@ begin
                    end
                    for d in 1:17]...)
     c_irred_error = let data = classification_test_data,
-                        p = MLCourse.σ.(s_gen * (MLCourse.f.(data.X1) .- data.X2))
+                        p = M.σ.(s_gen * (M.f.(data.X1) .- data.X2))
         mean(log_loss(UnivariateFinite([false, true], p,
 			                            augment = true, pool = missing),
 			 data.y))
@@ -341,14 +363,14 @@ end;
 
 # ╔═╡ 2fa54070-e261-462d-bd63-c225b92fa876
 begin
-    m4 = machine(MLCourse.Polynomial(degree = degree2, predictors = (:X1, :X2)) |> LogisticClassifier(penalty = :none),
+    m4 = machine(Polynomial(degree = degree2, predictors = (:X1, :X2)) |> LogisticClassifier(penalty = :none),
                  select(classification_data, Not(:y)),
                  classification_data.y);
     fit!(m4, verbosity = 0);
 end;
 
 # ╔═╡ ed62cb94-8187-4d50-a6f9-6967893dd021
-begin
+let
     scatter(xgrid.X1, xgrid.X2, color = coerce(predict_mode(m4, xgrid), Count),
             markersize = 2, label = nothing, markerstrokewidth = 0,
             xlabel = "X1", ylabel = "X2")
@@ -370,7 +392,7 @@ end
 let
 	fprs_l, tprs_l, _ = roc(predict(m2, select(classification_test_data, Not(:y))), classification_test_data.y)
 	fprs_p, tprs_p, _ = roc(predict(m4, select(classification_test_data, Not(:y))), classification_test_data.y)
-	p = MLCourse.σ.(s_gen*(MLCourse.f.(classification_test_data.X1) .- classification_test_data.X2))
+	p = M.σ.(s_gen*(M.f.(classification_test_data.X1) .- classification_test_data.X2))
 	fprs_o, tprs_o, _ = roc(UnivariateFinite.(Ref([false, true]), p, augment = true, pool = missing), classification_test_data.y)
 	plot(fprs_l, tprs_l, label = "linear classifier",
 		legend_position = :bottomright, ylabel = "true positive rate",
@@ -383,7 +405,7 @@ end
 md"### Running Polynomial Classification"
 
 # ╔═╡ 21a5aebb-226e-40e5-806b-63f501016b19
-@mlcode(
+mlcode(
 """
 using MLJ, MLJLinearModels
 # we use the same custom code for the Polynomial
@@ -395,7 +417,7 @@ m4 = machine(Polynomial(degree = 3, predictors = (:X1, :X2)) |>
 fit!(m4, verbosity = 0)
 """
 ,
-py"""
+"""
 """
 ;
 showoutput = false
@@ -412,8 +434,8 @@ K = $(@bind K Slider(1:50, show_value = true))
 
 # ╔═╡ ef0892e2-6c9d-4cea-ae6e-609b800c6f4c
 begin
-regression_datak = MLCourse.regression_data_generator(n = 50, σ = σ_genk)
-regression_test_datak = MLCourse.regression_data_generator(n = 10^4, σ = σ_genk)
+regression_datak = M.regression_data_generator(n = 50, σ = σ_genk)
+regression_test_datak = M.regression_data_generator(n = 10^4, σ = σ_genk)
 losses = hcat([let m = fit!(machine(KNNRegressor(K = k),
                                 select(regression_datak, Not(:y)),
                                 regression_datak.y), verbosity = 0)
@@ -452,7 +474,7 @@ end
 md"### Running K-Nearest-Neighbor Regression"
 
 # ╔═╡ 7a58ca5a-e299-4c26-939c-97e23e8a07a7
-@mlcode(
+mlcode(
 """
 using NearestNeighborModels
 # WARNING: running KNNRegressor on more than a few predictors
@@ -463,7 +485,7 @@ mach = machine(KNNRegressor(K = 4),
 fit!(mach, verbosity = 0)
 """
 ,
-py"""
+"""
 """
 ;
 showoutput = false
@@ -478,8 +500,8 @@ K = $(@bind Kc Slider(1:2:100, show_value = true))"
 
 # ╔═╡ 0a57f15b-c292-4c64-986d-f046260da66e
 begin
-    classification_datak = MLCourse.classification_data_generator(n = 400, s = s_genk)
-    classification_test_datak = MLCourse.classification_data_generator(n = 10^4, s = s_genk)
+    classification_datak = M.classification_data_generator(n = 400, s = s_genk)
+    classification_test_datak = M.classification_data_generator(n = 10^4, s = s_genk)
     closses = hcat([let m = fit!(machine(KNNClassifier(K = k),
                                          select(classification_datak, Not(:y)),
                                          classification_datak.y), verbosity = 0)
@@ -521,7 +543,7 @@ md"### Running K-Nearest-Neighbor Classification"
 
 
 # ╔═╡ 6f371ccd-d92e-44d7-9ab4-23ddcaf13b5f
-@mlcode(
+mlcode(
 """
 using NearestNeighborModels
 # WARNING: running KNNClassifier on more than a few predictors
@@ -533,7 +555,7 @@ fit!(mach, verbosity = 0)
 
 """
 ,
-py"""
+"""
 """
 ;
 showoutput = false
@@ -553,7 +575,7 @@ of 60'000 training images has to be found.
 "
 
 # ╔═╡ 34db537f-9cd8-4105-9244-0d05b09a9967
-@mlcode(
+mlcode(
 """
 using OpenML
 mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
@@ -569,7 +591,7 @@ test_predictions = predict_mode(m5, mnist_x[60001:70000, :])
 mnist_errorrate = mean(test_predictions .!= mnist_y[60001:70000])
 """
 ,
-py"""
+"""
 """
 ;
 eval = false
@@ -593,7 +615,7 @@ The strategy is to
 "
 
 # ╔═╡ f10b7cad-eda3-4ec9-99ee-d43ed013a057
-@mlcode(
+mlcode(
 """
 f(x) = .3 * sin(10x) + .7x
 conditional_generator(x; n = 50, σ = 0.1) = f(x) .+ σ*randn(n)
@@ -604,7 +626,7 @@ end
 f̂(x) = 0.1 + x
 """
 ,
-py"""
+"""
 """
 ;
 showoutput = false
@@ -614,32 +636,32 @@ showoutput = false
 md"The expected error of a function `f` at point `x` for our `conditional_generator` can be estimated by computing the mean squared error for many samples obtained from this generator."
 
 # ╔═╡ c6a59b85-d031-4ad4-9e24-691494d08cde
-@mlcode(
+mlcode(
 """
 expected_error(f̂, 0.1) # estimated total expected error at 0.1
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ e50b8196-e804-473a-b3b5-e22fdb9d2f45
-@mlcode(
+mlcode(
 """
 (f(.1) - f̂(.1))^2 # reducible error
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ f413ea94-36ca-4afc-8ca8-9a7e88101980
-@mlcode(
+mlcode(
 """
 expected_error(f, 0.1) # estimated irreducible error
 """
 ,
-py"""
+"""
 """
 )
 
@@ -654,11 +676,11 @@ The result above holds for `x = 0.1`. In the figure below we can get to the same
 md"σ\_noise = $(@bind σ_noise Slider(.01:.01:.5, default = .2, show_value = true))"
 
 # ╔═╡ dbf7fc72-bfd0-4c57-a1a9-fb5881e16e7e
-let x = rand(100), grid = 0:.05:1, f = MLCourse.f, f̂ = MLCourse.f̂
-    p1 = scatter(x, vcat(MLCourse.conditional_generator.(x; n = 1, σ = σ_noise)...), label = "samples")
+let x = rand(100), grid = 0:.05:1, f = M.f, f̂ = M.f̂
+    p1 = scatter(x, vcat(M.conditional_generator.(x; n = 1, σ = σ_noise)...), label = "samples")
     plot!(f, label = "f", w = 2)
     plot!(f̂, label = "f̂", w = 2, ylabel = "y")
-    p2 = plot(grid, MLCourse.expected_error.(f̂, grid, σ = σ_noise), label = "expected error f̂", w = 3)
+    p2 = plot(grid, M.expected_error.(f̂, grid, σ = σ_noise), label = "expected error f̂", w = 3)
     plot!(grid, (f.(grid) .- f̂.(grid)).^2, label = "reducible error", w = 3)
     hline!([σ_noise^2], label = "irreducible error", ylims = (0, .6), w = 3, xlabel = "x", ylabel = "mse")
     plot(p1, p2, layout = (2, 1), legend = :topleft)
@@ -689,12 +711,12 @@ bvd = let K = 100, Kshow = 10, xgrid = 0:.01:1
     colors = Plots.Colors.distinguishable_colors(Kshow)
     Random.seed!(123)
     x = rand(xgrid, 50)
-    y = [vcat(MLCourse.conditional_generator.(x, n = 1)...) for _ in 1:K]
+    y = [vcat(M.conditional_generator.(x, n = 1)...) for _ in 1:K]
     m = [machine(Polynomial(degree = deg_bvd) |> LinearRegressor(), DataFrame(x = x), y[k]) |> m -> fit!(m, verbosity = 0) for k in 1:K]
     pred = [predict(m[k], (x = xgrid,)) for k in 1:K]
     avg = mean(pred)
     vari = var(pred, corrected = false)
-    testdata = MLCourse.conditional_generator.(xgrid, n = 10^4)
+    testdata = M.conditional_generator.(xgrid, n = 10^4)
     expected_error = [mean(abs2, pred[i][j] - testdata[j][k]
                            for i in 1:K, k in 1:10^4) for j in 1:length(xgrid)]
     (; K, Kshow, x, y, xgrid, pred, avg, vari, colors, expected_error, testdata)
@@ -710,7 +732,7 @@ let colors = bvd.colors
         scatter!(bvd.x, bvd.y[k], c = colors[k], label = "training set $k", alpha = .3)
         plot!(bvd.xgrid, bvd.pred[k], c = colors[k], w = 1, label = "fit $k")
     end
-    plot!(MLCourse.f, c = :green, w = 2, label = "f")
+    plot!(M.f, c = :green, w = 2, label = "f")
     plot!(bvd.xgrid, bvd.avg, c = :red,  w = 2, label = "fit average")
     vline!([x_bvd], label = nothing, c = :gray)
     plot!(legend_position = :outertopright,
@@ -720,7 +742,7 @@ end
 
 # ╔═╡ 6523395e-33ae-453a-94eb-0a7463e9ea94
 let Ktest = 18, dataticks = range(.39, .58, Ktest), fitticks = range(.12, .31, bvd.Kshow),
-    f = MLCourse.f(x_bvd)
+    f = M.f(x_bvd)
     i = findfirst(==(x_bvd), bvd.xgrid)
     pred = getindex.(bvd.pred[1:bvd.Kshow], i)
     ytest = bvd.testdata[i][1:Ktest]
@@ -739,7 +761,7 @@ end
 
 # ╔═╡ 6a89d461-0c68-4dae-9a52-a86d13767674
 let
-    bias2 = (bvd.avg .- MLCourse.f.(bvd.xgrid)).^2
+    bias2 = (bvd.avg .- M.f.(bvd.xgrid)).^2
     hline([0.1^2], label = "irreducible error", c = :green, xrange = (0, 1))
     plot!(bvd.xgrid, bias2, label = "bias", c = :orange)
     plot!(bvd.xgrid, bvd.vari, label = "variance", c = :red)

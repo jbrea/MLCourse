@@ -20,19 +20,11 @@ using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 end
-using Revise, MLCourse, HypertextLiteral, PyCall, Plots, Random, MLJ, MLJLinearModels, DataFrames
+using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal
 import PlutoPlotly as PP
 MLCourse.CSS_STYLE
 end
-
-# ╔═╡ ce30505e-7488-49f4-9e42-2ec457ca6aa8
-@mlcode(
-using StatsPlots
-,
-py"""
-"""
-)
 
 # ╔═╡ 11e350b2-70bd-437b-acef-af5103a6eb96
 using PlutoUI; PlutoUI.TableOfContents()
@@ -52,30 +44,19 @@ md"The goal of this week is to
 The MNIST Handwritten Digit dataset consists of 70'000 standardized photos of handwritten digits in the format of 28x28 pixels grayscale images, with corresponding labels
 "
 
-# ╔═╡ 9990249a-3845-4d2b-a33d-c7dda396b63a
-@mlcode(
-nothing,
-py"""
-pd.DataFrame({'bl': [1, 2, 3], 'c': [1, 2, 3], 'd': ['bl', 'ba', 'ol']})
-"""
-)
-
 # ╔═╡ f63c04e8-eefe-11eb-1a14-8305504a6f1c
-@mlcode(
+mlcode(
 "
 using OpenML, DataFrames
-mnist = OpenML.load(554, maxbytes = 10^5) |> DataFrame"
+mnist = OpenML.load(554) |> DataFrame"
 ,
-py"""
+"""
 import pandas as pd
 import openml
 mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
 mnist
 """
 )
-
-# ╔═╡ 7ccc412f-85a7-4dbe-8c28-a4638ebe9f1e
-
 
 # ╔═╡ f63c04f2-eefe-11eb-2562-e530426e4300
 mlstring(md"With the keyword argument `maxbytes = 10^5`, we load only a small fraction of the dataset. We can load the full dataset by omitting this argument or setting it to `maxbytes = typemax(Int)`.
@@ -86,19 +67,23 @@ Let us have a look at the column `class` which contains the class labels for all
 )
 
 # ╔═╡ f63c04f2-eefe-11eb-3ceb-ff1e36a2a302
-@mlcode(
+mlcode(
+"""
 mnist.class
+"""
 ,
-py"""
+"""
 mnist['class']
 """
 )
 
 # ╔═╡ f63c04fc-eefe-11eb-35b6-5345dda134e7
-@mlcode(
+mlcode(
+"""
 size(mnist)
+"""
 ,
-py"""
+"""
 mnist.shape
 """
 )
@@ -111,13 +96,13 @@ We can plot different input images with the following code.
 """
 
 # ╔═╡ f63c0506-eefe-11eb-1857-e3eaf731c152
-@mlcode(
+mlcode(
 """
 using Plots
 plot(Gray.(reshape(Array(mnist[19, 1:end-1]) ./ 255, 28, 28)'))
 """
 ,
-py"""
+"""
 import matplotlib.pyplot as plt
 plt.imshow(mnist.iloc[18, :-1].values.reshape(28, 28).astype(float)/255,
            cmap='gray')
@@ -139,10 +124,12 @@ Not surprisingly, the class label for the image plotted above is \"6\", as we ca
 )
 
 # ╔═╡ f63c0506-eefe-11eb-399f-455ee06548da
-@mlcode(
+mlcode(
+"""
 mnist.class[19]
+"""
 ,
-py"""
+"""
 mnist['class'][18]
 """
 )
@@ -162,12 +149,12 @@ preprocessing code in the [scripts folder of the MLCourse package](https://githu
 ")
 
 # ╔═╡ f63c051a-eefe-11eb-0db2-c519292f88a2
-@mlcode(
+mlcode(
 """
 using CSV
 spam = CSV.read(download("https://go.epfl.ch/bio322-spam.csv"), DataFrame)
 """,
-py"""
+"""
 import pandas as pd
 import numpy as np
 spam = pd.read_csv("https://go.epfl.ch/bio322-spam.csv")
@@ -176,21 +163,21 @@ spam
 )
 
 # ╔═╡ f63c051a-eefe-11eb-16eb-a572fe41aa43
-@mlcode(
+mlcode(
 """
 spam[spam.label .== "ham", :] # only show non-spam email
 """,
-py"""
+"""
 spam[spam['label'] == 'ham']
 """
 )
 
 # ╔═╡ f63c0524-eefe-11eb-3abd-63d677b12db9
-@mlcode(
+mlcode(
 """
 spam[spam.label .== "spam", :] # only show spam examples
 """,
-py"""
+"""
 spam[spam['label'] == 'spam']
 """
 )
@@ -203,13 +190,13 @@ Our goal is to predict the wind speed in Lucerne from 5 hours old measurements.
 "
 
 # ╔═╡ f63c052e-eefe-11eb-3a14-e5e8f3d578a8
-@mlcode(
+mlcode(
 """
-weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),        
+weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
                    DataFrame)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -217,33 +204,33 @@ py"""
 md"The data that we loaded contains already a column with name `LUZ_wind_peak`. However, this is the measurement of the current wind peak. What we would like to do, is to predict the wind peak in 5 hours. We have hourly measurements. We can see this by looking at the `time` column; `2015010113` means the measurement was done in the 13th hour of the first of January 2015. This means that the wind peak value we would like to predict given the measurements in the first row, is contained in the 6th row of the `LUZ_wind_peak` column, etc. Therefore, we take as our response variable `y` all wind peak measurements from hour 6 to the end of the dataframe and as input data all measurements from hour 1 until 5 hours before the end of the dataframe."
 
 # ╔═╡ f63c052e-eefe-11eb-0884-7bd433ce0c5e
-@mlcode(
+mlcode(
 """
 y = weather.LUZ_wind_peak[6:end] # from hour 6 until the end we take all wind values
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ f63c0538-eefe-11eb-2a4b-d19efe6b6689
-@mlcode(
+mlcode(
 """
 X = weather.LUZ_pressure[1:end-5] # pressure from the first hour until the fifth last hour
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ f63c0538-eefe-11eb-2eca-2d8bf12fae95
-@mlcode(
+mlcode(
 """
 histogram2d(X, y, markersize = 3, xlabel = "LUZ_pressure [hPa]",
 	        legend = false, ylabel = "LUZ_wind_peak [km/h]", bins = (250, 200))
 """
 ,
-py"""
+"""
 """
 )
 
@@ -256,14 +243,24 @@ Have a look at the [readme of the StatsPlots package](https://github.com/JuliaPl
 ""
 )
 
+# ╔═╡ ce30505e-7488-49f4-9e42-2ec457ca6aa8
+mlcode(
+"""
+using StatsPlots
+"""
+,
+"""
+"""
+)
+
 # ╔═╡ f63c054c-eefe-11eb-13db-171084b417a9
-@mlcode(
+mlcode(
 """
 @df weather corrplot([:BAS_pressure :LUG_pressure :LUZ_pressure :LUZ_wind_peak],
                      grid = false, fillcolor = cgrad(), size = (700, 600))
 """
 ,
-py"""
+"""
 """
 )
 
@@ -478,7 +475,7 @@ In the following we run in code the same example we had on the blackboard."
 md"For now we use the same data set as in the blackboard example."
 
 # ╔═╡ f63c05a6-eefe-11eb-2927-b1e9dbbe032d
-@mlcode(
+mlcode(
 """
 using DataFrames, Plots
 training_data = DataFrame(x = [0., 2., 2.], y = [-1., 4., 3.])
@@ -487,7 +484,15 @@ scatter(training_data.x, training_data.y,
 plot!(x -> 2x - 1, label = "mean data generator")
 """
 ,
-py"""
+"""
+import pandas as pd
+import matplotlib.pyplot as plt
+
+training_data = pd.DataFrame({'x': [0., 2., 2.], 'y': [-1., 4., 3.]})
+plt.scatter(training_data['x'], training_data['y'], label="training data")
+plt.plot([-1, 3], [2*(-1) - 1, 2*3 - 1], c='red', label="mean data generator")
+plt.legend(loc="upper left")
+plt.show()
 """
 )
 
@@ -498,7 +503,7 @@ md"Now we define a supervised learning machine. The function family, loss
    and the output."
 
 # ╔═╡ f63c05ba-eefe-11eb-18b5-7522b326ab65
-@mlcode(
+mlcode(
 """
 # using MLJ makes the functions machine, fit!, fitted_params, predict, ... available
 # MLJLinearModel contains LinearRegressor, LogisticClassifier etc.
@@ -510,7 +515,7 @@ fit!(mach, verbosity = 0); # fit the machine
 fitted_params(mach) # show the result
 """
 ,
-py"""
+"""
 """
 )
 
@@ -519,20 +524,22 @@ py"""
 md"Here, the `intercept` corresponds to $\theta_0$ in the slides and `coefs[1].second` to $\theta_1$. Why do we need to write `coefs[1].second`? The coefficients returned by the `fitted_params` function are, in general, a vector of pairs (`:x => 2.25` is a pair, with first element the name of the data column this coefficient multiplies and the second element the value of the coefficient.). We can also extract these numbers, e.g."
 
 # ╔═╡ 92bf4b9c-4bda-4430-bd0f-d85e09dd5d54
-@mlcode(
+mlcode(
+"""
 fitted_params(mach).intercept
+"""
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ 5911642f-151b-4d28-8109-6feb4d418ddf
-@mlcode(
+mlcode(
 """
 fitted_params(mach).coefs[1].second # or fitted_params(mach).coefs[1][2]
 """
 ,
-py"""
+"""
 """
 )
 
@@ -544,22 +551,22 @@ md"We can use the fitted machine and the `predict` function to compute $\hat y =
 )
 
 # ╔═╡ bd9a7214-f39e-4ae5-995a-6ec02d613fda
-@mlcode(
+mlcode(
 """
 predict(mach) # predictions on the training input x = [0, 2, 2]
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ f0f6ac8f-2e61-4b08-9383-45ff5b02c5b1
-@mlcode(
+mlcode(
 """
 predict(mach, DataFrame(x = [0.5, 1.5])) # the second argument is the test input x = [0.5, 1.5]
 """
 ,
-py"""
+"""
 """
 )
 
@@ -567,13 +574,13 @@ py"""
 md"Next, we define a function to compute the mean squared error for a given machine `mach` and a data set `data`."
 
 # ╔═╡ f63c05c4-eefe-11eb-2d60-f7bf7beb8118
-@mlcode(
+mlcode(
 """
 my_mse(mach, data) = mean((predict(mach, select(data, :x)) .- data.y).^2)
 my_mse(mach, training_data) # this is the training data
 """
 ,
-py"""
+"""
 """
 )
 
@@ -582,10 +589,12 @@ py"""
 md"We can get the same result by squaring the result obtained with the MLJ function `rmse` (root mean squared error)."
 
 # ╔═╡ 27f44b28-f6d6-4e1f-8dbe-6fe7789b9a18
-@mlcode(
+mlcode(
+"""
 rmse(predict(mach), training_data.y)^2
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -593,7 +602,7 @@ py"""
 md"For plotting we will define a new function `fitted_linear_func` that extracts the fitted parameters from a machine and returns a linear function with these parameters."
 
 # ╔═╡ f63c05d8-eefe-11eb-2a11-fd8f954bf059
-@mlcode(
+mlcode(
 """
 function fitted_linear_func(mach)
     θ̂ = fitted_params(mach)
@@ -603,12 +612,12 @@ function fitted_linear_func(mach)
 end
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ f63c05d8-eefe-11eb-0a2e-970192b02d61
-@mlcode(
+mlcode(
 """
 scatter(training_data.x, training_data.y,
         xrange = (-1, 3), label = "training data", legend = :topleft)
@@ -616,7 +625,7 @@ plot!(x -> 2x - 1, label = "mean data generator")
 plot!(fitted_linear_func(mach), color = :green, label = "fit")
 """
 ,
-py"""
+"""
 """
 )
 
@@ -625,13 +634,15 @@ md"
 Next we actually generate data from the data generator defined in the blackboard example."
 
 # ╔═╡ f63c0592-eefe-11eb-2a76-15de55eff3ad
-@mlcode(
+mlcode(
+"""
 function data_generator(x, σ)
 	y = 2x .- 1 .+ σ * randn(length(x))
 	DataFrame(x = x, y = y)
 end
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -639,22 +650,22 @@ py"""
 md"We can use this generator to create a large test set and compute empirically the test loss of the fitted machine."
 
 # ╔═╡ 4987ad0c-d100-4a5d-a725-12f23bcc7aa3
-@mlcode(
+mlcode(
 """
 my_mse(mach, data_generator(fill(1.5, 10^4), .5)) # test loss at 1.5 for σ = 0.5
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ 93f529ab-a386-4746-94de-63a536b5e2aa
-@mlcode(
+mlcode(
 """
 my_mse(mach, data_generator(randn(10^4), .5)) # test loss of the joint generator
 """
 ,
-py"""
+"""
 """
 )
 
@@ -683,55 +694,49 @@ First, we will run a simple linear regression to predict the wind peak in 5 hour
 "
 
 # ╔═╡ d14244d4-b54e-42cf-b812-b149d9fa59e0
-@mlcode(
+mlcode(
 """
 training_set1 = DataFrame(LUZ_pressure = weather.LUZ_pressure[1:end-5],
                           wind_peak_in5h = weather.LUZ_wind_peak[6:end])
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ 34e527f2-ef80-4cb6-be3a-bee055eca125
-@mlcode(
+mlcode(
 """
 m1 = machine(LinearRegressor(),
 			 select(training_set1, :LUZ_pressure),
 	         training_set1.wind_peak_in5h)
 fit!(m1, verbosity = 0)
+fitted_params(m1)
 """
 ,
-py"""
+"""
 """
 ;
 showoutput = false
 )
 
 # ╔═╡ e4712ebe-f395-418b-abcc-e10ada4b05c2
-md"Let us inspect the results.
-First we look at the fitted parameters.
+md"
 We find that there is a negative correlation between the pressure in Luzern
 and the wind speed 5 hours later in Luzern.
 "
-
-# ╔═╡ 8c9ae8f7-81b2-4d60-a8eb-ded5364fe0cc
-@mlcode(
-fitted_params(m1)
-,
-py"""
-"""
-)
 
 # ╔═╡ 4158eaff-884c-4b64-bef9-9f4511cdc5a4
 md"The fitted model can be used to make some predictions. Note that only the mean of the conditional distribution is predicted.
 "
 
 # ╔═╡ 9b62c374-c26e-4990-8ffc-790928e62e88
-@mlcode(
+mlcode(
+"""
 predict(m1, (LUZ_pressure = [930., 960., 990.],))
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -742,14 +747,14 @@ We will now use the predict function to plot the prediction on top of the wind p
 "
 
 # ╔═╡ ded13e94-7c29-430e-8864-373e682b5509
-@mlcode(
+mlcode(
 """
 histogram2d(X, y, markersize = 3, xlabel = "LUZ_pressure [hPa]",
 	        legend = false, ylabel = "LUZ_wind_peak [km/h]", bins = (250, 200))
 plot!(X, predict(m1), linewidth = 3)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -759,24 +764,26 @@ md"We use the root-mean-squared-error (`rmse`) = ``\sqrt{\frac1n\sum_{i=1}^n(y_i
 "
 
 # ╔═╡ 57f352dc-55ee-4e14-b68d-698938a97d92
-@mlcode(
+mlcode(
+"""
 rmse(predict(m1), training_set1.wind_peak_in5h)
+"""
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ b0de002f-3f39-4378-8d68-5c4606e488b7
-@mlcode(
+mlcode(
 """
-weather_test = CSV.read(joinpath(@__DIR__, "..", "data", "weather2019-2020.csv"),
+weather_test = CSV.read(download("https://go.epfl.ch/bio322-weather2019-2020.csv"),
                         DataFrame);
 test_set1 = DataFrame(LUZ_pressure = weather_test.LUZ_pressure[1:end-5],
                       wind_peak_in5h = weather_test.LUZ_wind_peak[6:end])
 rmse(predict(m1, select(test_set1, :LUZ_pressure)), test_set1.wind_peak_in5h)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -791,10 +798,12 @@ With `DataFrame(schema(weather))` we get additionally information about the type
 "
 
 # ╔═╡ 25e1f89f-a5b2-4d5c-a6e8-a990b3bebddb
-@mlcode(
+mlcode(
+"""
 DataFrame(schema(weather))
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -804,7 +813,7 @@ md"When loading data one should check if the scientific type is correctly detect
 After the transformation to the correct scientific type, we fill define a machine and fit it on all measurements, except the response variable and the time variable."
 
 # ╔═╡ 753ec309-1363-485d-a2bd-b9fa100d9058
-@mlcode(
+mlcode(
 """
 coerce!(weather, Count => Continuous)
 m2 = machine(LinearRegressor(),
@@ -813,7 +822,7 @@ m2 = machine(LinearRegressor(),
 fit!(m2, verbosity = 0)
 """
 ,
-py"""
+"""
 """
 ;
 showoutput = false
@@ -823,35 +832,35 @@ showoutput = false
 md"Let us have a look at the fitted parameters. For example, we can conclude that an increase of pressure in Luzern by 1hPa correlates with a decrease of almost 2km/h of the expected wind peaks - everything else being the same. This result is consistent with our expectation that high pressure locally is usually accompanied by good weather without strong winds. On the other hand, an increase of pressure in Genève by 1hPa correlates with an increase of more than 5km/h of the expected wind peaks. This result is also consistent with our expectations, given that stormy west wind weather occurs usually when there is a pressure gradient from south west to north east of Switzerland. Note also that the parameter for pressure in Pully (50 km north east from Genève) is -4.4km/h⋅hPa, i.e. when the pressure in Pully is the same as in Genève these two contributions to the prediction almost compensate each other."
 
 # ╔═╡ 618ef3c7-0fda-4970-88e8-1dac195545de
-@mlcode(
+mlcode(
 """
 sort!(DataFrame(predictor = names(select(weather, Not([:LUZ_wind_peak, :time]))),
                 value = last.(fitted_params(m2).coefs)), :value)
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ 2d25fbb6-dc9b-40ad-bdce-4c952cdad077
-@mlcode(
+mlcode(
 """
 rmse(predict(m2, select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
      weather.LUZ_wind_peak[6:end])
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ c9f10ace-3299-45fb-b98d-023a35dd405a
-@mlcode(
+mlcode(
 """
 rmse(predict(m2, select(weather_test[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
      weather_test.LUZ_wind_peak[6:end])
 """
 ,
-py"""
+"""
 """
 )
 
@@ -1004,9 +1013,7 @@ MLCourse.FOOTER
 
 # ╔═╡ Cell order:
 # ╟─f63c04dc-eefe-11eb-1e24-1d02a686920a
-# ╠═9990249a-3845-4d2b-a33d-c7dda396b63a
-# ╠═f63c04e8-eefe-11eb-1a14-8305504a6f1c
-# ╠═7ccc412f-85a7-4dbe-8c28-a4638ebe9f1e
+# ╟─f63c04e8-eefe-11eb-1a14-8305504a6f1c
 # ╟─f63c04f2-eefe-11eb-2562-e530426e4300
 # ╟─f63c04f2-eefe-11eb-3ceb-ff1e36a2a302
 # ╟─f63c04fc-eefe-11eb-35b6-5345dda134e7
@@ -1074,7 +1081,6 @@ MLCourse.FOOTER
 # ╟─d14244d4-b54e-42cf-b812-b149d9fa59e0
 # ╟─34e527f2-ef80-4cb6-be3a-bee055eca125
 # ╟─e4712ebe-f395-418b-abcc-e10ada4b05c2
-# ╟─8c9ae8f7-81b2-4d60-a8eb-ded5364fe0cc
 # ╟─4158eaff-884c-4b64-bef9-9f4511cdc5a4
 # ╟─9b62c374-c26e-4990-8ffc-790928e62e88
 # ╟─0087f48b-7b50-4796-9371-fc87cf33c55d

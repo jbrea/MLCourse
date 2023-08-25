@@ -20,10 +20,11 @@ using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 end
-using Revise, MLCourse, HypertextLiteral, PyCall, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra
+using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra
 import Distributions: Normal, Poisson
 import MLCourse: poly, Polynomial
 import PlutoPlotly as PP
+const M = MLCourse.JlMod
 MLCourse.CSS_STYLE
 end
 
@@ -49,13 +50,13 @@ md"# 1. Ridge Regression (L2)
 md"λ₂ = $(@bind λ₂ Slider(0:.01:5, show_value = true))"
 
 # ╔═╡ 50ac0b07-ffee-40c3-843e-984b3c628282
-l2coefs = MLCourse.ridge_regression(MLCourse.x, MLCourse.y, λ₂)
+l2coefs = M.ridge_regression(M.x, M.y, λ₂)
 
 # ╔═╡ 58746554-ca5a-4e8e-97e5-587a9c2aa44c
 let r = λ₂ == 0 ? 6 : norm([l2coefs...]),
     ccol = plot_color(:blue, .3),
-	ridge_regression = MLCourse.ridge_regression,
-    x = MLCourse.x, y = MLCourse.y
+	ridge_regression = M.ridge_regression,
+    x = M.x, y = M.y
     path = hcat([[ridge_regression(x, y, l)...] for l in 0:.01:5]...)
     p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y",
 	             legend = :topleft)
@@ -95,7 +96,7 @@ For the lasso, we run a fixed point iteration that starts at the unregularized s
 "
 
 # ╔═╡ 8bd483cc-f490-11eb-38a1-b342dd2551fd
-@mlcode(
+mlcode(
 """
 begin
     function ridge_regression(x, y, λ)
@@ -135,7 +136,7 @@ x = rand(n)
 y = 2.2x .+ .3 .+ .2randn(n)
 """
 ,
-py"""
+"""
 import numpy as np
 
 def ridge_regression(x, y, l):
@@ -170,7 +171,6 @@ def lasso(x, y, l):
 n = 30
 x = np.random.rand(n)
 y = 2.2 * x + 0.3 + 0.2 * np.random.randn(n)
- 
 """
 ;
 showoutput = false,
@@ -184,13 +184,13 @@ md"# 2. Lasso (L1)"
 md"λ₁ = $(@bind λ₁ Slider(0:.01:1, show_value = true))"
 
 # ╔═╡ 4841f9ba-f3d2-4c65-9225-bc8d0c0a9478
-l1coefs = MLCourse.lasso(MLCourse.x, MLCourse.y, λ₁)
+l1coefs = M.lasso(M.x, M.y, λ₁)
 
 # ╔═╡ ed2b7969-79cd-43c8-bcdb-34dab89c2cb0
 let r = λ₁ == 0 ? 10 : norm([l1coefs...], 1),
     ccol = plot_color(:blue, .3),
-    lasso = MLCourse.lasso,
-    x = MLCourse.x, y = MLCourse.y
+    lasso = M.lasso,
+    x = M.x, y = M.y
     path = hcat([[lasso(x, y, l)...] for l in 0:.01:1]...)
     p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y", legend = :topleft)
     plot!(x -> l1coefs.β₀ + x * l1coefs.β₁, w = 3, label = "lasso")
@@ -226,16 +226,17 @@ md"# 3. Regularization Examples
 md"""Instead of using the custom code to compute the ridge regression and the lasso we could have used some $(mlstring("MLJ", "")) functions."""
 
 # ╔═╡ c1033416-334e-4b0e-b81e-6f9137402730
-@mlcode(
+mlcode(
 """
-using MLJ, MLJLinearModels
+using MLJ, MLJLinearModels, DataFrames
+
 mach = machine(RidgeRegressor(lambda = 3.82, penalize_intercept = true),
 	           DataFrame(x = x), y)
 fit!(mach, verbosity = 0)
 fitted_params(mach)
 """
 ,
-py"""
+"""
 from sklearn.linear_model import Ridge, Lasso
 from sklearn.linear_model import LassoCV
 ridge = Ridge(alpha=3.82, fit_intercept=True)
@@ -248,14 +249,14 @@ ridge.coef_
 md"You can check with the slider above that we get indeed the same result with our custom method."
 
 # ╔═╡ 0429acfe-d31e-427a-96d9-deddfa2c30f8
-@mlcode(
+mlcode(
 """
 mach = machine(LassoRegressor(lambda = .1,
 	                          # usually the intercept is not penalized,
 	                          # but here we do penalize it.
 	                          penalize_intercept = true,
 	                          # usually the default optimizer is quite good,
-	                          # but here we decrease the tolerance to get 
+	                          # but here we decrease the tolerance to get
 	                          # higher precision.
                               solver = ISTA(tol = 1e-8)),
 	           DataFrame(x = x), y)
@@ -263,7 +264,7 @@ fit!(mach, verbosity = 0)
 fitted_params(mach)
 """
 ,
-py"""
+"""
 lasso = Lasso(alpha=0.1, fit_intercept=True, tol=1e-8)
 lasso.fit(x.reshape(-1, 1), y)
 lasso.coef_
@@ -292,18 +293,17 @@ $(@bind lambda Slider(-14:.1:.5, default = -4))
 # ╔═╡ a54e3439-69b8-41c8-bfe0-4575795fb9b8
 md"λ = $(lambda == -14 ? 0 : 10.0^lambda)"
 
-# ╔═╡ 2d2bc9c8-aab7-4597-a17c-0c9e2b7e2190
-
-
 # ╔═╡ 566be5a7-3eae-4c26-ab6d-605dcf08a57d
 md"## Tuning Two Hyperparameters: Lambda and Degree
 
 In the cell below we use a `TunedModel` to find with cross validation the best polynomial degree and the best regularization constant for ridge regression. Nore how we can just replace the `LinearRegressor()` by a `RidgeRegressor()` in the usual model for polynomial regression (previously we used `Polynomial() |> LinearRegressor()`)."
 
 # ╔═╡ fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
-@mlcode(
+mlcode(
 	"""
 using MLJ, MLJLinearModels, DataFrames
+import MLCourse: Polynomial
+	
 model = Polynomial() |> RidgeRegressor()
 self_tuning_model = TunedModel(model = model,
                                tuning =  Grid(goal = 500),
@@ -314,32 +314,33 @@ self_tuning_model = TunedModel(model = model,
                                               lower = 1e-12, upper = 1e-3,
                                               scale = :log10)],
                                measure = rmse)
+f(x) = .3 * sin.(10x) .+ .7x
 dataset = let x = rand(50)
-    DataFrame(x = x, y = .3 * sin.(10x) .+ .7x .+ .1*randn(50))
+    DataFrame(x = x, y = f.(x) .+ .1*randn(50))
 end
 self_tuning_mach = machine(self_tuning_model, select(dataset, :x), dataset.y)
 fit!(self_tuning_mach, verbosity = 0)
 report(self_tuning_mach)
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ 7b4daae4-20d3-4992-94e9-46882e47b840
-md"With the report function we can have a look at the best hyper-parameter values (`polynomial.degree`= $(report(MLCourse.self_tuning_mach).best_model.polynomial.degree) and 
- `ridge_regressor.lambda` = $(report(MLCourse.self_tuning_mach).best_model.ridge_regressor.lambda)) found by the self-tuning machine.
+md"With the report function we can have a look at the best hyper-parameter values (`polynomial.degree`= $(report(M.self_tuning_mach).best_model.polynomial.degree) and
+ `ridge_regressor.lambda` = $(report(M.self_tuning_mach).best_model.ridge_regressor.lambda)) found by the self-tuning machine.
 
 The result of the self-tuning machine can be visualized with the `plot` function."
 
 # ╔═╡ f5057d4a-1103-4728-becc-287d93d682ba
-@mlcode(
+mlcode(
 """
 using Plots
 plot(self_tuning_mach)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -351,9 +352,9 @@ In the plot **at the right** we see the root mean squared error as for different
 Let us have a look how well the model with the best hyper-parameters fits the data."
 
 # ╔═╡ 596fd0f2-eee0-46ca-a203-e7cbac6f9788
-@mlcode(
+mlcode(
 	"""
-    p1 = scatter(X.x, y,
+    p1 = scatter(dataset.x, dataset.y,
                  label = "training data", ylims = (-.1, 1.1))
     plot!(f, label = "generator", c = :green, w = 2)
     grid = 0:.01:1
@@ -364,7 +365,7 @@ Let us have a look how well the model with the best hyper-parameters fits the da
     annotate!([(.28, .6, "reducible error ≈ " * reducible_error_str)])
 """
 ,
-py"""
+"""
 """
 )
 
@@ -410,20 +411,18 @@ We load here the preprocessed spam data.
 "
 
 # ╔═╡ 8e542a48-ed28-4297-b2e8-d6a755a5fdf9
-@mlcode(
+mlcode(
 """
 using CSV
-spam_train = CSV.read(joinpath(Pkg.devdir(), "MLCourse", "data",
-                               "spam_preprocessed.csv"), DataFrame)
+spam_train = CSV.read(download("https://go.epfl.ch/bio322-spam_train.csv"), DataFrame)
 spam_train.spam_or_ham = String.(spam_train.spam_or_ham)
 coerce!(spam_train, :spam_or_ham => OrderedFactor)
-spam_test = CSV.read(joinpath(Pkg.devdir(), "MLCourse", "data",
-                              "spam_preprocessed_test.csv"), DataFrame)
+spam_test = CSV.read(download("https://go.epfl.ch/bio322-spam_test.csv"), DataFrame)
 spam_test.spam_or_ham = String.(spam_test.spam_or_ham)
 coerce!(spam_test, :spam_or_ham => OrderedFactor)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -431,7 +430,7 @@ py"""
 md"The `LogisticClassifier` and the `MultinomialClassifier` have a `penalty` argument that can be used to enforce an L1 or L2 penalty. Look up the documentation to learn more about it."
 
 # ╔═╡ d956613e-db32-488c-8ebb-fd61dfa31e59
-@mlcode(
+mlcode(
 """
 spam_mach = machine(LogisticClassifier(penalty = :l2, lambda = 1e-5),
                     select(spam_train, Not(:spam_or_ham)),
@@ -441,19 +440,19 @@ confusion_matrix(predict_mode(spam_mach, select(spam_train, Not(:spam_or_ham))),
                  spam_train.spam_or_ham) # on training data
 """
 ,
-py"""
+"""
 """
 )
 
 
 # ╔═╡ ef701511-db7e-4dc0-8d31-ea14471943ab
-@mlcode(
+mlcode(
 """
-confusion_matrix(predict_mode(spam_fit, select(spam_test, Not(:spam_or_ham))),
+confusion_matrix(predict_mode(spam_mach, select(spam_test, Not(:spam_or_ham))),
                  spam_test.spam_or_ham) # on test data
 """
 ,
-py"""
+"""
 """
 )
 
@@ -472,18 +471,19 @@ md"# 4. The Lasso Path for the Weather Data
 For the Lasso it is often interesting to see the fitted parameter values for different regularization values (the Lasso path). In the following we use the package `GLMNet` to do so."
 
 # ╔═╡ 1fa932c1-ce29-40ca-a8dc-e636aa2ecf66
-@mlcode(
+mlcode(
 """
 using CSV
-weather = CSV.read(download("https://raw.githubusercontent.com/jbrea/MLCourse/main/data/weather2015-2018.csv"), DataFrame)
+weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"), 
+                   DataFrame)
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
-@mlcode(
+mlcode(
 """
 import GLMNet: glmnet
 weather_input = select(weather, Not(:LUZ_wind_peak))[1:end-5, :]
@@ -491,7 +491,7 @@ weather_output = weather.LUZ_wind_peak[6:end]
 weather_fits = glmnet(Array(weather_input), weather_output)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -499,11 +499,12 @@ py"""
 md"In the following figure we can see that the predictor `BER_wind_peak` is the first one to have a non-zero coefficient when we decrease the regularization constant `λ`."
 
 # ╔═╡ 4652a904-5edb-463c-a046-5c5d378f7cca
-let lambda = log.(MLCourse.weather_fits.lambda),
-    col_names = names(MLCourse.weather_input)
-	cols = union((x -> x[1]).(findall(MLCourse.weather_fits.betas .> 0)))
+let fits = M.weather_fits,
+    lambda = log.(fits.lambda),
+    col_names = names(M.weather_input)
+	cols = union((x -> x[1]).(findall(fits.betas .> 0)))
 	append!(cols, setdiff(1:length(col_names), cols))
-	p = [PP.scatter(x = lambda, y = MLCourse.weather_fits.betas[i, :],
+	p = [PP.scatter(x = lambda, y = fits.betas[i, :],
 	                name = col_names[i])
         for i in cols]
     PP.PlutoPlot(PP.Plot(p, PP.Layout(xaxis_title = "log(λ)")))
@@ -513,12 +514,15 @@ end
 md"Indeed, if we were allowed to use only one predictor, the wind peak in Bern is most informative about the wind peak in Luzern five hours later. The correlation is positive, but there is a lot of noise."
 
 # ╔═╡ c9ed011c-8d36-4926-9ec4-84be3b4878d7
-@mlcode(
+mlcode(
 """
-scatter(weather_input.BER_wind_peak, weather_output, xlabel = "wind peak in Bern [km/h]", ylabel = "wind peak in Luzern 5 hours later [km/h]", label = nothing)
+scatter(weather_input.BER_wind_peak, weather_output,
+        xlabel = "wind peak in Bern [km/h]",
+        ylabel = "wind peak in Luzern 5 hours later [km/h]",
+        label = nothing)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -526,7 +530,7 @@ py"""
 md"In the figures below we see that the first few predictors explain most of the variability that is explainable with linear models. In fact, at `log(λ) = 0` we see that less than 10 predictors are sufficient to explain approximately 30% of the variance. Adding more predictors increases the explained variance to less than 40%."
 
 # ╔═╡ 40bb385f-1cbd-4555-a8ab-544a67f33595
-@mlcode(
+mlcode(
 """
 lambda = log.(weather_fits.lambda)
 p1 = plot(lambda, 100 * weather_fits.dev_ratio, ylabel = "% variance explained")
@@ -535,7 +539,7 @@ p2 = plot(lambda, reshape(sum(weather_fits.betas .!= 0, dims = 1), :),
           xlabel = "log(λ)")
 plot(p1, p2, layout = (2, 1), legend = false)
 """,
-py"""
+"""
 """
 )
 
@@ -641,7 +645,6 @@ MLCourse.FOOTER
 # ╟─3d50111b-3a08-4a41-96ce-d77a8e37275d
 # ╟─a54e3439-69b8-41c8-bfe0-4575795fb9b8
 # ╟─bdbf0dfd-8da5-4e54-89c4-ef4d6b3796ce
-# ╠═2d2bc9c8-aab7-4597-a17c-0c9e2b7e2190
 # ╟─566be5a7-3eae-4c26-ab6d-605dcf08a57d
 # ╟─fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
 # ╟─7b4daae4-20d3-4992-94e9-46882e47b840

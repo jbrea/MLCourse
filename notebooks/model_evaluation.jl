@@ -20,7 +20,7 @@ using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 end
-using Revise, MLCourse, HypertextLiteral, PyCall, Plots, Random, MLJ, MLJLinearModels, DataFrames
+using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal, Poisson
 import MLCourse: poly, Polynomial
 import PlutoPlotly as PP
@@ -204,16 +204,18 @@ In the following cell we generate an artificial data, fit a polynomial of degree
 """
 
 # ╔═╡ 30fe1445-6ddb-4ef2-8dcd-d41ff703da40
-@mlcode(
+mlcode(
 """
 using MLJ, MLJLinearModels
+using MLCourse: Polynomial
+
 X, y = make_regression(100, 1) # generate some artificial data
 evaluate!(machine(Polynomial(degree = 4) |> LinearRegressor(), X, y),
           resampling = Holdout(shuffle = true, fraction_train = 0.5),
           measure = rmse, verbosity = 0)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -225,15 +227,16 @@ In the following cell we generate an artificial data, fit a polynomial of degree
 """
 
 # ╔═╡ 8ae790b3-3987-4f41-8e21-adbb71081eb9
-@mlcode(
+mlcode(
 """
 using MLJ, MLJLinearModels
+
 X, y = make_regression(100, 1) # generate some artificial data
 evaluate!(machine(Polynomial(degree = 4) |> LinearRegressor(), X, y),
           resampling = CV(nfolds = 10), measure = rmse, verbosity = 0)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -246,9 +249,10 @@ Finding good hyper-parameters (tuning) is such an important step in the process 
 In the cell below you see an example where the degree of polynomial regression is automatically tuned on a given dataset by performing 10-fold cross-validation on all degrees on a \"grid\", i.e. of all degrees from 1 to 17 are tested."""
 
 # ╔═╡ f93f20db-4fed-481f-b085-ca744b68fa8f
-@mlcode(
+mlcode(
 """
-using MLJ, MLJLinearModels
+using MLJ, MLJLinearModels, DataFrames
+
 model = Polynomial() |> LinearRegressor()
 self_tuning_model = TunedModel(model = model, # the model to be tuned
                                resampling = CV(nfolds = 10), # how to evaluate
@@ -262,7 +266,7 @@ fit!(self_tuning_mach, verbosity = 0)
 report(self_tuning_mach) # show the result
 """
 ,
-py"""
+"""
 """
 )
 
@@ -289,13 +293,13 @@ $(mlstring(md"This happens when we `evaluate!` with cross-validation a self-tuni
 """
 
 # ╔═╡ 3e9c6f1c-4cb6-48d8-8119-07a4b03c2e4b
-@mlcode(
-	"""
+mlcode(
+"""
 nested_cv = evaluate!(machine(self_tuning_model, DataFrame(X), y),
                       resampling = CV(nfolds = 5), measure = rmse, verbosity = 0)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -303,10 +307,12 @@ py"""
 md"We can have a closer look at the report per fold:"
 
 # ╔═╡ c8d26ab6-86ec-4b37-9540-0f785fd8cdc2
-@mlcode(
-	nested_cv.report_per_fold
+mlcode(
+"""
+nested_cv.report_per_fold
+"""
 ,
-py"""
+"""
 """
 )
 

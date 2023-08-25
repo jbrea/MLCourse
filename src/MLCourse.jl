@@ -4,7 +4,7 @@ import Pkg
 using Pkg.Artifacts
 using Requires, PrecompilePlutoCourse
 using Markdown, Base64
-using HypertextLiteral, PyCall
+using HypertextLiteral, PythonCall
 
 function rel_path(args...)
     devpath = joinpath(Pkg.devdir(), "MLCourse")
@@ -16,18 +16,17 @@ function rel_path(args...)
 end
 
 include("notebooks.jl")
-export @mlcode, mlstring
+export mlcode, mlstring
 
 function __init__()
 if isdefined(Main, :PlutoRunner) && isdefined(Main.PlutoRunner, :embed_display)
     global embed_display = Main.PlutoRunner.embed_display
-    py"""
-import warnings
-import matplotlib.pyplot as plt
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    plt.rcParams.update({'backend' : 'Agg'})
+    pyexec("""
+import matplotlib as mpl    
+mpl.use("module://juliacall.matplotlib")
 """
+,
+PyMod)
 end
 
 ext = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"

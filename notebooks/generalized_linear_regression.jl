@@ -20,7 +20,7 @@ using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 end
-using Revise, MLCourse, HypertextLiteral, PyCall, Plots, Random, MLJ, MLJLinearModels, DataFrames
+using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal, Poisson
 import MLCourse: fitted_linear_func
 import PlutoPlotly as PP
@@ -112,9 +112,11 @@ md"# 2. Blackboard Example
 
 
 # ╔═╡ f63c0616-eefe-11eb-1cea-dfdaa64e6233
-@mlcode(
+mlcode(
 """
 using DataFrames, MLJ, Random
+
+logistic(x) = 1 / (1 + exp(-x))
 function data_generator(x; rng = Xoshiro(432))
     y = ifelse.(logistic.(2x .- 1) .> rand(rng, length(x)), "A", "B")
     DataFrame(x = x, y = categorical(y, levels = ["A", "B"]))
@@ -122,7 +124,7 @@ end
 classification_data = data_generator([0., 2., 3.])
 """
 ,
-py"""
+"""
 """
 )
 
@@ -139,7 +141,7 @@ md"
 Next we will fit a logistic classifier to this data."
 
 # ╔═╡ f63c061e-eefe-11eb-095b-8be221b33d49
-@mlcode(
+mlcode(
 """
 using MLJLinearModels
 mach3 = machine(LogisticClassifier(penalty = :none), # model
@@ -149,7 +151,7 @@ fit!(mach3, verbosity = 0);
 fitted_params(mach3)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -164,10 +166,12 @@ md"
 For the `LogisticClassifier` the `predict` method returns the conditional probabilities of the classes. Click on the little gray triangle below to toggle the display of the full output."
 
 # ╔═╡ f63c061e-eefe-11eb-3b91-7136b4a16616
-@mlcode(
+mlcode(
+"""
 p̂ = predict(mach3, DataFrame(x = -1:.5:2))
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -175,10 +179,12 @@ py"""
 md"If we want to extract the probability of a given response, we can use the `pdf` function."
 
 # ╔═╡ 5224d406-4e02-424d-9502-a22e0614cb96
-@mlcode(
+mlcode(
+"""
 pdf.(p̂, "A")
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -186,10 +192,12 @@ py"""
 md"If we want to get as a response the class with the highest probability, we can use the function `predict_mode`."
 
 # ╔═╡ f63c0628-eefe-11eb-3125-077e533456d9
-@mlcode(
+mlcode(
+"""
 predict_mode(mach3, DataFrame(x = -1:.5:2))
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -200,16 +208,15 @@ md"
 In the following cell we define the log-likelihood loss function `ll` to compute the loss of the optimal parameters (found by the `fit!` function). This is the formula we derived in the slides. Note that the training data is somewhat hidden in this formula: the response of the first data point is a B (see above) at x = 0, therefore its probability is `logistic(-(θ[1] + θ[2]*0)) = logistic(-θ[1])` etc."
 
 # ╔═╡ d0c4804f-c66d-4405-a7dc-1e85974e261f
-@mlcode(
+mlcode(
 """
-logistic(x) = 1 / (1 + exp(-x))
 ll(θ) = log(logistic(-θ[1])) +
         log(logistic(θ[1] + 2θ[2])) +
         log(logistic(-θ[1] - 3θ[2]))
 ll([-1.28858, .338548]) # the parameters we obtained above
 """
 ,
-py"""
+"""
 """
 )
 
@@ -220,10 +227,12 @@ $(mlstring(md"We could have obtained the same result using the `MLJ` function `l
 """
 
 # ╔═╡ d034a44b-e331-4929-9053-351e7fe9aa94
-@mlcode(
+mlcode(
+"""
 -sum(log_loss(predict(mach3), classification_data.y))
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -298,15 +307,15 @@ The important point to remember here is that one may need to do quite some prepr
 "
 
 # ╔═╡ 210b977d-7136-407f-a1c9-eeea869d0312
-@mlcode(
+mlcode(
 """
 using CSV, DataFrames
-spamdata = CSV.read(joinpath(@__DIR__, "..", "data", "spam.csv"), DataFrame,
+spamdata = CSV.read(download("https://go.epfl.ch/bio322-spam.csv"), DataFrame,
                     limit = 6000)
 dropmissing!(spamdata) # remove entries without any text (missing values).
 """
 ,
-py"""
+"""
 """
 )
 
@@ -315,7 +324,7 @@ md"In the next cell we create the full lexicon of words appearing in the first
 2000 emails. Each lexicon entry is of the form `\"word\" => count`."
 
 # ╔═╡ c50c529f-d393-4854-b5ed-91e90d557d12
-@mlcode(
+mlcode(
 """
 import TextAnalysis: Corpus, StringDocument, DocumentTermMatrix, lexicon,
                      update_lexicon!, tf
@@ -324,7 +333,7 @@ update_lexicon!(crps)
 lexicon(crps)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -335,25 +344,25 @@ all the design choses of this very crude feature engineering).
 "
 
 # ╔═╡ bf4110a9-31a4-48a3-bd6d-85c404d0e72d
-@mlcode(
+mlcode(
 """
 small_lex = Dict(k => lexicon(crps)[k]
                  for k in findall(x -> 100 <= last(x) <= 10^3, lexicon(crps)))
 m = DocumentTermMatrix(crps, small_lex)
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ 534681d5-71d8-402a-b455-f491cfbb353e
-@mlcode(
+mlcode(
 """
 spam_or_ham = coerce(String.(spamdata.label[1:2000]), OrderedFactor)
 normalized_word_counts = float.(DataFrame(tf(m), :auto))
 """
 ,
-py"""
+"""
 """
 )
 
@@ -364,7 +373,7 @@ md"Here we go: now we have a matrix of size 2000 x 801 as input and a vector of 
 md"## Multiple Logistic Regression on the spam data"
 
 # ╔═╡ 29e1d9ff-4375-455a-a69b-8dd0c2cac57d
-@mlcode(
+mlcode(
 """
 m3 = fit!(machine(LogisticClassifier(penalty = :none),
                   normalized_word_counts,
@@ -372,23 +381,27 @@ m3 = fit!(machine(LogisticClassifier(penalty = :none),
 predict(m3)
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ 21b66582-3fda-401c-9421-73ae2f455a75
-@mlcode(
+mlcode(
+"""
 predict_mode(m3)
+"""
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ 32bafa9e-a35e-4f54-9857-d269b47f95c3
-@mlcode(
+mlcode(
+"""
 confusion_matrix(predict_mode(m3), spam_or_ham)
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -398,7 +411,7 @@ almost always correctly. Let us see how well this works for test data.
 "
 
 # ╔═╡ 50c035e6-b892-4157-a52f-824578366977
-@mlcode(
+mlcode(
 """
 test_crps = Corpus(StringDocument.(spamdata.text[2001:end]))
 test_input = float.(DataFrame(tf(DocumentTermMatrix(test_crps, small_lex)), :auto))
@@ -406,7 +419,7 @@ test_labels = coerce(String.(spamdata.label[2001:end]), OrderedFactor)
 confusion_matrix(predict_mode(m3, test_input), test_labels)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -414,7 +427,7 @@ py"""
 md"In the following we use the functions `roc_curve` and `auc` to plot the ROC curve and compute the area under the curve."
 
 # ╔═╡ e7d48a13-b4e6-4633-898c-c13b3e7f68ea
-@mlcode(
+mlcode(
 """
 using Plots
 fprs1, tprs1, _ = roc_curve(predict(m3), spam_or_ham)
@@ -423,18 +436,18 @@ plot(fprs1, tprs1, label = "training ROC")
 plot!(fprs2, tprs2, label = "test ROC", legend = :bottomright)
 """
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ 8b851c67-0c6e-4081-a8ed-b818c2902c2f
-@mlcode(
+mlcode(
 """
 (training_auc = auc(predict(m3), spam_or_ham),
  test_auc = auc(predict(m3, test_input), test_labels))
 """
 ,
-py"""
+"""
 """
 )
 
@@ -442,7 +455,7 @@ py"""
 md"Let us evaluate the fit in terms of commonly used losses for binary classification."
 
 # ╔═╡ 8ed39cdc-e99e-48ff-9973-66df41aa0f78
-@mlcode(
+mlcode(
 """
 function losses(machine, input, response)
     (negative_loglikelihood = sum(log_loss(predict(machine, input), response)),
@@ -454,16 +467,18 @@ end
 losses(m3, normalized_word_counts, spam_or_ham)
 """
 ,
-py"""
+"""
 """
 )
 
 
 # ╔═╡ 935adbcd-48ab-4a6f-907c-b04137ca3abe
-@mlcode(
+mlcode(
+"""
 losses(m3, test_input, test_labels)
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -479,21 +494,23 @@ In this section our goal will be to predict the number of rented bikes at a give
 OpenML.describe_dataset(42712)
 
 # ╔═╡ 6384a36d-1dac-4d72-9d7b-84511f20e6ca
-@mlcode(
+mlcode(
+"""
 bikesharing = OpenML.load(42712) |> DataFrame
+"""
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ db0f6302-333f-4e65-bff8-cd6c64f72cce
-@mlcode(
+mlcode(
 """
 dropmissing!(bikesharing) # remove rows with missing data
 DataFrame(schema(bikesharing))
 """
 ,
-py"""
+"""
 """
 )
 
@@ -503,7 +520,7 @@ md"Above we see that the `:count` column is detected as `Continuous`, whereas it
 For count variables we can use Poisson regression. Following the standard recipe, we parametrize ``f(x) = \theta_0 + \theta_1 x_1 + \cdots +\theta_d x_d``, plug this into the formula of the Poisson distribution and fit the parameters ``\theta_0, \ldots, \theta_d`` by maximizing the log-likelihood. In `MLJ` this is done by the `CountRegressor()`."
 
 # ╔═╡ 81c55206-bf59-4c4e-ac5e-77a46e31bec7
-@mlcode(
+mlcode(
 """
 coerce!(bikesharing, :count => Count)
 
@@ -515,7 +532,7 @@ fit!(m4, verbosity = 0);
 fitted_params(m4)
 """
 ,
-py"""
+"""
 """
 )
 
@@ -525,10 +542,12 @@ md"Not suprisingly, at higher temperatures more bikes are rented than at lower t
 In the next cell, we see that the predictions with this machine are Poisson distributions."
 
 # ╔═╡ f071c985-7be7-454e-8541-28416400882f
-@mlcode(
+mlcode(
+"""
 predict(m4)
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -536,18 +555,22 @@ py"""
 md"And we can obtain the mean or the mode of this conditional distribution with:"
 
 # ╔═╡ d5b394ac-b243-4825-a5c1-b30146500ef6
-@mlcode(
+mlcode(
+"""
 predict_mean(m4)
+"""
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ caa11dd3-577d-4692-b889-3a38d0bf61e0
-@mlcode(
+mlcode(
+"""
 predict_mode(m4)
+"""
 ,
-py"""
+"""
 """
 )
 
@@ -557,26 +580,32 @@ md"##### Side remark
 `MLJ` distinguishes between models that make deterministic point predictions, like `LinearRegressor()` that predicts the expected response (which is the same as the mean of the conditional normal distribution in the probabilistic view), and models that predict probability distributions, like `LogisticClassifier()` or `LinearCountRegressor()`. If you are unsure about the prediction type of a model you can use the function `prediction_type`:"
 
 # ╔═╡ 41e5133c-db89-4407-9501-70e869616e9d
-@mlcode(
+mlcode(
+"""
 prediction_type(LinearRegressor())
+"""
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ b8bb7c85-0be8-4a87-96da-4e1b37aea96d
-@mlcode(
+mlcode(
+"""
 prediction_type(LogisticClassifier())
+"""
 ,
-py"""
+"""
 """
 )
 
 # ╔═╡ d3d7fa67-ca7d-46e1-b705-e30ec9b09f6a
-@mlcode(
+mlcode(
+"""
 prediction_type(LinearCountRegressor())
+"""
 ,
-py"""
+"""
 """
 )
 

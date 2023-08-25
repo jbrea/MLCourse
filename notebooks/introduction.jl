@@ -10,7 +10,7 @@ using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 end
-using MLCourse, HypertextLiteral, PyCall
+using Revise, MLCourse, HypertextLiteral
 MLCourse.CSS_STYLE
 end
 
@@ -36,17 +36,29 @@ In fact, the code examples for this course will be given in Julia and Python and
 """
 
 # ╔═╡ 7343bb19-ed3f-4db1-be83-ca165099dcc3
-@mlcode(
-function a_julia_function(x)
-    x^2
+mlcode(
+"""
+a_julia_function(x) = x^2
+
+function another_julia_function(x)
+	√x
 end
+
+another_julia_function(144)
+"""
 ,
-py"""
+"""
+import math
 def a_python_function(x):
-	x**2
+	return x**2
+
+def another_python_function(x):
+	return math.sqrt(x)
+
+another_python_function(144)
 """
 ;
-eval = false
+showoutput = true
 )
 
 # ╔═╡ fdae59d6-5cc6-40d3-9693-1ce08cdfc5a9
@@ -201,10 +213,13 @@ A common "trick" to generate 100 samples of a binary variable with probability `
 
 
 # ╔═╡ 36e33686-4220-42dd-83a3-cdaeedd30d5b
-@mlcode(
+mlcode(
+"""
 rand(100) .> 0.7
+"""
 ,
-py""
+"""
+"""
 )
 
 # ╔═╡ 4ffa4078-67f7-4e0c-a196-80d94ff49196

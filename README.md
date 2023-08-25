@@ -5,7 +5,7 @@ You can find an interactive preview of the Pluto notebooks of this course [here]
 
 ## Installation
 
-To use the code, we recommend downloading Julia version 1.7.3 with `juliaup`.
+To use the code, we recommend downloading Julia version 1.9.3 with `juliaup`.
 
 <details>
 <summary>Windows</summary>
@@ -14,17 +14,17 @@ To use the code, we recommend downloading Julia version 1.7.3 with `juliaup`.
 ```
 winget install julia -s msstore
 ```
-#### 2. Add Julia 1.7.3
+#### 2. Add Julia 1.9.3
 ```
-juliaup add 1.7.3
+juliaup add 1.9.3
 ```
-#### 3. Make 1.7.3 default
+#### 3. Make 1.9.3 default
 ```
-juliaup default 1.7.3
+juliaup default 1.9.3
 ```
 
 <!---#### Alternative
-Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/winnt/x64/1.7/julia-1.7.3-win64.exe).--->
+Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/winnt/x64/1.7/julia-1.9.3-win64.exe).--->
 
 </details>
 
@@ -42,17 +42,17 @@ Alternatively, if `brew` is available on the system you can install juliaup with
 ```
 brew install juliaup
 ```
-#### 2. Add Julia 1.7.3
+#### 2. Add Julia 1.9.3
 ```
-juliaup add 1.7.3
+juliaup add 1.9.3
 ```
-#### 3. Make 1.7.3 default
+#### 3. Make 1.9.3 default
 ```
-juliaup default 1.7.3
+juliaup default 1.9.3
 ```
 
 <!---#### Alternative
-Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/mac/x64/1.7/julia-1.7.3-mac64.dmg)--->
+Alternatively you can download [this installer](https://julialang-s3.julialang.org/bin/mac/x64/1.7/julia-1.9.3-mac64.dmg)--->
 
 </details>
 
@@ -67,17 +67,17 @@ curl -fsSL https://install.julialang.org | sh
 You may need to run `source ~/.bashrc` or `source ~/.bash_profile` or `source ~/.zshrc` if `juliaup` is not found after installation.
 
 Alternatively, use the AUR if you are on Arch Linux or `zypper` if you are on openSUSE Tumbleweed.
-#### 2. Add Julia 1.7.3
+#### 2. Add Julia 1.9.3
 ```
-juliaup add 1.7.3
+juliaup add 1.9.3
 ```
-#### 3. Make 1.7.3 default
+#### 3. Make 1.9.3 default
 ```
-juliaup default 1.7.3
+juliaup default 1.9.3
 ```
 
 <!---#### Alternative
-Alternatively you can download and unpack [this archive](https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.7.3-linux-x86_64.tar.gz)--->
+Alternatively you can download and unpack [this archive](https://julialang-s3.julialang.org/bin/linux/x64/1.7/julia-1.9.3-linux-x86_64.tar.gz)--->
 
 </details>
 
