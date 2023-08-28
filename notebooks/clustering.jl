@@ -16,13 +16,15 @@ end
 
 # ╔═╡ 48d87103-4c23-4144-a121-1e33d2bb87f3
 begin
-    using Pkg
+using Pkg
+Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using MLCourse, MLJ, DataFrames, MLJMultivariateStatsInterface, OpenML,
-          LinearAlgebra, Statistics, Random, MLJClusteringInterface, StatsPlots,
-          Distributions, Distances
 end
-
+using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, MLJMultivariateStatsInterface, OpenML, MLJClusteringInterface, StatsPlots, Distributions, Distances
+import PlutoPlotly as PP
+const M = MLCourse.JlMod
+MLCourse.CSS_STYLE
+end
 
 # ╔═╡ 7b013132-0ee2-11ec-1dd2-25a9f16f0568
 begin
@@ -307,7 +309,7 @@ CSV.read(download(\"https://www.statlearning.com/s/Ch12Ex13.csv\"),
 MLCourse.list_notebooks(@__FILE__)
 
 # ╔═╡ 35ac2056-ab72-44b0-9972-723a0887a622
-MLCourse.footer()
+MLCourse.FOOTER
 
 # ╔═╡ Cell order:
 # ╠═48d87103-4c23-4144-a121-1e33d2bb87f3

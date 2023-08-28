@@ -20,11 +20,9 @@ using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra
-import Distributions: Normal, Poisson
+using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Statistics
 import MLCourse: poly, Polynomial
 import PlutoPlotly as PP
-const M = MLCourse.JlMod
 MLCourse.CSS_STYLE
 end
 
@@ -43,43 +41,8 @@ md"The goal of this week is to
 md"# 1. Ridge Regression (L2)
 "
 
-# ╔═╡ 9e1e8284-a8c1-47a9-83d0-2d8fbd8ce005
-
-
 # ╔═╡ 1009e251-59af-4f1a-9d0a-e96f4b696cad
 md"λ₂ = $(@bind λ₂ Slider(0:.01:5, show_value = true))"
-
-# ╔═╡ 50ac0b07-ffee-40c3-843e-984b3c628282
-l2coefs = M.ridge_regression(M.x, M.y, λ₂)
-
-# ╔═╡ 58746554-ca5a-4e8e-97e5-587a9c2aa44c
-let r = λ₂ == 0 ? 6 : norm([l2coefs...]),
-    ccol = plot_color(:blue, .3),
-	ridge_regression = M.ridge_regression,
-    x = M.x, y = M.y
-    path = hcat([[ridge_regression(x, y, l)...] for l in 0:.01:5]...)
-    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y",
-	             legend = :topleft)
-    plot!(x -> l2coefs.β₀ + x * l2coefs.β₁, w = 3, label = "ridge regression")
-    p2 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
-                 label = "loss", title = "loss with constraints",
-		         legend = :bottomright,
-                 levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
-    plot!(t -> r * sin(t), t -> r * cos(t), 0:.001:2π,
-          fill = (0, ccol), label = "constraint", color = ccol)
-    plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
-    scatter!([l2coefs.β₀], [l2coefs.β₁], label = "current fit", markersize = 6, color = :red)
-    p3 = plot(0:.01:5, path[1, :], label = "β₀", xlabel = "λ₂", ylabel = "")
-    plot!(0:.01:5, path[2, :], label = "β₁", ylims = (0, 2.4))
-    scatter!([λ₂], [l2coefs.β₀], label = nothing, markersize = 6, color = :red)
-    scatter!([λ₂], [l2coefs.β₁], label = nothing, markersize = 6, color = :red)
-    p4 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2) + λ₂ * (β₀^2 + β₁^2),
-                 label = "loss", title = "regularized loss",
-                 levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
-    scatter!([l2coefs.β₀], [l2coefs.β₁], markersize = 6, label = nothing, color = :red)
-    plot(p1, p4, p3, p2,
-         layout = (2, 2), size = (700, 600), cbar = false)
-end
 
 # ╔═╡ 64b9cfa0-99f7-439b-b70e-f9266754ff74
 md" ## Implementation Details
@@ -96,8 +59,12 @@ For the lasso, we run a fixed point iteration that starts at the unregularized s
 "
 
 # ╔═╡ 8bd483cc-f490-11eb-38a1-b342dd2551fd
+begin
+const M = MLCourse.JlMod
 mlcode(
 """
+import Statistics: mean
+
 begin
     function ridge_regression(x, y, λ)
        β₁ = (mean(x .* y) - mean(x) * mean(y)/(1 + λ))/
@@ -171,11 +138,45 @@ def lasso(x, y, l):
 n = 30
 x = np.random.rand(n)
 y = 2.2 * x + 0.3 + 0.2 * np.random.randn(n)
+ 
 """
 ;
 showoutput = false,
 collapse = "custom code"
 )
+end
+
+# ╔═╡ 50ac0b07-ffee-40c3-843e-984b3c628282
+l2coefs = M.ridge_regression(M.x, M.y, λ₂)
+
+# ╔═╡ 58746554-ca5a-4e8e-97e5-587a9c2aa44c
+let r = λ₂ == 0 ? 6 : norm([l2coefs...]),
+    ccol = plot_color(:blue, .3),
+	ridge_regression = M.ridge_regression,
+    x = M.x, y = M.y
+    path = hcat([[ridge_regression(x, y, l)...] for l in 0:.01:5]...)
+    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y",
+	             legend = :topleft)
+    plot!(x -> l2coefs.β₀ + x * l2coefs.β₁, w = 3, label = "ridge regression")
+    p2 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
+                 label = "loss", title = "loss with constraints",
+		         legend = :bottomright,
+                 levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
+    plot!(t -> r * sin(t), t -> r * cos(t), 0:.001:2π,
+          fill = (0, ccol), label = "constraint", color = ccol)
+    plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
+    scatter!([l2coefs.β₀], [l2coefs.β₁], label = "current fit", markersize = 6, color = :red)
+    p3 = plot(0:.01:5, path[1, :], label = "β₀", xlabel = "λ₂", ylabel = "")
+    plot!(0:.01:5, path[2, :], label = "β₁", ylims = (0, 2.4))
+    scatter!([λ₂], [l2coefs.β₀], label = nothing, markersize = 6, color = :red)
+    scatter!([λ₂], [l2coefs.β₁], label = nothing, markersize = 6, color = :red)
+    p4 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2) + λ₂ * (β₀^2 + β₁^2),
+                 label = "loss", title = "regularized loss",
+                 levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
+    scatter!([l2coefs.β₀], [l2coefs.β₁], markersize = 6, label = nothing, color = :red)
+    plot(p1, p4, p3, p2,
+         layout = (2, 2), size = (700, 600), cbar = false)
+end
 
 # ╔═╡ f43a82e2-1145-426d-8e0e-5363d1c38ccf
 md"# 2. Lasso (L1)"
@@ -625,7 +626,6 @@ MLCourse.FOOTER
 # ╔═╡ Cell order:
 # ╟─7c52d913-65a9-456f-8c54-9ae9c6e4c815
 # ╟─78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
-# ╟─9e1e8284-a8c1-47a9-83d0-2d8fbd8ce005
 # ╟─1009e251-59af-4f1a-9d0a-e96f4b696cad
 # ╟─50ac0b07-ffee-40c3-843e-984b3c628282
 # ╟─58746554-ca5a-4e8e-97e5-587a9c2aa44c

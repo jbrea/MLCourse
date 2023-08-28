@@ -6,17 +6,18 @@ using InteractiveUtils
 
 # ╔═╡ a022be72-b0b0-43b7-8f39-c02a53875ff6
 begin
-    using Pkg
+using Pkg
+Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using OpenML, MLJ, MLJXGBoostInterface, DataFrames, MLJLinearModels, MLJDecisionTreeInterface
 end
-
-# ╔═╡ cf267836-0ac5-494d-9b5e-12eb314ac170
-using MLJLIBSVMInterface, Random, Plots
+using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux, MLJXGBoostInterface, MLJDecisionTreeInterface, MLJLIBSVMInterface
+import PlutoPlotly as PP
+const M = MLCourse.JlMod
+MLCourse.CSS_STYLE
+end
 
 # ╔═╡ 01a467a5-7389-44d1-984d-244dfb1ea39f
 begin
-    using MLCourse
     function MLCourse.embed_figure(name)
         "![](data:img/png; base64,
              $(open(MLCourse.base64encode,
@@ -446,7 +447,7 @@ Use a recurrent neural network to classify emails in our spam dataset.
 ")
 
 # ╔═╡ 3bd0ed27-7d3b-4036-87a4-2dd0e2874b58
-MLCourse.footer()
+MLCourse.FOOTER
 
 # ╔═╡ Cell order:
 # ╟─7cfd274d-75d8-4cd9-b38b-4176466c9e26

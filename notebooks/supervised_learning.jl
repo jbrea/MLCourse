@@ -33,7 +33,7 @@ using PlutoUI; PlutoUI.TableOfContents()
 md"The goal of this week is to
 
 1. Get to know some datasets we will use for supervised learning.
-2. Understand linear regression from two equivalent perspectives: as a machine that tunes its own parameters to A) minimize the mean squared error loss or B) maximize the log-likelihood
+2. Understand linear regression from two equivalent perspectives: as a machine that tunes its own parameters to A) minimize the mean squared error loss or B) maximize the log-likelihood.
 3. Translate the blackboard example of linear regression into code and understand the concept of a data generator.
 3. Know how to perform (multiple) linear regression on a given dataset.
 

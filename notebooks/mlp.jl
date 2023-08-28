@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.9
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -16,11 +16,15 @@ end
 
 # ╔═╡ 87f59dc7-5149-4eb6-9d81-440ee8cecd72
 begin
-    using Pkg
+using Pkg
+Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using MLCourse, Plots, MLJ, DataFrames, Random, CSV, Flux, Distributions,
-          StatsPlots, MLJFlux, OpenML, Random
-    import MLCourse: heaviside
+end
+using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux
+import PlutoPlotly as PP
+import MLCourse: heaviside
+const M = MLCourse.JlMod
+MLCourse.CSS_STYLE
 end
 
 # ╔═╡ 83e2c454-042f-11ec-32f7-d9b38eeb7769
@@ -575,7 +579,7 @@ $(MLCourse.embed_figure("poly.png"))
 ")
 
 # ╔═╡ 8c72c4b5-452d-4ba3-903b-866cac1c799d
-MLCourse.footer()
+MLCourse.FOOTER
 
 # ╔═╡ Cell order:
 # ╠═87f59dc7-5149-4eb6-9d81-440ee8cecd72
