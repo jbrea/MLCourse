@@ -2,7 +2,7 @@
 
 julia_version = "1.9.3"
 manifest_format = "2.0"
-project_hash = "d2efcb34dbf716771cbcba098eab0e558da5278a"
+project_hash = "452cbf972afb83f11f8c700134dd215599182a5c"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -1566,11 +1566,9 @@ version = "0.11.17"
 
 [[deps.PackageCompiler]]
 deps = ["Artifacts", "LazyArtifacts", "Libdl", "Pkg", "Printf", "RelocatableFolders", "TOML", "UUIDs"]
-git-tree-sha1 = "c807c24acd397549645de0151f16fdf874ee8e5a"
-repo-rev = "626cd7f"
-repo-url = "https://github.com/jbrea/PackageCompiler.jl.git"
+git-tree-sha1 = "1a6a868eb755e8ea9ecd000aa6ad175def0cc85b"
 uuid = "9b87118b-4619-50d2-8e1e-99f35a4d4d9d"
-version = "2.0.9"
+version = "2.1.7"
 
 [[deps.PackageExtensionCompat]]
 git-tree-sha1 = "f9b1e033c2b1205cf30fd119f4e50881316c1923"

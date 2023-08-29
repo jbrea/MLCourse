@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.9
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -16,75 +16,11 @@ const M = MLCourse.JlMod
 MLCourse.CSS_STYLE
 end
 
-# ╔═╡ 01a467a5-7389-44d1-984d-244dfb1ea39f
-begin
-    function MLCourse.embed_figure(name)
-        "![](data:img/png; base64,
-             $(open(MLCourse.base64encode,
-                    joinpath(Pkg.devdir(), "MLCourse", "notebooks", "figures", name))))"
-    end
-    MLCourse.list_notebooks(@__FILE__)
-end
-
 # ╔═╡ 64bac944-8008-498d-a89b-b9f8ee54aa98
 begin
     using PlutoUI
     PlutoUI.TableOfContents()
 end
-
-# ╔═╡ 7cfd274d-75d8-4cd9-b38b-4176466c9e26
-Markdown.parse("# Fitting MNIST with a Convolutional Neural Networks
-
-In the following we fit a convolutional neural network to the MNIST data set.
-
-Running this example takes more than 10 minutes.
-
-We load the data
-```julia
-using MLJ, Plots, MLJFlux, Flux, OpenML, DataFrames
-mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
-    Float32.(df[:, 1:end-1] ./ 255), # scaling the input
-    df.class
-end
-```
-and transform the input to an image representation
-```julia
-images = coerce(PermutedDimsArray(reshape(Array(mnist_x), :, 28, 28), (3, 2, 1)),
-                GrayImage);
-plot(images[1])
-```
-$(MLCourse.embed_figure("mnist_example1.png"))
-
-Now we define our network builder
-```julia
-builder = MLJFlux.@builder(
-              begin
-                  front = Chain(Conv((8, 8), n_channels => 16, relu),
-                                Conv((4, 4), 16 => 32, relu),
-                                Flux.flatten)
-                  d = first(Flux.outputsize(front, (n_in..., n_channels, 1)))
-                  Chain(front, Dense(d, n_out))
-              end)
-```
-The `front` consists of two convolutional layers. The volume of the second
-convolutional layer is flattened and taken as input to a single dense layer.
-```julia
-m = machine(ImageClassifier(builder = builder,
-                            batch_size = 32,
-                            epochs = 5),
-            images, mnist_y)
-fit!(m, rows = 1:60000, verbosity = 2)
-```
-Finally, let us compute the test error rate
-```julia
-mean(predict_mode(m, images[60001:70000]) .!= mnist_y[60001:70000])
-```
-The result is a misclassification rate of 1.4% which is again a strong improvement
-over the MLP result. Note that we achieved this value without tuning of the hyper-parameters. Well-tuned convolutional networks achieve performances below 1% error.
-
-If you are interested in learning more about convolutional neural networks I can highly recommend to have a look at one of the excellent tutorials on the internet, like [this](https://towardsdatascience.com/intuitively-understanding-convolutions-for-deep-learning-1f6f42faee1), [this](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53) or [this](https://distill.pub/2017/feature-visualization/) one.
-")
-
 
 # ╔═╡ dd12ea16-f087-4507-a571-c95bf38aa976
 Markdown.parse("# Language Detection with a Recurrent Neural Network
@@ -398,7 +334,7 @@ m5 = machine(SVC(), X, y);
 fit!(m5, verbosity = 0);
 
 # ╔═╡ a48c53e8-99f7-4b54-9a80-0be243b4cddb
-let grid = MLCourse.grid(-5:.5:11.5, -9:.5:12, names = (:x1, :x2))
+let grid = MLCourse.grid2D(-5:.5:11.5, -9:.5:12, names = (:x1, :x2))
 	pred = predict(m5, grid)
 	scatter(grid.x1, grid.x2, c = Int.(int.(pred)),
 		    markersize = 2, markerstrokewidth = 0, legend = false)
@@ -424,6 +360,70 @@ end
 # - a multilayer perceptron with one hidden layer of 100 neurons.
 # - a convolutional network with 10 filters of size ``3\\times3\\times3`` stride 1 padding 1 followed by a dense hidden layer of 10 neurons.
 # - a convolution network with a first convolutional layer with 20 filters of size ``5\\times5\\times3`` padding 2 stride 5, a second convolutional layer with 10 filters of size ``3\\times3\\times20``, stride 2 padding 1, followed by a dense hidden layer of 10 neurons.
+
+# ╔═╡ 01a467a5-7389-44d1-984d-244dfb1ea39f
+begin
+    function MLCourse.embed_figure(name)
+        "![](data:img/png; base64,
+             $(open(MLCourse.base64encode,
+                    joinpath(Pkg.devdir(), "MLCourse", "notebooks", "figures", name))))"
+    end
+    MLCourse.list_notebooks(@__FILE__)
+end
+
+# ╔═╡ 7cfd274d-75d8-4cd9-b38b-4176466c9e26
+Markdown.parse("# Fitting MNIST with a Convolutional Neural Networks
+
+In the following we fit a convolutional neural network to the MNIST data set.
+
+Running this example takes more than 10 minutes.
+
+We load the data
+```julia
+using MLJ, Plots, MLJFlux, Flux, OpenML, DataFrames
+mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
+    Float32.(df[:, 1:end-1] ./ 255), # scaling the input
+    df.class
+end
+```
+and transform the input to an image representation
+```julia
+images = coerce(PermutedDimsArray(reshape(Array(mnist_x), :, 28, 28), (3, 2, 1)),
+                GrayImage);
+plot(images[1])
+```
+$(MLCourse.embed_figure("mnist_example1.png"))
+
+Now we define our network builder
+```julia
+builder = MLJFlux.@builder(
+              begin
+                  front = Chain(Conv((8, 8), n_channels => 16, relu),
+                                Conv((4, 4), 16 => 32, relu),
+                                Flux.flatten)
+                  d = first(Flux.outputsize(front, (n_in..., n_channels, 1)))
+                  Chain(front, Dense(d, n_out))
+              end)
+```
+The `front` consists of two convolutional layers. The volume of the second
+convolutional layer is flattened and taken as input to a single dense layer.
+```julia
+m = machine(ImageClassifier(builder = builder,
+                            batch_size = 32,
+                            epochs = 5),
+            images, mnist_y)
+fit!(m, rows = 1:60000, verbosity = 2)
+```
+Finally, let us compute the test error rate
+```julia
+mean(predict_mode(m, images[60001:70000]) .!= mnist_y[60001:70000])
+```
+The result is a misclassification rate of 1.4% which is again a strong improvement
+over the MLP result. Note that we achieved this value without tuning of the hyper-parameters. Well-tuned convolutional networks achieve performances below 1% error.
+
+If you are interested in learning more about convolutional neural networks I can highly recommend to have a look at one of the excellent tutorials on the internet, like [this](https://towardsdatascience.com/intuitively-understanding-convolutions-for-deep-learning-1f6f42faee1), [this](https://towardsdatascience.com/a-comprehensive-guide-to-convolutional-neural-networks-the-eli5-way-3bd2b1164a53) or [this](https://distill.pub/2017/feature-visualization/) one.
+")
+
 
 # ╔═╡ 2bbf9876-0676-11ec-3985-73f4dcaea02f
 Markdown.parse("# Exercises
@@ -476,7 +476,6 @@ MLCourse.FOOTER
 # ╠═2942f37c-b848-49c9-a599-0deb5040045c
 # ╟─c4b21c4a-f8ec-468e-b86b-7e4c3e0203df
 # ╟─9fd69edd-9d2d-4341-ac34-efe9b4c86f68
-# ╠═cf267836-0ac5-494d-9b5e-12eb314ac170
 # ╠═2d9cf0a4-6ba7-438b-8e8f-4a911a340f06
 # ╠═87a48194-fc87-414f-8d44-8bf00a87b3ec
 # ╠═3a7fa61a-69e0-4082-9bb2-13df40089bb2

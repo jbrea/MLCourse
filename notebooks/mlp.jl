@@ -33,44 +33,48 @@ begin
     PlutoUI.TableOfContents()
 end
 
-# ╔═╡ c95ad296-5191-4f72-a7d7-87ddebc43a65
-md"# Solving the XOR Problem with Learned Feature Vectors
-
-In the following example we define a loss function that learns the features (weights of the hidden neurons) and the \"regression coefficients\" (output weights) with gradient descent.
-
-First, we generate the data set.
+# ╔═╡ c1cbcbf4-f9a9-4763-add8-c5ed7cbd2889
+md"The goal of this week is to
+1.
+2.
+3.
+4.
 "
 
-# ╔═╡ fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
-function xor_generator(; n = 200)
-	x = 2 * rand(n, 2) .- 1
-	DataFrame(X1 = x[:, 1], X2 = x[:, 2],
-		      y = (x[:, 1] .> 0) .⊻ (x[:, 2] .> 0))
-end
+# ╔═╡ c95ad296-5191-4f72-a7d7-87ddebc43a65
+md"# 1. Solving the XOR Problem with Learned Feature Vectors
 
-# ╔═╡ ea7fc5b6-79cc-4cc5-820e-5c55da83207e
-begin
-    xor_data = xor_generator()
-    xor_input = Array(select(xor_data, Not(:y)))
-    xor_target = xor_data.y
-end;
+In the following example we define a loss function that learns the features (weights of the hidden neurons) and the \"regression coefficients\" (output weights) with gradient descent.
+"
 
 # ╔═╡ a908176b-319a-445d-9f33-6271c2ef6149
-md"Now we define a neural network with one hidden layer of 4 relu-neurons and the negative log-likelihood loss function."
+md"First, we define a neural network with one hidden layer of 4 relu-neurons and the negative log-likelihood loss function."
 
 # ╔═╡ a2539e77-943e-464c-9ad3-c8542eab36ab
-begin
-    f(x, w₁, w₂, w₃, w₄, β) = β[1] * relu.(x * w₁) .+
-                              β[2] * relu.(x * w₂) .+
-                              β[3] * relu.(x * w₃) .+
-                              β[4] * relu.(x * w₄) .+
-                              β[5]
-    f(x, θ) = f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
-    function log_reg_loss(θ)
-        p = σ.(f(xor_input, θ)) # sigmoid
-        -mean(@. xor_target * log(p) + (1 - xor_target) * log(1 - p))
+mlcode(
+"""
+import Statistics: mean
+
+relu(x) = max(0, x)
+f(x, w₁, w₂, w₃, w₄, β) = β[1] * relu.(x * w₁) .+
+                          β[2] * relu.(x * w₂) .+
+                          β[3] * relu.(x * w₃) .+
+                          β[4] * relu.(x * w₄) .+
+                          β[5]
+f(x, θ) = f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
+logp(x) = ifelse(x < -40, x, -log(1 + exp(-x))) # for numerical stability
+function log_reg_loss_function(X, y)
+    function(θ)
+        tmp = f(X, θ)
+        -mean(@. y * logp(tmp) + (1 - y) * logp(-tmp))
     end
-end;
+end
+"""
+,
+"""
+""",
+showoutput = false
+)
 
 # ╔═╡ 235c6588-8210-4b8e-812c-537a72ce950f
 md"Now we can run gradient descent. The initial parameters θ₀ depend on a pseudo-random number generator whose seed can be set in the dropdown menu below."
@@ -84,8 +88,59 @@ t = $(@bind t Slider(1:10^2))
 # ╔═╡ 9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
 md"The green arrows in the figure above are the weights w₁, …, w₄ of the four (hidden) neurons. The coloring of the dots is based on classification at decision threshold 0.5, i.e. if the activation of the output neuron is above 0.5 for a given input point, this point is classified as red (green, otherwise). Note that the initial configuration of the green vectors depends on the initialization of gradient descent and therefore on the seed. For some seeds the optimal solution to the xor-problem is not found by gradient descent."
 
+# ╔═╡ fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
+begin
+    function xor_generator(; n = 200)
+        x = 2 * rand(n, 2) .- 1
+        DataFrame(X1 = x[:, 1], X2 = x[:, 2],
+                  y = (x[:, 1] .> 0) .⊻ (x[:, 2] .> 0))
+    end
+    xor_data = xor_generator()
+    xor_input = Array(select(xor_data, Not(:y)))
+    xor_target = xor_data.y
+end;
+
+# ╔═╡ 9661f274-180f-4e97-90ce-8beb7d1d69bc
+mlcode(
+"""
+    using MLJFlux
+    function fit_xor(n_hidden)
+        x = select(xor_data, Not(:y))
+        y = coerce(xor_data.y, Binary)
+        builder = MLJFlux.Short(n_hidden = n_hidden,
+                                dropout = 0,
+                                σ = relu)
+        mach = machine(NeuralNetworkClassifier(builder = builder,
+                                               batch_size = 32,
+                                               epochs = 10^4),
+                       x, y) |> fit!
+        xor_test = xor_generator(n = 10^4)
+        x_test = select(xor_test, Not(:y))
+        y_test = coerce(xor_test.y, Binary)
+        DataFrame(n_hidden = n_hidden,
+                  training_accuracy = mean(predict_mode(mach, x) .== y),
+                  test_accuracy = mean(predict_mode(mach, x_test) .== y_test))
+    end
+    xor_results = vcat([fit_xor(n_hidden) for n_hidden in [4, 10], _ in 1:10]...)
+    @df xor_results dotplot(:n_hidden, :training_accuracy,
+                            xlabel = "number of hidden units",
+                            ylabel = "accuracy",
+                            label = "training",
+                            yrange = (.5, 1.01),
+                            aspect_ratio = 20,
+                            legend = :bottomright,
+                            xticks = [4, 10])
+    @df xor_results dotplot!(:n_hidden, :test_accuracy, label = "test")
+"""
+,
+nothing
+,
+eval = false,
+collapse = "Implementation details"
+)
+
 # ╔═╡ 5c2154ef-2a35-4d91-959d-f72100049894
-md"# Multilayer Perceptrons
+md"# 2. Multilayer Perceptrons
 
 Below you see three equivalent ways to implement a neural network:
 1. In the `expanded` form all parameters and activation functions are explicitely written out in \"one line\". With more neurons or hidden layers, this form quickly becomes annoying to write.
@@ -95,42 +150,54 @@ Below you see three equivalent ways to implement a neural network:
 
 
 # ╔═╡ 71dabb22-816b-4aa2-9a29-f2894989b2ea
-begin
-    function neural_net_expanded(x,
-                                 w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, g¹,
-                                 w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
-        g²(w₁₀² +
-           w₁₁² * g¹(w₁₀¹ + w₁₁¹ * x) +
-           w₁₂² * g¹(w₂₀¹ + w₂₁¹ * x) +
-           w₁₃² * g¹(w₃₀¹ + w₃₁¹ * x) +
-           w₁₄² * g¹(w₄₀¹ + w₄₁¹ * x))
-    end
-    neuron(x, b, w, g) = g.(b .+ w' * x)
-    function neural_net_neurons(x,
-                                w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, g¹,
-                                w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
-        second_layer_input = [neuron(x, w₁₀¹, w₁₁¹, g¹),
-                              neuron(x, w₂₀¹, w₂₁¹, g¹),
-                              neuron(x, w₃₀¹, w₃₁¹, g¹),
-                              neuron(x, w₄₀¹, w₄₁¹, g¹)]
-        neuron(second_layer_input, w₁₀², [w₁₁², w₁₂², w₁₃², w₁₄²], g²)
-    end
-    function neural_net_matrix(x,
-                               w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, g¹,
-                               w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
-        b¹ = [w₁₀¹, w₂₀¹, w₃₀¹, w₄₀¹]
-        w¹ = [w₁₁¹
-              w₂₁¹
-              w₃₁¹
-              w₄₁¹]
-        b² = [w₁₀²]
-        w² = [w₁₁² w₁₂² w₁₃² w₁₄²]
-        neural_net_matrix(x, b¹, w¹, g¹, b², w², g²)
-    end
-    function neural_net_matrix(x, b¹, w¹, g¹, b², w², g²)
-        g².(b² .+ w² * g¹.(b¹ .+ w¹ * x))
-    end
-end;
+mlcode(
+"""
+# 1. expanded version
+function neural_net_expanded(x,
+                             w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, g¹,
+                             w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
+    g²(w₁₀² +
+       w₁₁² * g¹(w₁₀¹ + w₁₁¹ * x) +
+       w₁₂² * g¹(w₂₀¹ + w₂₁¹ * x) +
+       w₁₃² * g¹(w₃₀¹ + w₃₁¹ * x) +
+       w₁₄² * g¹(w₄₀¹ + w₄₁¹ * x))
+end
+
+# 2. neuron version
+neuron(x, b, w, g) = g.(b .+ w' * x)
+function neural_net_neurons(x,
+                            w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, g¹,
+                            w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
+    second_layer_input = [neuron(x, w₁₀¹, w₁₁¹, g¹),
+                          neuron(x, w₂₀¹, w₂₁¹, g¹),
+                          neuron(x, w₃₀¹, w₃₁¹, g¹),
+                          neuron(x, w₄₀¹, w₄₁¹, g¹)]
+    neuron(second_layer_input, w₁₀², [w₁₁², w₁₂², w₁₃², w₁₄²], g²)
+end
+
+# 3. matrix version
+function neural_net_matrix(x, b¹, w¹, g¹, b², w², g²)
+    g².(b² .+ w² * g¹.(b¹ .+ w¹ * x))
+end
+function neural_net_matrix(x,
+                           w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, g¹,
+                           w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
+    b¹ = [w₁₀¹, w₂₀¹, w₃₀¹, w₄₀¹]
+    w¹ = [w₁₁¹
+          w₂₁¹
+          w₃₁¹
+          w₄₁¹]
+    b² = [w₁₀²]
+    w² = [w₁₁² w₁₂² w₁₃² w₁₄²]
+    neural_net_matrix(x, b¹, w¹, g¹, b², w², g²)
+end
+"""
+,
+"""
+"""
+,
+showoutput = false
+)
 
 
 # ╔═╡ 653ea4e8-47b2-4d9f-bc5c-583468d6e1ae
@@ -160,11 +227,11 @@ md"## 1D to 1D
 "
 
 # ╔═╡ 1171bcb8-a2af-49f3-9a7e-2e7cac34f9f4
-let
+let neuron = M.neuron
     x = -5:.01:5
     _g1 = getproperty(@__MODULE__, Symbol(g1))
     _g2 = getproperty(@__MODULE__, Symbol(g2))
-    y = neural_net_expanded.(x, w101, w111, w201, w211, w301, w311, w401, w411, _g1, w102, w112, w122, w132, w142, _g2)
+    y = M.neural_net_expanded.(x, w101, w111, w201, w211, w301, w311, w401, w411, _g1, w102, w112, w122, w132, w142, _g2)
     py = plot(x, y, xlabel = "x", ylabel = "y")
     p1 = plot(x, neuron.(x, w101, w111, _g1), xlabel = "x", ylabel = "hidden neuron 1")
     p2 = plot(x, neuron.(x, w201, w211, _g1), xlabel = "x", ylabel = "hidden neuron 2")
@@ -216,8 +283,8 @@ begin
 end;
 
 # ╔═╡ 66bc40f3-7710-4892-ae9f-79b9c850b0ea
-let x = -5:.1:5
-    grid = MLCourse.grid(x, x, output_format = DataFrame)
+let x = -5:.1:5, neuron = M.neuron
+    grid = MLCourse.grid2D(x, x, output_format = DataFrame)
     X = Array(Array(grid)')
     _g1 = getproperty(@__MODULE__, Symbol(g1_2d))
     _g2 = getproperty(@__MODULE__, Symbol(g2_2d))
@@ -228,7 +295,7 @@ let x = -5:.1:5
           w411_2d w421_2d]
     b2 = [w102_2d]
     w2 = [w112_2d w122_2d w132_2d w142_2d]
-    y = neural_net_matrix(X, b1, w1, _g1, b2, w2, _g2)
+    y = M.neural_net_matrix(X, b1, w1, _g1, b2, w2, _g2)
     p1 = scatter(grid.X, grid.Y, c = tocol(neuron(X, b1[1], w1[1, :], _g1)), title = "hidden 1")
     p2 = scatter(grid.X, grid.Y, c = tocol(neuron(X, b1[2], w1[2, :], _g1)), title = "hidden 2")
     p3 = scatter(grid.X, grid.Y, c = tocol(neuron(X, b1[3], w1[3, :], _g1)), title = "hidden 3")
@@ -238,6 +305,95 @@ let x = -5:.1:5
          py, layout = (2, 1), markersize = 2, markerstrokewidth = 0,
                  xlabel = "x₁", ylabel = "x₂", legend = false, aspect_ratio = 1)
 end
+
+# ╔═╡ 9d3e7643-34fd-40ee-b442-9d2a434f30e0
+md"""# 3. Regression with MLPs
+
+## Fitting the Weather Data
+
+Let us find out if with an MLP we can get better predictions than with multiple
+linear regression on the weather data set.
+
+!!! note
+
+    We use here a `Pipeline` (`|>`) that standardizes with a `Standardizer`
+    the input first to mean zero and standard deviation one.
+    We do this, because the usual initializations
+    of neural networks work best with standardized input.
+    With the `TransformedTargetModel` we also standardize the output variable.
+
+    To learn more about the usual initializations you can have a look at this [blog post](https://towardsdatascience.com/weight-initialization-in-neural-networks-a-journey-from-the-basics-to-kaiming-954fb9b47c79) (optional).
+
+!!! note
+
+    Our builder constructs a neural network with one hidden layer of 128 relu neurons.
+    In the construction we specify that we would like to train with 50% dropout
+    to reduce the risk of overfitting.
+
+"""
+
+# ╔═╡ a5568dfb-4467-4dca-b1c7-714bbfcbd6e6
+mlcode(
+"""
+# preparing the data
+using CSV, DataFrames
+
+weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
+                   DataFrame)
+weather_test = CSV.read(download("https://go.epfl.ch/bio322-weather2019-2020.csv"),
+                        DataFrame)
+weather_x = select(weather, Not([:LUZ_wind_peak, :time]))[1:end-5, :]
+weather_y = weather.LUZ_wind_peak[6:end]
+weather_test_x = select(weather_test, Not([:LUZ_wind_peak, :time]))[1:end-5, :]
+weather_test_y = weather_test.LUZ_wind_peak[6:end]
+
+# setting up the model
+using Random, MLJ, MLJFlux, Flux
+
+Random.seed!(31)
+nn = NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
+                                                    dropout = .5,
+                                                    σ = relu),
+                            optimiser = ADAMW(),
+                            batch_size = 128,
+                            epochs = 150)
+model = TransformedTargetModel(Standardizer() |> (x -> Float32.(x)) |> nn,
+                               transformer = Standardizer())
+mach = machine(model, weather_x, weather_y)
+
+# fitting and evaluating the model
+fit!(mach, verbosity = 0)
+(training_error = rmse(predict(mach, weather_x), weather_y),
+ test_error = rmse(predict(mach, weather_test_x), weather_test_y))
+"""
+,
+"""
+"""
+)
+
+
+# ╔═╡ 47024142-aabb-40d8-8336-5f8aeb2aa623
+md"""
+Both errors are lower than what we found with multiple linear regression
+(training error ≈ 8.09, test_error ≈ 8.91). However, comparing the predictions
+to the ground truth we see that a lot of the variability is still uncaptured
+by the model. If the model would prefectly predict the test data, all points in the figure below would lie on the red diagonal. This is not the case and means most likely that the irreducible error is pretty high in this dataset.
+"""
+
+# ╔═╡ 0a48241c-2be0-46cf-80ae-dc86abefad6f
+mlcode(
+"""
+using Plots
+
+scatter(predict(mach, weather_test_x), weather_test_y,
+        xlabel = "predicted", ylabel = "data")
+plot!(identity, legend = false)
+"""
+,
+"""
+"""
+)
+
 
 # ╔═╡ 14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
 md"# Classification with MLPs
@@ -314,13 +470,13 @@ In this exercise our goal is to find a good machine learning model to predict th
 MLCourse.list_notebooks(@__FILE__)
 
 # ╔═╡ 825c40e9-de99-4829-aad0-0c5c901df5e9
-begin 
+begin
 	struct Tracker{T} # structure definition with parametric type
 		path::T
 	end
 	Tracker(x::T) where T = Tracker{Vector{T}}([copy(x)]) # constructor
 	(t::Tracker)(x) = push!(t.path, copy(x))        # making the object callable
-	
+
 function MLCourse.embed_figure(name)
     "![](data:img/png; base64,
          $(open(MLCourse.base64encode,
@@ -333,20 +489,17 @@ begin
     Random.seed!(Meta.parse(seed))
     θ₀ = .1 * randn(13)
     tracker = Tracker(θ₀)
-    MLCourse.gradient_descent(log_reg_loss, θ₀, .05, 10^4,
+    MLCourse.advanced_gradient_descent(M.log_reg_loss_function(xor_input, xor_target),
+                              θ₀, T = 2*10^4,
                               callback = tracker)
-end;
-
-# ╔═╡ b650ddb4-5854-4862-ba26-0bf92f77c3df
-begin
-    idxs = min.(max.(1:100, floor.(Int, (1e4^(1/100)).^(1:100))), 10^5)
-    losses = log_reg_loss.(tracker.path[idxs])
+    idxs = min.(max.(1:100, floor.(Int, (2e4^(1/100)).^(1:100))), 10^5)
+    losses = M.log_reg_loss_function(xor_input, xor_target).(tracker.path[idxs])
 end;
 
 # ╔═╡ 16d0808e-4094-46ff-8f92-1ed21aa6191b
 let idx = idxs[t], path = tracker.path
     θ = path[idx]
-    prediction = σ.(f(xor_input, θ)) .> .5
+    prediction = σ.(M.f(xor_input, θ)) .> .5
     p1 = scatter(xor_data.X1, xor_data.X2, c = prediction .+ 1,
                  xlim = (-1.5, 1.5), ylim = (-1.5, 1.5),
                  xlabel = "X1", ylabel = "X2")
@@ -356,7 +509,7 @@ let idx = idxs[t], path = tracker.path
     hline!([0], c = :black)
     vline!([0], c = :black)
     p2 = plot(idxs, losses, xscale = :log10, xlabel = "gradient descent step t",
-              ylabel = "loss", title = "learning curve")
+              ylabel = "loss", title = "learning curve", yrange = (-.03, 1))
     scatter!([idxs[t]], [losses[t]], c = :red)
     plot(p1, p2, layout = (1, 2), size = (700, 400), legend = false)
 end
@@ -370,109 +523,8 @@ neurons to our xor data. We see that training and test accuracy is better for
 the larger network. The reason is that gradient descent for the the larger
 network does not get stuck in suboptimal solutions.
 
-Because it takes a bit of time to run the code, it is included here in text form.
-Copy-paste it to a cell to run it.
-```julia
-begin
-    using MLJFlux
-    function fit_xor(n_hidden)
-        x = select(xor_data, Not(:y))
-        y = coerce(xor_data.y, Binary)
-        builder = MLJFlux.Short(n_hidden = n_hidden,
-                                dropout = 0,
-                                σ = relu)
-        mach = machine(NeuralNetworkClassifier(builder = builder,
-                                               batch_size = 32,
-                                               epochs = 10^4),
-                       x, y) |> fit!
-        xor_test = xor_generator(n = 10^4)
-        x_test = select(xor_test, Not(:y))
-        y_test = coerce(xor_test.y, Binary)
-        DataFrame(n_hidden = n_hidden,
-                  training_accuracy = mean(predict_mode(mach, x) .== y),
-                  test_accuracy = mean(predict_mode(mach, x_test) .== y_test))
-    end
-    xor_results = vcat([fit_xor(n_hidden) for n_hidden in [4, 10], _ in 1:10]...)
-    @df xor_results dotplot(:n_hidden, :training_accuracy,
-                            xlabel = \"number of hidden units\",
-                            ylabel = \"accuracy\",
-                            label = \"training\",
-                            yrange = (.5, 1.01),
-                            aspect_ratio = 20,
-                            legend = :bottomright,
-                            xticks = [4, 10])
-    @df xor_results dotplot!(:n_hidden, :test_accuracy, label = \"test\")
-end
-```
 $(MLCourse.embed_figure("overparametrized.png"))
 ")
-
-# ╔═╡ 9d3e7643-34fd-40ee-b442-9d2a434f30e0
-Markdown.parse("""# Regression with MLPs
-
-## Fitting the Weather Data
-
-Let us find out if with an MLP we can get better predictions than with multiple
-linear regression on the weather data set.
-
-The following code takes roughly 2 minutes to run.
-
-```julia
-weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
-                   DataFrame)
-weather_test = CSV.read(joinpath(@__DIR__, "..", "data", "weather2019-2020.csv"),
-                        DataFrame)
-weather_x = float.(select(weather, Not([:LUZ_wind_peak, :time]))[1:end-5, :])
-weather_y = weather.LUZ_wind_peak[6:end]
-weather_test_x = float.(select(weather_test, Not([:LUZ_wind_peak, :time]))[1:end-5, :])
-weather_test_y = weather_test.LUZ_wind_peak[6:end]
-
-Random.seed!(31)
-nn = NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
-                                                    dropout = .5,
-                                                    σ = relu),
-                            optimiser = ADAMW(),
-                            batch_size = 128,
-                            epochs = 150)
-model = TransformedTargetModel(Standardizer() |> nn, target = Standardizer())
-mach = machine(model, weather_x, weather_y)
-fit!(mach, verbosity = 2)
-```
-
-!!! note
-
-    We use here a `Pipeline` (`|>`) that standardizes with a `Standardizer`
-    the input first to mean zero and standard deviation one.
-    We do this, because the usual initializations
-    of neural networks work best with standardized input.
-    With the `TransformedTargetModel` we also standardize the output variable.
-
-    To learn more about the usual initializations you can have a look at this [blog post](https://towardsdatascience.com/weight-initialization-in-neural-networks-a-journey-from-the-basics-to-kaiming-954fb9b47c79) (optional).
-
-!!! note
-
-    Our builder constructs a neural network with one hidden layer of 128 relu neurons.
-    In the construction we specify that we would like to train with 50% dropout
-    to reduce the risk of overfitting.
-
-Let us evalute the learned machine.
-
-```julia
-(training_error = rmse(predict(mach, weather_x), weather_y),
- test_error = rmse(predict(mach, weather_test_x), weather_test_y))
-```
-We find a training error of 7.14 and a test error of 8.70.
-Both errors are lower than what we found with multiple linear regression
-(training error ≈ 8.09, test_error ≈ 8.91). However, comparing the predictions
-to the ground truth we see that a lot of the variability is still uncaptured
-by the model. If the model would prefectly predict the test data, all points in the figure below would lie on the red diagonal. This is not the case and means most likely that the irreducible error is pretty high in this dataset.
-```julia
-scatter(predict(mach, weather_test_x), weather_test_y,
-        xlabel = "predicted", ylabel = "data")
-plot!(identity, legend = false)
-```
-$(MLCourse.embed_figure("weather_mlp.png"))
-""")
 
 # ╔═╡ 0ba71a2a-f2f9-4fc7-aa81-416799e79e57
 Markdown.parse("""## Parametrizing Variances of Log-Normal Distributions with MLPs
@@ -582,21 +634,20 @@ $(MLCourse.embed_figure("poly.png"))
 MLCourse.FOOTER
 
 # ╔═╡ Cell order:
-# ╠═87f59dc7-5149-4eb6-9d81-440ee8cecd72
+# ╟─c1cbcbf4-f9a9-4763-add8-c5ed7cbd2889
 # ╟─c95ad296-5191-4f72-a7d7-87ddebc43a65
-# ╠═fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
-# ╠═ea7fc5b6-79cc-4cc5-820e-5c55da83207e
 # ╟─a908176b-319a-445d-9f33-6271c2ef6149
-# ╠═a2539e77-943e-464c-9ad3-c8542eab36ab
+# ╟─a2539e77-943e-464c-9ad3-c8542eab36ab
 # ╟─235c6588-8210-4b8e-812c-537a72ce950f
-# ╠═49c2b3a1-50c0-4fb9-a06b-2de7be216702
 # ╟─258a3459-3fef-4655-830c-3bdf11eb282d
 # ╟─16d0808e-4094-46ff-8f92-1ed21aa6191b
 # ╟─9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
-# ╟─b650ddb4-5854-4862-ba26-0bf92f77c3df
+# ╟─fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
+# ╟─49c2b3a1-50c0-4fb9-a06b-2de7be216702
 # ╟─8c54bfb2-54c5-4777-ad53-97926da97f7e
+# ╟─9661f274-180f-4e97-90ce-8beb7d1d69bc
 # ╟─5c2154ef-2a35-4d91-959d-f72100049894
-# ╠═71dabb22-816b-4aa2-9a29-f2894989b2ea
+# ╟─71dabb22-816b-4aa2-9a29-f2894989b2ea
 # ╟─653ea4e8-47b2-4d9f-bc5c-583468d6e1ae
 # ╟─1171bcb8-a2af-49f3-9a7e-2e7cac34f9f4
 # ╟─1c70c3c4-bded-44ec-ac40-c71268b7307e
@@ -604,6 +655,9 @@ MLCourse.FOOTER
 # ╟─15cd82d3-c255-4eb5-9f0d-1e662c488027
 # ╟─9e6ad99f-8cd4-4372-a4a2-f280e49e21a3
 # ╟─9d3e7643-34fd-40ee-b442-9d2a434f30e0
+# ╟─a5568dfb-4467-4dca-b1c7-714bbfcbd6e6
+# ╟─47024142-aabb-40d8-8336-5f8aeb2aa623
+# ╟─0a48241c-2be0-46cf-80ae-dc86abefad6f
 # ╟─0ba71a2a-f2f9-4fc7-aa81-416799e79e57
 # ╟─4bd63efb-0aef-41cd-a9b7-9fa78db107a0
 # ╟─14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
@@ -612,3 +666,4 @@ MLCourse.FOOTER
 # ╟─825c40e9-de99-4829-aad0-0c5c901df5e9
 # ╟─83e2c454-042f-11ec-32f7-d9b38eeb7769
 # ╟─8c72c4b5-452d-4ba3-903b-866cac1c799d
+# ╟─87f59dc7-5149-4eb6-9d81-440ee8cecd72

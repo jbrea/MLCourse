@@ -22,7 +22,7 @@ function __init__()
 if isdefined(Main, :PlutoRunner) && isdefined(Main.PlutoRunner, :embed_display)
     global embed_display = Main.PlutoRunner.embed_display
     pyexec("""
-import matplotlib as mpl    
+import matplotlib as mpl
 mpl.use("module://juliacall.matplotlib")
 """
 ,
@@ -42,16 +42,35 @@ PrecompilePlutoCourse.configure(@__MODULE__,
 @require Zygote="e88e6eb3-aa80-5325-afca-941959d7151f" begin
 using Zygote
 """
-    gradient_descent(f, x₀, η, T; callback = x -> nothing)
+    gradient_descent(f, x₀; η, T, callback = x -> nothing)
 
 Run gradient descent on `f` with initial condition `x₀` and learning rate `η`
 for `T` steps. The function `callback` is executed after every update of the
 of the parameters and takes the current value of the parameters as input.
 """
-function gradient_descent(f, x₀, η, T; callback = x -> nothing)
+function gradient_descent(f, x₀; η, T, callback = x -> nothing)
     x = copy(x₀) # use copy to not overwrite the input
     for t in 1:T
         x .-= η * gradient(f, x)[1] # update parameters in direction of -∇f
+        callback(x) # the callback will be used to save intermediate values
+    end
+    x
+end
+end # Zygote
+@require Flux="587475ba-b771-5e3f-ad9e-33799f191a9c" begin
+using Flux
+"""
+    advanced_gradient_descent(f, x₀; optimizer = ADAMW(), T, callback = x -> nothing)
+
+Run gradient descent on `f` with initial condition `x₀` and learning rate `η`
+for `T` steps. The function `callback` is executed after every update of the
+of the parameters and takes the current value of the parameters as input.
+"""
+function advanced_gradient_descent(loss, x; T, optimizer = ADAMW(),
+                                         callback = x -> nothing)
+    for t in 1:T
+        ∇loss = gradient(loss, x)[1] # compute ∇f
+		Flux.update!(optimizer, x, ∇loss) # apply the changes to x
         callback(x) # the callback will be used to save intermediate values
     end
     x

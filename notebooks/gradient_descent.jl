@@ -378,11 +378,11 @@ mlcode(
 """
 using Flux
 
-function advanced_gradient_descent(f, x; T, optimizer = ADAMW(),
+function advanced_gradient_descent(loss, x; T, optimizer = ADAMW(),
                                          callback = x -> nothing)
     for t in 1:T
-        ∇f = gradient(f, x)[1] # compute ∇f
-		Flux.update!(optimizer, x, ∇f) # apply the changes to x
+        ∇loss = gradient(loss, x)[1] # compute ∇f
+		Flux.update!(optimizer, x, ∇loss) # apply the changes to x
         callback(x) # the callback will be used to save intermediate values
     end
     x
