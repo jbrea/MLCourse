@@ -24,6 +24,7 @@ using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, D
 import MLCourse: fitted_linear_func
 import PlutoPlotly as PP
 const M = MLCourse.JlMod
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -96,8 +97,8 @@ def classification_data_generator(n, s=20, rng=random):
     return pd.DataFrame({'X1': X1, 'X2': X2, 'y': y})
 """
 ;
-showoutput = false,
-collapse = "Data Generators"
+collapse = "Data Generators",
+cache = false
 )
 
 
@@ -629,7 +630,8 @@ f̂(x) = 0.1 + x
 """
 """
 ;
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 # ╔═╡ 3d77d753-b247-4ead-a385-7cbbcfc3190b
@@ -827,6 +829,9 @@ MLCourse.list_notebooks(@__FILE__)
 # ╔═╡ 2320f424-7652-4e9f-83ef-fc011b722dcc
 MLCourse.FOOTER
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─cdbcc51d-4cc6-4ab7-b0ef-c6272b5728af
 # ╟─12942f50-efb1-11eb-01c0-055b6be166e0
@@ -903,3 +908,4 @@ MLCourse.FOOTER
 # ╟─12942f34-efb1-11eb-3eb4-c1a38396cfb8
 # ╟─2320f424-7652-4e9f-83ef-fc011b722dcc
 # ╟─8fa836a6-1133-4a54-b996-a02083fc6bba
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

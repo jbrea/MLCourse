@@ -168,8 +168,75 @@ const CSS_STYLE =
 
     """
 
-const PyMod = Module()
-const JlMod = Module()
+module PyMod
+const _OUTPUT_CACHE = Dict{String, Any}()
+end
+module JlMod
+using Serialization
+const _OUTPUT_CACHE = Dict{String, Any}()
+end
+function _cache_path(file, ending = ".dat")
+    path = splitpath(split(file, "#")[1] * ending)
+    insert!(path, length(path), ".cache")
+    joinpath(path)
+end
+function _usings(s)
+    pkgs = ""
+    structs = ""
+    lines = split(s, '\n')
+    for (i, line) in pairs(lines)
+        if match(r"using ", line) !== nothing ||
+           match(r"import ", line) !== nothing
+           if match(r"#.*using ", line) === nothing &&
+              match(r"#.*import ", line) === nothing
+                j = i
+                while j ≤ length(lines)
+                    pkgs *= lines[j]
+                    sl = strip(lines[j])
+                    sl[end] != ',' && break
+                    j += 1
+                end
+                pkgs *= "\n"
+            end
+        end
+        if match(r"struct ", line) !== nothing
+           if match(r"#.*struct ", line) === nothing
+                j = i
+                while j ≤ length(lines)
+                    structs *= lines[j] * "\n"
+                    match(r"end", lines[j]) !== nothing && break
+                    j += 1
+                end
+                structs *= "\n"
+            end
+        end
+    end
+    pkgs, structs
+end
+function save_cache(file)
+    fn = _cache_path(file)
+    pkgs = ""
+    structs = ""
+    for k in keys(JlMod._OUTPUT_CACHE)
+        p, s = _usings(k)
+        pkgs *= p
+        structs *= s
+    end
+    write(fn * "-using", pkgs * structs)
+    serialize(fn, (JlMod._OUTPUT_CACHE, PyMod._OUTPUT_CACHE))
+end
+function load_cache(file)
+    fn = _cache_path(file)
+    isfile(fn) || return
+    JlMod.eval(Meta.parseall(read(fn * "-using", String)))
+    jlc, pyc = deserialize(fn)
+    for (k, v) in jlc
+        JlMod._OUTPUT_CACHE[k] = v
+    end
+    for (k, v) in pyc
+        PyMod._OUTPUT_CACHE[k] = v
+    end
+end
 
 function embed(out)
     isnothing(out) && return ""
@@ -194,7 +261,9 @@ function convert_py_output(pyout)
 end
 function py_output(lastline)
     if match(r"plt\.show()", lastline) != nothing
-        pyeval("plt.gcf()", PyMod)
+        fn = tempname() * ".png"
+        pyeval("plt.savefig(\"$fn\")", PyMod)
+        Markdown.parse("![](data:img/png; base64, $(open(base64encode, fn)))")
     elseif match(r"^\w* ?= ?\w", lastline) == nothing &&
            match(r"^ ", lastline) == nothing &&
            match(r"^\t", lastline) == nothing
@@ -242,22 +311,35 @@ collapse = "click to see more"
 )
 ```
 """
-function mlcode(jlcode, pycode; eval = true, showoutput = true, showinput = true, collapse = nothing)
+function mlcode(jlcode, pycode; eval = true, showoutput = true, showinput = true, collapse = nothing, cache = true)
     nojl = jlcode === nothing
     nopy = pycode === nothing
 	ojl = if eval && !nojl
-        if isa(jlcode, String)
-            _eval(Meta.parse("begin\n"*jlcode*"\nend"))
+        if cache && haskey(JlMod._OUTPUT_CACHE, jlcode)
+#             @info "loading jl from cache"
+            JlMod._OUTPUT_CACHE[jlcode]
+        elseif isa(jlcode, String)
+            tmp = _eval(Meta.parse("begin\n"*jlcode*"\nend"))
+            tmp = isa(tmp, Function) ? nothing : embed(tmp)
+            if cache
+                JlMod._OUTPUT_CACHE[jlcode] = tmp
+            end
+            tmp
         else
             error("jlcode is a $(typeof(jlcode)) but needs to be a `String`.")
         end
     end
     opy = if eval && !nopy && pycode != ""
-        if isa(pycode, String)
+        if haskey(JlMod._OUTPUT_CACHE, pycode)
+#             @info "loading py from cache"
+            PyMod._OUTPUT_CACHE[pycode]
+        elseif isa(pycode, String)
             lines = split(pycode, '\n')
             lastline = lines[end-1]
             pyexec(join(lines[1:end-2], "\n"), PyMod)
-            py_output(lastline)
+            tmp = embed(py_output(lastline))
+            PyMod._OUTPUT_CACHE[pycode] = tmp
+            tmp
         else
             error("pycode is a $(typeof(pycode)) but needs to be a `String`.")
         end
@@ -282,12 +364,12 @@ $(!nopy && !nojl && showinput ? language_selector() : nothing)
 <div class="julia_code">
     $(showinput ? s1 : nothing)
 
-    $(showoutput && !nojl ? embed(ojl) : nothing)
+    $(showoutput && !nojl ? ojl : nothing)
 </div>
 <div class="python_code">
     $(showinput ? s2 : nothing)
 
-    $(showoutput && !nopy ? embed(opy) : nothing)
+    $(showoutput && !nopy ? opy : nothing)
 </div>
 """)
 if !isnothing(collapse)

@@ -23,6 +23,7 @@ end
 using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux, Zygote
 import PlutoPlotly as PP
 const M = MLCourse.JlMod
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -93,7 +94,8 @@ gradient_descent(loss, params, η = .1, T = 100)
 """
 """
 ,
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 # ╔═╡ e65c80e2-c951-4ff0-aeff-2cdddac26479
@@ -182,7 +184,8 @@ gradient_descent(logloss, params, η = .1, T = 100)
 """
 """
 ,
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 
@@ -313,7 +316,8 @@ end
 """
 """
 ,
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 # ╔═╡ 75528011-05d9-47dc-a37b-e6bb6be52c25
@@ -392,7 +396,8 @@ end
 """
 """
 ,
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 # ╔═╡ 7b57c3f0-ef5a-4dd7-946f-72c8dde2ae8f
@@ -450,8 +455,7 @@ begin
     poly_regression_loss(θ) = poly_regression_loss(θ, h_training, target)
     poly_params = 1e-3 * randn(13)
     tracker5 = Tracker(poly_params)
-	poly_opt = ADAMW()
-	M.advanced_gradient_descent(poly_regression_loss, poly_params, poly_opt, 3*10^4, callback = tracker5)
+	M.advanced_gradient_descent(poly_regression_loss, poly_params, T = 3*10^4, callback = tracker5)
 end;
 
 # ╔═╡ 0d431c00-9eef-4ce4-9542-9571728d1501
@@ -526,6 +530,9 @@ MLCourse.list_notebooks(@__FILE__)
 # ╔═╡ 8459f86e-bce7-4839-9c51-57335ac6353c
 MLCourse.FOOTER
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─e03882f9-843e-4552-90b1-c47b6cbba19b
 # ╟─06479d01-5c03-4b26-9d1c-2ee71032c3ae
@@ -568,3 +575,4 @@ MLCourse.FOOTER
 # ╟─cb9f858a-f60a-11eb-3f0e-a9b68cf33921
 # ╟─8459f86e-bce7-4839-9c51-57335ac6353c
 # ╟─7aa547f8-25d4-488d-9fc3-f633f7f03f57
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

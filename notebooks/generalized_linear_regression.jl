@@ -24,6 +24,7 @@ using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, D
 import Distributions: Normal, Poisson
 import MLCourse: fitted_linear_func
 import PlutoPlotly as PP
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -824,6 +825,8 @@ let
     PP.PlutoPlot(plot)
 end
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
 
 # ╔═╡ Cell order:
 # ╟─661e96c4-9432-4e39-b67e-6d0de2b76635
@@ -908,3 +911,4 @@ end
 # ╟─fbc70eaa-df15-423a-9885-93a5fa27fbc5
 # ╟─12d5824c-0873-49a8-a5d8-f93c73b633ae
 # ╟─94f8e29e-ef91-11eb-1ae9-29bc46fa505a
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

@@ -24,6 +24,7 @@ using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, D
 import Distributions: Normal, Poisson
 import MLCourse: poly, Polynomial
 import PlutoPlotly as PP
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -568,6 +569,9 @@ The improved hyperparameter search also leads to a better estimate of the test e
 # ╔═╡ 9042e811-9a34-42b8-8069-877f3b3f1e75
 (mean_valid_winner = mean(minimum(cv2.valid_losses, dims = 1)), mean_test_winner = mean(cv2.test_losses))
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─b70d9848-91a7-4de0-b93e-8078acfd77f8
 # ╟─7eb6a060-f948-4d85-881a-4909e74c15bd
@@ -631,3 +635,4 @@ The improved hyperparameter search also leads to a better estimate of the test e
 # ╟─7dd7e9a7-9245-4c64-af0c-8f7d2f62b2bf
 # ╟─46827e21-0eea-4ec9-83ed-05e41dda1502
 # ╟─736856ce-f490-11eb-3349-057c86edfe7e
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

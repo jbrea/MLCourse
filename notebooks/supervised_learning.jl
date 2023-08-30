@@ -23,6 +23,8 @@ end
 using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal
 import PlutoPlotly as PP
+# Base.download(s::AbstractString) = joinpath(@__DIR__, "..", "data", replace(s, "https://go.epfl.ch/bio322-" => ""))
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -716,8 +718,7 @@ fitted_params(m1)
 ,
 """
 """
-;
-showoutput = false
+,
 )
 
 # ╔═╡ e4712ebe-f395-418b-abcc-e10ada4b05c2
@@ -1011,6 +1012,9 @@ MLCourse.list_notebooks(@__FILE__)
 # ╔═╡ e3aa458a-486c-4d5b-a330-67fb68e6f516
 MLCourse.FOOTER
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─f63c04dc-eefe-11eb-1e24-1d02a686920a
 # ╟─f63c04e8-eefe-11eb-1a14-8305504a6f1c
@@ -1108,3 +1112,4 @@ MLCourse.FOOTER
 # ╟─11e350b2-70bd-437b-acef-af5103a6eb96
 # ╟─e3aa458a-486c-4d5b-a330-67fb68e6f516
 # ╟─f63c04d4-eefe-11eb-3fda-1729ac6de2cb
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

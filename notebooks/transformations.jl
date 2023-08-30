@@ -25,6 +25,7 @@ import Distributions: Beta, Normal, Gamma
 import Distributions, GLM
 import PlutoPlotly as PP
 const M = MLCourse.JlMod
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -309,6 +310,8 @@ wage = OpenML.load(534) |> DataFrame
 ,
 """
 """
+,
+cache = false
 )
 
 # ╔═╡ 1bf42b12-5fd1-4b4c-94c6-14a52317b15f
@@ -440,6 +443,8 @@ xor_data = xor_generator()
 ,
 """
 """
+,
+cache = false
 )
 
 # ╔═╡ fa7cf2ae-9777-4ba9-9fe0-df545b94c5d8
@@ -679,6 +684,9 @@ MLCourse.list_notebooks(@__FILE__)
 # ╔═╡ 951f6957-0ff7-4b2e-ba91-1b69122bbe47
 MLCourse.FOOTER
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─4e30f307-7b07-4cb7-a34e-ada7e2f6946d
 # ╟─000e5d2f-19da-42f8-8bd8-9a2a3943228d
@@ -755,3 +763,4 @@ MLCourse.FOOTER
 # ╟─e688a9de-2dba-4fab-b4e6-9803c5361a62
 # ╟─951f6957-0ff7-4b2e-ba91-1b69122bbe47
 # ╟─34beb7d6-fba9-11eb-15b8-e34afccc9f88
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d
