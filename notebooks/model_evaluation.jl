@@ -216,6 +216,22 @@ evaluate!(machine(Polynomial(degree = 4) |> LinearRegressor(), X, y),
 """
 ,
 """
+from sklearn.datasets import make_regression
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+X, y = make_regression(n_samples=100, n_features=1)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.5,shuffle=True)
+
+pipeline = Pipeline ([("polynomial",PolynomialFeatures(degree=4)),("regressor",LinearRegression())])
+pipeline.fit(X_train,y_train)
+
+y_pred = pipeline.predict(X_test)
+mse = mean_squared_error(y_test, y_pred, squared=False)
+("MSE " , mse)
 """
 )
 
@@ -237,6 +253,15 @@ evaluate!(machine(Polynomial(degree = 4) |> LinearRegressor(), X, y),
 """
 ,
 """
+from sklearn.model_selection import cross_val_score
+
+X, y = make_regression(n_samples=100, n_features=1)  # generate some artificial data
+
+pipeline = Pipeline ([("polynomial",PolynomialFeatures(degree=4)),("regressor",LinearRegression())])
+
+scores = cross_val_score(pipeline, X, y, cv=10, scoring='neg_root_mean_squared_error')
+
+("NRMSE : mean", scores.mean(), "Standart deviation", scores.std(), "per_fold ",scores)
 """
 )
 
@@ -267,6 +292,23 @@ report(self_tuning_mach) # show the result
 """
 ,
 """
+from sklearn.model_selection import GridSearchCV
+import numpy as np
+
+X, y = make_regression(n_samples=100, n_features=1)  # generate some artificial data
+
+pipeline = Pipeline ([("polynomial",PolynomialFeatures()),("regressor",LinearRegression())])
+
+param_grid = [
+    {'polynomial__degree': np.arange(1,18,1)} # hyperparameter and values to check
+  ]
+
+grid_search = GridSearchCV(pipeline, param_grid, cv=10,
+                           scoring='neg_mean_squared_error',
+                           return_train_score=True)
+
+grid_search.fit(X, y)
+("best_accuracy",grid_search.best_score_, "best_parameters", grid_search.best_params_)
 """
 )
 
@@ -275,12 +317,17 @@ mlstring(
 md"The `range(model, :hyper, values = ...)` function in the cell above returns a `NominalRange(polynomial.degree = 1, 2, 3, ...)` to the tuner. This specifies the degrees of the polynomial that should be tested during tuning.
 
 In general, for any given model you may first want to find out, how the parameters are called that you would like to tune. This can be done by inspecting the model.
-In the output below you see that the model is a `DeterministicPipeline`, with a `polynomial` and a `linear_regressor`. To tune the degree of the `polynomial` we choose `:(polynomial.degree) in the range function above.
+In the output below you see that the model is a `DeterministiPipeline`, with a `polynomial` and a `linear_regressor`. To tune the degree of the `polynomial` we choose `:(polynomial.degree) in the range function above.
 
 Have a look at the best models found for each fold in the output above.
 "
 ,
-""
+"
+In general, for any given model you may first want to find out, how the parameters are called that you would like to tune. This can be done by inspecting the model. The model is a `DeterministiPipeline`, with a `polynomial` and a `linear_regressor`.
+We can see in the Pipeline that the transform `PolynomialFeatures` is named `polynomial`. To tune the degree of the `polynomial` we choose `:(polynomial__degree)` in the param_grid.
+
+Have a look at the best models found for each fold in the output above.
+"
 )
 
 
@@ -300,6 +347,24 @@ nested_cv = evaluate!(machine(self_tuning_model, DataFrame(X), y),
 """
 ,
 """
+from sklearn.model_selection import KFold
+
+# Declare the inner and outer cross-validation strategies
+inner_cv = KFold(n_splits=5, shuffle=True, random_state=42)
+outer_cv = KFold(n_splits=5, shuffle=True, random_state=42)
+
+# Inner cross-validation for parameter search
+model = GridSearchCV(
+	estimator=pipeline, param_grid=param_grid, cv=inner_cv, 
+                           scoring='neg_mean_squared_error')
+model.fit(X,y)
+outer_scores = model.best_score_
+
+# Outer cross-validation to compute the testing score
+nested_score=cross_val_score(model, X, y, cv=outer_cv, 
+                           scoring='neg_mean_squared_error') 
+
+nested_scores = nested_score.mean()
 """
 )
 
@@ -313,6 +378,7 @@ nested_cv.report_per_fold
 """
 ,
 """
+("Outer scores : ", outer_scores, "Nested scores : ",nested_scores)
 """
 )
 

@@ -125,13 +125,30 @@ classification_data = data_generator([0., 2., 3.])
 """
 ,
 """
+import numpy as np
+import pandas as pd
+
+np.random.seed(24)
+
+def logistic(x):
+    return 1 / (1 + np.exp(-x))
+
+def data_generator(x):
+    y = np.where(logistic(2*np.array(x) - 1) > np.random.random(len(x)), "A", "B")
+    df = pd.DataFrame({"x": x, "y": pd.Categorical(y, categories=["A", "B"])})
+    return df
+
+classification_data = data_generator([0., 2., 3.])
+classification_data
 """
 )
 
 # ╔═╡ 7dfa42e3-c409-43a7-9952-a64fbad63c7f
 mlstring(md"In the cell above we used the function `categorical` to tell the computer that the strings \"A\" and \"B\" indicate membership in different categories."
 ,
-""
+"
+In the cell above we used the function `pd.Categorical` to tell the computer that the strings \"A\" and \"B\" indicate membership in different categories.
+"
 )
 
 # ╔═╡ 5233d53e-0104-4eeb-a742-687bd9c9978a
@@ -152,7 +169,16 @@ fitted_params(mach3)
 """
 ,
 """
+from sklearn.linear_model import LogisticRegression
+
+mach3 = LogisticRegression(penalty=None)
+mach3.fit(
+    classification_data['x'].values.reshape(-1, 1), 
+    classification_data['y']
+    )
+("coeff : ", mach3.coef_ , "intercept", mach3.intercept_)
 """
+	
 )
 
 # ╔═╡ a9c7ca33-ce22-49b3-a976-8c180916fa5e
@@ -162,8 +188,16 @@ md"**Training data and conditional probabilites.** The training data is shown as
 # ╔═╡ 0e775dfb-0da4-4536-886c-ada8c176a073
 md"
 ### Making Predictions
+"
+
+# ╔═╡ 9322fa8d-772d-43ac-a6ff-10fe500c3244
+mlstring(md"
 
 For the `LogisticClassifier` the `predict` method returns the conditional probabilities of the classes. Click on the little gray triangle below to toggle the display of the full output."
+,
+"
+For the `LogisticClassifier` the `predict_proba` method returns the conditional probabilities of the classes.
+")
 
 # ╔═╡ f63c061e-eefe-11eb-3b91-7136b4a16616
 mlcode(
@@ -172,11 +206,19 @@ p̂ = predict(mach3, DataFrame(x = -1:.5:2))
 """
 ,
 """
+p = mach3.predict_proba( np.arange(-1, 2.5, 0.5).reshape(-1,1))
+p
 """
 )
 
 # ╔═╡ 0c90f5b6-8a3b-41d8-9f51-d7d7c6b06ba0
-md"If we want to extract the probability of a given response, we can use the `pdf` function."
+mlstring(md"
+
+If we want to extract the probability of a given response, we can use the `pdf` function."
+,
+"
+The probability of a given response is store in one column of p. For the probability of response A : 
+")
 
 # ╔═╡ 5224d406-4e02-424d-9502-a22e0614cb96
 mlcode(
@@ -185,11 +227,16 @@ pdf.(p̂, "A")
 """
 ,
 """
+("Probability of A : ", p[:,0])
 """
 )
 
 # ╔═╡ 34c49e49-a5e7-48ad-807b-c0624a59a367
-md"If we want to get as a response the class with the highest probability, we can use the function `predict_mode`."
+mlstring(md"If we want to get as a response the class with the highest probability, we can use the function `predict_mode`."
+,
+"If we want to get as a response the class with the highest probability, we can use the function `predict`.
+"
+)
 
 # ╔═╡ f63c0628-eefe-11eb-3125-077e533456d9
 mlcode(
@@ -198,6 +245,7 @@ predict_mode(mach3, DataFrame(x = -1:.5:2))
 """
 ,
 """
+mach3.predict(np.arange(-1, 2.5, 0.5).reshape(-1,1))
 """
 )
 
@@ -205,7 +253,7 @@ predict_mode(mach3, DataFrame(x = -1:.5:2))
 md"
 ### Computing the Log-Likelihood
 
-In the following cell we define the log-likelihood loss function `ll` to compute the loss of the optimal parameters (found by the `fit!` function). This is the formula we derived in the slides. Note that the training data is somewhat hidden in this formula: the response of the first data point is a B (see above) at x = 0, therefore its probability is `logistic(-(θ[1] + θ[2]*0)) = logistic(-θ[1])` etc."
+In the following cell we define the log-likelihood loss function `ll` to compute the loss of the optimal parameters. This is the formula we derived in the slides. Note that the training data is somewhat hidden in this formula: the response of the first data point is a B (see above) at x = 0, therefore its probability is `logistic(-(θ[1] + θ[2]*0)) = logistic(-θ[1])` etc."
 
 # ╔═╡ d0c4804f-c66d-4405-a7dc-1e85974e261f
 mlcode(
@@ -213,17 +261,25 @@ mlcode(
 ll(θ) = log(logistic(-θ[1])) +
         log(logistic(θ[1] + 2θ[2])) +
         log(logistic(-θ[1] - 3θ[2]))
+
 ll([-1.28858, .338548]) # the parameters we obtained above
 """
 ,
 """
+import math
+
+def ll(theta):
+    return math.log(logistic(-theta[0])) +  math.log(logistic(theta[0] + 2 * theta[1])) + math.log(logistic(-theta[0] - 3 * theta[1]))
+
+ll([-1.28858, 0.338548]) # the parameters we obtained above
 """
 )
 
 # ╔═╡ b8b81c1b-0faf-4ce9-b690-2f6cc9542b0f
 md"""The likelihood of the optimal parameters is approximately -1.85.
 
-$(mlstring(md"We could have obtained the same result using the `MLJ` function `log_loss`. This function computes the negative log-likelihood for each individual data point. To get the total likelihood we need to take the negative of the sum of these values.", ""))
+$(mlstring(md"We could have obtained the same result using the `MLJ` function `log_loss`. This function computes the negative log-likelihood for each individual data point. To get the total likelihood we need to take the negative of the sum of these values.",
+"We could have obtained the same result using the `sklearn` function `log_loss`. This function computes the negative log-likelihood for each individual data point. To get the total likelihood we need to take the negative of the sum of these values."))
 """
 
 # ╔═╡ d034a44b-e331-4929-9053-351e7fe9aa94
@@ -233,6 +289,9 @@ mlcode(
 """
 ,
 """
+from sklearn.metrics import log_loss
+classification_data["y"].values
+-log_loss(classification_data["y"].values, mach3.predict_proba(classification_data['x'].values.reshape(-1, 1)), normalize=False)
 """
 )
 
@@ -316,12 +375,21 @@ dropmissing!(spamdata) # remove entries without any text (missing values).
 """
 ,
 """
+spamdata = pd.read_csv("https://go.epfl.ch/bio322-spam.csv", nrows=5000)
+spamdata.dropna(inplace=True) # Drop rows with missing values
+spamdata
 """
 )
 
 # ╔═╡ 4cbb3057-01f4-4e80-9029-4e80d6c9e5e6
-md"In the next cell we create the full lexicon of words appearing in the first
-2000 emails. Each lexicon entry is of the form `\"word\" => count`."
+mlstring(md"In the next cell we create the full lexicon of words appearing in the first
+2000 emails. Each lexicon entry is of the form `\"word\" => count`. "
+,
+"
+In the next cell we create the full lexicon of words appearing in the first
+2000 emails. Use `vectorizer.get_feature_names_out()` to see the list of words. `X` is the matrix of occurance of these words for each email.
+"
+)
 
 # ╔═╡ c50c529f-d393-4854-b5ed-91e90d557d12
 mlcode(
@@ -334,16 +402,23 @@ lexicon(crps)
 """
 ,
 """
+from sklearn.feature_extraction.text import CountVectorizer
+
+vectorizer = CountVectorizer()
+word_counts = vectorizer.fit_transform(spamdata["text"].values[:2000]).toarray()
 """
 )
 
-# ╔═╡ 72b50cee-d436-42ce-add9-07b0c012cb31
-md"Now we select only those words of the full lexicon that appear at least 100
-times and at most 10^3 times. These numbers are pulled out of thin air (like
-all the design choses of this very crude feature engineering).
+# ╔═╡ a37baeec-4252-40bd-8022-88cbedc504ed
+mlstring(md" Then we select only those words of the full lexicon that appear at least 100 times and at most 10^3 times. These numbers are pulled out of thin air (like
+all the design choses of this very crude feature engineering)."
+,
+"We select only those words that appear at least 100
+times and at most 10^3 times.
 "
+)
 
-# ╔═╡ bf4110a9-31a4-48a3-bd6d-85c404d0e72d
+# ╔═╡ f61773d4-cedb-4cb5-8bb1-82e0664fbf19
 mlcode(
 """
 small_lex = Dict(k => lexicon(crps)[k]
@@ -352,6 +427,10 @@ m = DocumentTermMatrix(crps, small_lex)
 """
 ,
 """
+words_occurence = np.sum(word_counts, axis=0) # count words occurences in all emails
+index = np.where((words_occurence>10**3) | (words_occurence<100))[0] # select words by their count score
+word_counts = np.delete(word_counts, index, 1)
+word_counts
 """
 )
 
@@ -363,11 +442,17 @@ normalized_word_counts = float.(DataFrame(tf(m), :auto))
 """
 ,
 """
+spam_or_ham = list(spamdata["label"][:2000])
+normalized_word_counts = word_counts/word_counts.sum(axis= 0)[None,:] #normalized
+words_list = np.delete(vectorizer.get_feature_names_out(),index)
+pd.DataFrame(normalized_word_counts,columns=words_list)
 """
 )
 
 # ╔═╡ ec1c2ea5-29ce-4371-be49-08798305ff50
-md"Here we go: now we have a matrix of size 2000 x 801 as input and a vector of binary label as output. We will be able to use this as input in multiple logistic regression."
+mlstring(md"Here we go: now we have a matrix of size 2000 x 801 as input and a vector of binary label as output. We will be able to use this as input in multiple logistic regression.",
+"Here we go: now we have a matrix of size 2000 x 781 as input and a vector of binary label as output. We will be able to use this as input in multiple logistic regression.
+")
 
 # ╔═╡ 62ad57e5-1366-4635-859b-ccdab2efd3b8
 md"## Multiple Logistic Regression on the spam data"
@@ -382,6 +467,8 @@ predict(m3)
 """
 ,
 """
+m3 = LogisticRegression(penalty=None)
+m3.fit(normalized_word_counts, spam_or_ham)
 """
 )
 
@@ -392,6 +479,7 @@ predict_mode(m3)
 """
 ,
 """
+m3.predict(normalized_word_counts)
 """
 )
 
@@ -402,6 +490,8 @@ confusion_matrix(predict_mode(m3), spam_or_ham)
 """
 ,
 """
+from sklearn.metrics import confusion_matrix
+confusion_matrix(m3.predict(normalized_word_counts), spam_or_ham)
 """
 )
 
@@ -420,6 +510,10 @@ confusion_matrix(predict_mode(m3, test_input), test_labels)
 """
 ,
 """
+vectorizer = CountVectorizer(vocabulary = words_list)
+test_input = vectorizer.fit_transform(spamdata["text"].values[2000:]).toarray()
+test_labels = list(spamdata["label"][2000:])
+confusion_matrix(m3.predict(test_input), test_labels)
 """
 )
 
@@ -437,6 +531,21 @@ plot!(fprs2, tprs2, label = "test ROC", legend = :bottomright)
 """
 ,
 """
+from sklearn.metrics import roc_curve
+import matplotlib.pyplot as plt
+
+train_input_int = [ 1 if x == "ham" else 0 for x in list(m3.predict(normalized_word_counts))]
+train_labels_int = [ 1 if x == "ham" else 0 for x in spam_or_ham ]
+test_input_int = [ 1 if x == "ham" else 0 for x in m3.predict(test_input)]
+test_labels_int = [ 1 if x == "ham" else 0 for x in test_labels ]
+
+fprs1, tprs1, _ = roc_curve(train_input_int, train_labels_int)
+fprs2, tprs2, _ = roc_curve(test_input_int, test_labels_int)
+
+plt.plot(fprs1, tprs1, label="training ROC")
+plt.plot(fprs2, tprs2, label="test ROC")
+plt.legend(loc="lower right")
+plt.show()
 """
 )
 
@@ -448,6 +557,10 @@ mlcode(
 """
 ,
 """
+from sklearn.metrics import roc_curve, auc
+training_auc = auc(fprs1, tprs1)
+test_auc = auc(fprs2, tprs2)
+(training_auc, test_auc)
 """
 )
 
@@ -468,6 +581,16 @@ losses(m3, normalized_word_counts, spam_or_ham)
 """
 ,
 """
+from sklearn.metrics import log_loss, accuracy_score, roc_auc_score
+
+def losses(machine, input, response):
+  negative_loglikelihood = log_loss(response, machine.predict_proba(input), normalize=False)
+  misclassification_rate = np.mean(response != machine.predict(input))
+  accuracy = accuracy_score(response, machine.predict(input))
+  auc = roc_auc_score([ 1 if x == "ham" else 0 for x in list(m3.predict(input))], [ 1 if x == "ham" else 0 for x in response ])
+  return negative_loglikelihood, misclassification_rate, accuracy, auc
+
+losses(m3, normalized_word_counts, spam_or_ham)
 """
 )
 
@@ -479,6 +602,7 @@ losses(m3, test_input, test_labels)
 """
 ,
 """
+losses(m3, test_input, test_labels)
 """
 )
 
@@ -500,6 +624,10 @@ bikesharing = OpenML.load(42712) |> DataFrame
 """
 ,
 """
+import openml
+
+bikesharing,_,_,_ = openml.datasets.get_dataset(42712).get_data(dataset_format="dataframe")
+bikesharing
 """
 )
 
@@ -511,6 +639,8 @@ DataFrame(schema(bikesharing))
 """
 ,
 """
+bikesharing.dropna(inplace=True) # remove rows with missing data
+bikesharing.dtypes
 """
 )
 
@@ -533,6 +663,12 @@ fitted_params(m4)
 """
 ,
 """
+from sklearn import linear_model
+
+m4 = linear_model.PoissonRegressor() # Creating a linear count regression model
+m4.fit(bikesharing[['temp', 'humidity']], bikesharing['count']) # Fitting the model
+
+m4.coef_ # Retrieving the fitted parameters
 """
 )
 
@@ -548,11 +684,12 @@ predict(m4)
 """
 ,
 """
+m4.predict(bikesharing[['temp', 'humidity']])
 """
 )
 
 # ╔═╡ aa96bbe7-49f4-4244-9c71-8d9b2b3ee065
-md"And we can obtain the mean or the mode of this conditional distribution with:"
+mlstring(md"And we can obtain the mean or the mode of this conditional distribution with:", "")
 
 # ╔═╡ d5b394ac-b243-4825-a5c1-b30146500ef6
 mlcode(
@@ -575,9 +712,9 @@ predict_mode(m4)
 )
 
 # ╔═╡ 9ec91fbc-b756-4074-a623-1d47925c8239
-md"##### Side remark
+mlstring(md"##### Side remark
 
-`MLJ` distinguishes between models that make deterministic point predictions, like `LinearRegressor()` that predicts the expected response (which is the same as the mean of the conditional normal distribution in the probabilistic view), and models that predict probability distributions, like `LogisticClassifier()` or `LinearCountRegressor()`. If you are unsure about the prediction type of a model you can use the function `prediction_type`:"
+`MLJ` distinguishes between models that make deterministic point predictions, like `LinearRegressor()` that predicts the expected response (which is the same as the mean of the conditional normal distribution in the probabilistic view), and models that predict probability distributions, like `LogisticClassifier()` or `LinearCountRegressor()`. If you are unsure about the prediction type of a model you can use the function `prediction_type`:","")
 
 # ╔═╡ 41e5133c-db89-4407-9501-70e869616e9d
 mlcode(
@@ -845,6 +982,7 @@ end
 # ╟─88741216-4736-4491-a167-31a7852a54e4
 # ╟─a9c7ca33-ce22-49b3-a976-8c180916fa5e
 # ╟─0e775dfb-0da4-4536-886c-ada8c176a073
+# ╟─9322fa8d-772d-43ac-a6ff-10fe500c3244
 # ╟─f63c061e-eefe-11eb-3b91-7136b4a16616
 # ╟─0c90f5b6-8a3b-41d8-9f51-d7d7c6b06ba0
 # ╟─5224d406-4e02-424d-9502-a22e0614cb96
@@ -867,8 +1005,8 @@ end
 # ╟─210b977d-7136-407f-a1c9-eeea869d0312
 # ╟─4cbb3057-01f4-4e80-9029-4e80d6c9e5e6
 # ╟─c50c529f-d393-4854-b5ed-91e90d557d12
-# ╟─72b50cee-d436-42ce-add9-07b0c012cb31
-# ╟─bf4110a9-31a4-48a3-bd6d-85c404d0e72d
+# ╟─a37baeec-4252-40bd-8022-88cbedc504ed
+# ╟─f61773d4-cedb-4cb5-8bb1-82e0664fbf19
 # ╟─534681d5-71d8-402a-b455-f491cfbb353e
 # ╟─ec1c2ea5-29ce-4371-be49-08798305ff50
 # ╟─26d957aa-36d4-4b90-9b91-2d9d883877ea
