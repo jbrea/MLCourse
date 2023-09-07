@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.9
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -16,9 +16,11 @@ end
 
 # ╔═╡ b97724e4-d7b0-4085-b88e-eb3c5bcbe441
 begin
-    using Pkg
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-    using StatsBase, DataFrames, MLCourse, Plots
+using Pkg
+Base.redirect_stdio(stderr = devnull, stdout = devnull) do
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse", "RLEnv"))
+end
+using StatsBase, DataFrames, Plots, ReinforcementLearning, MLCourse
 end
 
 # ╔═╡ b3793299-c916-40d3-bd87-31153fc3781a
@@ -28,7 +30,7 @@ using PlutoUI, PlutoUI.BuiltinsNotebook.HypertextLiteral; PlutoUI.TableOfContent
 using Flux # used to define the Qnetwork as a feedforward neural network
 
 # ╔═╡ ce405f97-6d60-4ae4-b183-79e6c88d9811
-md"# Chasse au trésor"
+md"# 1. Chasse au trésor"
 
 # ╔═╡ b0b89b30-38f1-45c1-8c7a-796ea2f41e8d
 md"## Learning Q-Values with Monte Carlo Estimation
