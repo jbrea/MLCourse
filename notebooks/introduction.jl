@@ -10,7 +10,7 @@ using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 end
-using Revise, MLCourse, HypertextLiteral
+using MLCourse, HypertextLiteral
 MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end

@@ -10,7 +10,7 @@ using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux, MLJXGBoostInterface, MLJDecisionTreeInterface, MLJLIBSVMInterface
+using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux, MLJXGBoostInterface, MLJDecisionTreeInterface, MLJLIBSVMInterface
 import PlutoPlotly as PP
 const M = MLCourse.JlMod
 MLCourse.load_cache(@__FILE__)
