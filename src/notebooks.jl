@@ -363,8 +363,8 @@ function mlcode(jlcode, pycode;
         elseif isa(jlcode, String)
             tmp = _eval(Meta.parse("begin\n"*jlcode*"\nend"))
             tmp = isa(tmp, Function) ? nothing : embed(tmp)
-            if cache && showoutput
-                JlMod._OUTPUT_CACHE[jlcode] = tmp
+            if cache
+                JlMod._OUTPUT_CACHE[jlcode] = showoutput ? tmp : nothing
             end
             tmp
         else
@@ -390,8 +390,8 @@ function mlcode(jlcode, pycode;
                 pyexec(join(lines[1:end-2], "\n"), PyMod)
                 embed(py_output(lastline))
             end
-            if cache && showoutput
-                PyMod._OUTPUT_CACHE[pycode] = tmp
+            if cache
+                PyMod._OUTPUT_CACHE[pycode] = showoutput ? tmp : nothing
             end
             tmp
         else
