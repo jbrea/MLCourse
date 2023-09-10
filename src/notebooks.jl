@@ -260,7 +260,7 @@ function convert_py_output(pyout)
 #     @show typeof(pyout)
     if hasproperty(pyout, :__class__)
         cname = pyconvert(String, pyout.__class__.__name__)
-        @show cname
+#         @show cname
         if cname ∈ ("ndarray", "list")
             elname = pyconvert(String, pyout[0].__class__.__name__)
 #             @show elname
