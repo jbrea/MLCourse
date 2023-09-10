@@ -366,6 +366,7 @@ nested_score=cross_val_score(model, X, y, cv=outer_cv,
                            scoring='neg_mean_squared_error') 
 
 nested_scores = nested_score.mean()
+ 
 """
 )
 

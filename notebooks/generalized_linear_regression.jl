@@ -228,8 +228,10 @@ pdf.(p̂, "A")
 """
 ,
 """
-("Probability of A : ", p[:,0])
+# Probability of A:
+p[:,0]
 """
+,
 )
 
 # ╔═╡ 34c49e49-a5e7-48ad-807b-c0624a59a367
@@ -248,6 +250,7 @@ predict_mode(mach3, DataFrame(x = -1:.5:2))
 """
 mach3.predict(np.arange(-1, 2.5, 0.5).reshape(-1,1))
 """
+,
 )
 
 # ╔═╡ 38ccf735-5195-4e00-868f-95a895c05985
@@ -376,7 +379,7 @@ dropmissing!(spamdata) # remove entries without any text (missing values).
 """
 ,
 """
-spamdata = pd.read_csv("https://go.epfl.ch/bio322-spam.csv", nrows=5000)
+spamdata = pd.read_csv("https://go.epfl.ch/bio322-spam.csv", nrows = 6000)
 spamdata.dropna(inplace=True) # Drop rows with missing values
 spamdata
 """
@@ -407,6 +410,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 vectorizer = CountVectorizer()
 word_counts = vectorizer.fit_transform(spamdata["text"].values[:2000]).toarray()
+ 
 """
 )
 
@@ -468,8 +472,9 @@ predict(m3)
 """
 ,
 """
-m3 = LogisticRegression(penalty=None)
+m3 = LogisticRegression(penalty=None, max_iter = 1000)
 m3.fit(normalized_word_counts, spam_or_ham)
+ 
 """
 )
 
@@ -630,6 +635,8 @@ import openml
 bikesharing,_,_,_ = openml.datasets.get_dataset(42712).get_data(dataset_format="dataframe")
 bikesharing
 """
+,
+cache = false
 )
 
 # ╔═╡ db0f6302-333f-4e65-bff8-cd6c64f72cce
@@ -641,8 +648,10 @@ DataFrame(schema(bikesharing))
 ,
 """
 bikesharing.dropna(inplace=True) # remove rows with missing data
-bikesharing.dtypes
+bikesharing.dtypes.to_frame().reset_index()
 """
+,
+cache = false
 )
 
 # ╔═╡ b9ba1df0-5086-4c0f-a2c9-200c2be27294
@@ -698,8 +707,7 @@ mlcode(
 predict_mean(m4)
 """
 ,
-"""
-"""
+nothing
 )
 
 # ╔═╡ caa11dd3-577d-4692-b889-3a38d0bf61e0
@@ -708,8 +716,7 @@ mlcode(
 predict_mode(m4)
 """
 ,
-"""
-"""
+nothing
 )
 
 # ╔═╡ 9ec91fbc-b756-4074-a623-1d47925c8239
@@ -723,8 +730,7 @@ mlcode(
 prediction_type(LinearRegressor())
 """
 ,
-"""
-"""
+nothing
 )
 
 # ╔═╡ b8bb7c85-0be8-4a87-96da-4e1b37aea96d
@@ -733,8 +739,7 @@ mlcode(
 prediction_type(LogisticClassifier())
 """
 ,
-"""
-"""
+nothing
 )
 
 # ╔═╡ d3d7fa67-ca7d-46e1-b705-e30ec9b09f6a
@@ -743,8 +748,7 @@ mlcode(
 prediction_type(LinearCountRegressor())
 """
 ,
-"""
-"""
+nothing
 )
 
 # ╔═╡ 8b0451bf-59b0-4e71-be84-549e23b5bfe7

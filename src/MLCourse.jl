@@ -4,7 +4,7 @@ import Pkg
 using Pkg.Artifacts
 using Requires, PrecompilePlutoCourse
 using Markdown, Base64
-using HypertextLiteral, PythonCall, Serialization
+using HypertextLiteral, PythonCall, FileIO
 
 function rel_path(args...)
     devpath = joinpath(Pkg.devdir(), "MLCourse")

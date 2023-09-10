@@ -175,7 +175,7 @@ module JlMod
 using Serialization
 const _OUTPUT_CACHE = Dict{Any, Any}()
 end
-function _cache_path(file, ending = ".dat")
+function _cache_path(file, ending = ".jld2")
     path = splitpath(split(file, "#")[1] * ending)
     insert!(path, length(path), ".cache")
     joinpath(path)
@@ -224,13 +224,15 @@ function save_cache(file)
         structs *= s
     end
     write(fn * "-using", pkgs * structs)
-    serialize(fn, (JlMod._OUTPUT_CACHE, PyMod._OUTPUT_CACHE))
+    FileIO.save(fn, Dict("jl" => JlMod._OUTPUT_CACHE, "py" => PyMod._OUTPUT_CACHE))
 end
 function load_cache(file)
     fn = _cache_path(file)
     isfile(fn) || return
     JlMod.eval(Meta.parseall(read(fn * "-using", String)))
-    jlc, pyc = deserialize(fn)
+    cache = FileIO.load(fn)
+    jlc = cache["jl"]
+    pyc = cache["py"]
     for (k, v) in jlc
         JlMod._OUTPUT_CACHE[k] = v
         if isa(k, Symbol)
@@ -251,26 +253,50 @@ function embed(out)
 end
 
 function convert_py_output(pyout)
+#     @show typeof(pyout)
     if hasproperty(pyout, :__class__)
         cname = pyconvert(String, pyout.__class__.__name__)
+        @show cname
         if cname ∈ ("ndarray", "list")
-            pyconvert(Array, pyout)
+            elname = pyconvert(String, pyout[0].__class__.__name__)
+#             @show elname
+            if elname == "str"
+                pyconvert(Array{String}, pyout)
+            else
+                pyconvert(Array, pyout)
+            end
         elseif cname == "DataFrame"
-            DataFrame(PyTable(pyout))
+            DataFrame(PyPandasDataFrame(pyout))
         elseif cname == "dict"
-            pyconvert(Dict, pyout)
+            tmp = pyconvert(Dict, pyout)
+            Dict(k => convert_py_output(e) for (k, e) in tmp)
+        elseif cname == "tuple"
+            tuple((convert_py_output(e) for e in pyout)...)
+        elseif cname == "Series"
+            convert_py_output(pyout.to_frame())
+        elseif cname == "Categorical"
+            convert_py_output(pyout.to_frame())
+        elseif cname == "PairGrid"
+            error("Use plt.show()")
         else
             pyconvert(Any, pyout)
         end
+    elseif isa(pyout, PyArray)
+        convert(Array, pyout)
+    elseif isa(pyout, PyList)
+        convert(Array, pyout)
     else
         pyconvert(Any, pyout)
     end
 end
+function _py_png(; plt = "plt")
+    fn = tempname() * ".png"
+    pyeval("$plt.savefig(\"$fn\")", PyMod)
+    Markdown.parse("![](data:img/png; base64, $(open(base64encode, fn)))")
+end
 function py_output(lastline)
     if match(r"plt\.show()", lastline) != nothing
-        fn = tempname() * ".png"
-        pyeval("plt.savefig(\"$fn\")", PyMod)
-        Markdown.parse("![](data:img/png; base64, $(open(base64encode, fn)))")
+        _py_png()
     elseif match(r"^\w* ?= ?\w", lastline) == nothing &&
            match(r"^ ", lastline) == nothing &&
            match(r"^\t", lastline) == nothing
@@ -337,7 +363,7 @@ function mlcode(jlcode, pycode;
         elseif isa(jlcode, String)
             tmp = _eval(Meta.parse("begin\n"*jlcode*"\nend"))
             tmp = isa(tmp, Function) ? nothing : embed(tmp)
-            if cache
+            if cache && showoutput
                 JlMod._OUTPUT_CACHE[jlcode] = tmp
             end
             tmp
@@ -356,10 +382,17 @@ function mlcode(jlcode, pycode;
             PyMod._OUTPUT_CACHE[pycode]
         elseif isa(pycode, String)
             lines = split(pycode, '\n')
-            lastline = lines[end-1]
-            pyexec(join(lines[1:end-2], "\n"), PyMod)
-            tmp = embed(py_output(lastline))
-            PyMod._OUTPUT_CACHE[pycode] = tmp
+            lastline = length(lines) == 1 ? lines[end] : lines[end-1]
+            tmp = if match(r"^[a-z0-9_]* = ", lastline) !== nothing
+                pyexec(pycode, PyMod)
+                nothing
+            else
+                pyexec(join(lines[1:end-2], "\n"), PyMod)
+                embed(py_output(lastline))
+            end
+            if cache && showoutput
+                PyMod._OUTPUT_CACHE[pycode] = tmp
+            end
             tmp
         else
             error("pycode is a $(typeof(pycode)) but needs to be a `String`.")

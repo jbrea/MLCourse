@@ -693,6 +693,7 @@ def expected_error(f_hat, x, sigma=0.1):
     return np.mean((conditional_generator(x, 10**6, sigma) - f_hat(x))**2)
 
 f_hat = lambda x: 0.1 + x #test function f̂
+ 
 """
 ;
 showoutput = false,
