@@ -18,7 +18,7 @@ RUN git checkout -t origin/main
 # COPY --chown=MLCourse . /home/MLCourse
 ENV html_export=true
 ENV JULIA_PKG_DEVDIR=/home
-ADD notebooks/.cache notebooks/.cache
+ADD --chown=MLCourse notebooks/.cache notebooks/.cache
 
 # Initialize the julia project environment that will be used to run the bind server.
 # RUN julia --project=/home/MLCourse -e "import Pkg; Pkg.instantiate(); Pkg.precompile(); using MLCourse"

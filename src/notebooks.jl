@@ -163,7 +163,7 @@ const CSS_STYLE =
       transition: max-height 0.2s ease-out;
     }
 
-    #launch_binder {
+    .edit_or_run {
         display: none;
     }
 
