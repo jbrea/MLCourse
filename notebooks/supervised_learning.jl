@@ -80,7 +80,7 @@ mnist.class
 mnist['class']
 """
 ,
-recompute = true
+recompute = false
 )
 
 # ╔═╡ f63c04fc-eefe-11eb-35b6-5345dda134e7
@@ -311,7 +311,7 @@ g.map_upper(sns.kdeplot, fill=True,cmap="Reds")
 plt.show()
 """
 ,
-recompute = true
+recompute = false
 )
 
 # ╔═╡ f63c0574-eefe-11eb-2d7c-bd74b7d83f23
