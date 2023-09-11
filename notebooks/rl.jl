@@ -17,11 +17,13 @@ end
 # ╔═╡ b97724e4-d7b0-4085-b88e-eb3c5bcbe441
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse", "RLEnv"))
-end
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse", "RLEnv"))
 using StatsBase, DataFrames, Plots, ReinforcementLearning, MLCourse
 const M = MLCourse.JlMod
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
 MLCourse.CSS_STYLE
 end
 

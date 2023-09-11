@@ -18,12 +18,13 @@ end
 begin
 using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
-using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Statistics
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)end
 import MLCourse: poly, Polynomial
-MLCourse.load_cache(@__FILE__)
 import PlutoPlotly as PP
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 

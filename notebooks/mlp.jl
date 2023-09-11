@@ -17,18 +17,16 @@ end
 # ╔═╡ 87f59dc7-5149-4eb6-9d81-440ee8cecd72
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux
 import PlutoPlotly as PP
 import MLCourse: heaviside
 const M = MLCourse.JlMod
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
 MLCourse.load_cache(@__FILE__)
-using Serialization
-#for (k, v) in deserialize("/tmp/test.dat")
-#    M._OUTPUT_CACHE[k] = v
-#end
 MLCourse.CSS_STYLE
 end
 

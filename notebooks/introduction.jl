@@ -7,10 +7,12 @@ using InteractiveUtils
 # ╔═╡ 065a1e67-6b63-43df-9d6d-303af08d8434
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
+stderr_orig = stderr
+stdout_orig = stdout
+redirect_stdio(stderr = devnull, stdout = devnull)
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral
+redirect_stdio(stderr = stderr_orig, stdout = stdout_orig)
 MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end

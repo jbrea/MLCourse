@@ -17,14 +17,16 @@ end
 # ╔═╡ 8bd459cb-20bb-483e-a849-e18caae3beef
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, MLJMultivariateStatsInterface, OpenML, MLJClusteringInterface, Distributions, Distances
 import PlutoPlotly as PP
 const M = MLCourse.JlMod
-MLCourse.load_cache(@__FILE__)
 M.chop(x, eps = 1e-12) = abs(x) > eps ? x : zero(typeof(x))
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
