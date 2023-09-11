@@ -826,7 +826,7 @@ let Ktest = 18, dataticks = range(.39, .58, Ktest), fitticks = range(.12, .31, b
     scatter!(fitticks, pred, markershape = :utriangle, c = bvd.colors, label = "fit", xticks = ([dataticks; fitticks], [1:Ktest; 1:bvd.K]))
     plot!([.35, .35], [f, bvd.avg[i]], arrow = :both, c = :orange, label = "bias")
     plot!([.485, .485], [f-.2, f+.2], arrow = :both, c = :green, label = "irreducible error")
-    plot!([.215, .215], [bvd.avg[i]-2estd, bvd.avg[i]+2estd], arrow = :both, c = :red, label = "irreducible error")
+    plot!([.215, .215], [bvd.avg[i]-2estd, bvd.avg[i]+2estd], arrow = :both, c = :red, label = "variance")
     plot!(legend_position = :outertopright,
           ylabel = "y", xlabel = "fit id                                    test data id",
           yrange = (-.3, 1.1), size = (700, 350))
