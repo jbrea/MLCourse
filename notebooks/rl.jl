@@ -55,12 +55,6 @@ Base.@kwdef struct MCLearner # this defines a type MCLearner
     N = zeros(Int, na, ns) # default initial counts
     Q = zeros(na, ns)      # default initial Q-values
 end
-\"\"\"
-    update!(l::MCLearner, a, s, r)
-
-Updates an `MCLearner` object `l` for a given
-action `a`, state `s` and reward `r`.
-\"\"\"
 function update!(learner::MCLearner, a, s, r)
     N, Q = learner.N, learner.Q
     n = N[a, s]
@@ -68,11 +62,6 @@ function update!(learner::MCLearner, a, s, r)
     N[a, s] += 1
     learner
 end
-\"\"\"
-    update!(l::MCLearner, episode)
-
-Updates an `MCLearner` object `l` for a full episode.
-\"\"\"
 function update!(learner::MCLearner, episode)
     G = 0 # initialise the cumulative reward
     for (s, a, r, ) in reverse(episode)
@@ -168,7 +157,7 @@ function fixed_point_iteration(f, x0)
     old_x = copy(x0)
     while true
         new_x = f(old_x)
-        new_x ≈ old_x && break # break, if the values does not change much anymore
+        new_x ≈ old_x && break # break, if the values don't change much anymore
 		old_x = copy(new_x)
     end
     old_x
@@ -176,7 +165,8 @@ end
 function evaluate_policy(policy, T, R)
     nₐ, nₛ = size(T)
     r = mean.(R)' # this is an array of (nₐ, nₛ) average reward values
-    fixed_point_iteration(Q -> r .+ [sum(Q[policy(s′), s′]*T[a, s][s′] for s′ in 1:nₛ)
+    fixed_point_iteration(Q -> r .+ [sum(Q[policy(s′), s′]*T[a, s][s′]
+                                         for s′ in 1:nₛ)
                                      for a in 1:nₐ, s in 1:nₛ],
                           zeros(nₐ, nₛ))
 end
@@ -252,12 +242,6 @@ Base.@kwdef struct QLearner # this defines a type QLearner
     Q = zeros(na, ns)      # default initial Q-values
     λ = 0.01
 end
-\"\"\"
-    update!(l::QLearner, a, s, r)
-
-Updates a `QLearner` object `l` for a given
-state `s`, action `a`, reward `r` and next state `s′`.
-\"\"\"
 function update!(learner::QLearner, s, a, r, s′)
     Q, λ = learner.Q, learner.λ
     δ = (r + maximum(Q[:, s′]) - Q[a, s])
@@ -307,12 +291,6 @@ Base.@kwdef mutable struct DeepQLearner # this defines a type DeepQLearner
     Qnetwork
     optimizer = ADAM()
 end
-\"\"\"
-    update!(l::DeepQLearner, a, s, r)
-
-Updates a `DeepQlearner` object `l` for a given
-state `s`, action `a`, reward `r` and next state `s′`.
-\"\"\"
 function update!(l::DeepQLearner, s, a, r, s′)
     Qnetwork = l.Qnetwork
     x = distributed_representation(s)
@@ -325,11 +303,6 @@ function update!(l::DeepQLearner, s, a, r, s′)
     Flux.update!(l.optimizer, θ, gs)
     l
 end
-\"\"\"
-    update!(l::DeepQLearner, episode)
-
-Updates an `DeepQLearner` oject `l` for a full episode.
-\"\"\"
 function update!(l::DeepQLearner, episode)
     length(episode) > 0 || return l
     s, a, r, s′ = last(episode)
@@ -401,7 +374,7 @@ end;
 md"""# Exercises
 ## Conceptual
 
-### Exercise 1
+#### Exercise 1
 Consider an agent that experiences episode 1:
 
 ```math
@@ -427,7 +400,7 @@ S_3 &= s_2, A_3 = a_2, R_4 = 1
 
 (b) Compute ``Q(s_1, a_1)`` with Q-Learning, learning rate ``\lambda = 0.5`` and initial ``Q(s, a) = 0`` for all ``s`` and ``a``.
 
-### Exercise 2
+#### Exercise 2
 Consider the cliff-walking task shown below. This is a standard episodic task with an agent (red point) moving around in a grid world with start (bottom left) and goal state (green square at bottom right), and the usual actions causing movement up, down, right, and left. Reward is -1 on all transitions except those into the cliff region marked black and the goal state at the bottom right. Stepping into this region incurs a reward of -100. Episodes end when the agent steps into the cliff or reaches the goal at the bottom right; in this case `is_terminated(environment) == true` and `reset!(environment)` sends the agent back to the start state at the bottom left.
 
 (a) Determine the cumulative reward that would be obtained when following the optimal strategy in this task.
@@ -447,7 +420,7 @@ Justify your answers.
 md"""
 ## Applied
 
-### Exercise 3 (optional)
+#### Exercise 3 (optional)
 We continue looking at the cliff walking environment.
 
 (a) Train a Monte Carlo learner with epsilon-greedy exploration (``\epsilon = 0.1``) for ``10^3`` episodes. Keep track of the cumulative reward in each episode. *Hints:* You can use the `environment = CliffWalkingEnv()` and the usual functions like `state(environment)`, `reward(environment)` and `act!(environment, action)` etc. Because we do not know the length of the episodes, you can use the following pattern:
@@ -935,12 +908,6 @@ let
                (cwenv.params.ny ÷ 2, -.2, "cumulative reward = $(cwenv.cumulative_reward)")])
 end
 
-# ╔═╡ ae72b2c3-fe7b-4ffb-b45c-e589529209c7
-tictactoe = TicTacToeEnv();
-
-# ╔═╡ 4b90f08e-0183-4f8b-a6cd-e66b6938f4c8
-legal_action_space(tictactoe) # now action 5 is no longer availabl
-
 # ╔═╡ Cell order:
 # ╟─b3793299-c916-40d3-bd87-31153fc3781a
 # ╟─d7d714e5-066e-46f1-a371-d0166bd0393d
@@ -1009,5 +976,3 @@ legal_action_space(tictactoe) # now action 5 is no longer availabl
 # ╟─36e0ad57-08bd-4ece-81ba-df180d9c476f
 # ╟─402d6e7b-fdd1-4082-a995-d78fc7d4cb69
 # ╟─b97724e4-d7b0-4085-b88e-eb3c5bcbe441
-# ╠═ae72b2c3-fe7b-4ffb-b45c-e589529209c7
-# ╠═4b90f08e-0183-4f8b-a6cd-e66b6938f4c8

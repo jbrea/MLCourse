@@ -12,11 +12,17 @@ begin
     list_notebooks(@__FILE__, path = joinpath(base_path, "notebooks"), basedir = "notebooks")
 end
 
+# ╔═╡ d403d4a0-4e6e-47b7-aba1-c291095d1baf
+CSS_STYLE
+
 # ╔═╡ bd586b9b-2701-42ce-a56c-bdadf2576212
 md"# Welcome!
 
 On the following pages you find interactive animations, code examples and conceptual and applied exercises to learn more about machine learning.
 "
+
+# ╔═╡ 97134307-c909-4010-a0a9-72bf632182bf
+FOOTER
 
 # ╔═╡ 4744c137-8183-49a4-9a4a-4d86b96ae280
 # Markdown.parse(
@@ -34,9 +40,6 @@ On the following pages you find interactive animations, code examples and concep
 # notebook rather quickly.
 # "
 # )
-
-# ╔═╡ 97134307-c909-4010-a0a9-72bf632182bf
-FOOTER
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -196,9 +199,10 @@ version = "17.4.0+0"
 """
 
 # ╔═╡ Cell order:
+# ╟─d403d4a0-4e6e-47b7-aba1-c291095d1baf
 # ╟─bd586b9b-2701-42ce-a56c-bdadf2576212
-# ╟─4744c137-8183-49a4-9a4a-4d86b96ae280
 # ╟─4210f3a2-f61c-11eb-322f-c388a2ebc1ad
 # ╟─97134307-c909-4010-a0a9-72bf632182bf
+# ╟─4744c137-8183-49a4-9a4a-4d86b96ae280
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
