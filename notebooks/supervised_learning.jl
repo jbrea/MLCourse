@@ -326,24 +326,24 @@ You can control the parameters ``\theta_0`` and ``\theta_1`` to find the
 function that visually matches the data well.
 "
 
-# ╔═╡ 782a1b8a-d15e-47a3-937d-0c25b136da3d
-@bind linregsol Select(["Random Initialization", "Minimal Loss Solution"])
-
 # ╔═╡ d8a3bb08-df1e-4cf9-a04f-6156d27f0992
-begin
-    if linregsol == "Random Initialization"
-        theta0 = randn()/2
-        theta1 = randn()/2
-    else
-        theta0 = -1.1246030250560215
-        theta1 = 2.468858219596663
-    end
-end;
+# begin
+#     if linregsol == "Random Initialization"
+#         theta0 = randn()/2
+#         theta1 = randn()/2
+#     else
+#         theta0 = -1.1246030250560215
+#         theta1 = 2.468858219596663
+#     end
+# end;
+
+# ╔═╡ 782a1b8a-d15e-47a3-937d-0c25b136da3d
+# @bind linregsol Select(["Random Initialization", "Minimal Loss Solution"])
 
 # ╔═╡ f63c057e-eefe-11eb-1672-19db9efd0d32
-md"""θ₀ = $(linregsol; @bind θ₀ Slider(-1.8:.1:1.8, default = theta0, show_value = true))
+md"""θ₀ = $(@bind θ₀ Slider(-1.8:.1:1.8, default = 0, show_value = true))
 
-θ₁ = $(linregsol; @bind θ₁ Slider(-3:.1:3, default = theta1, show_value = true))
+θ₁ = $(@bind θ₁ Slider(-3:.1:3, default = 0, show_value = true))
 """
 
 # ╔═╡ f63c0588-eefe-11eb-0687-a7c44f9177a4
@@ -372,29 +372,29 @@ md"**Left:** The data is given by the blue points, the current function by the b
 ## Supervised Learning as Likelihood Maximization
 "
 
-# ╔═╡ c0610eee-9d7e-40cf-8b46-5317b0070de9
-@bind linmllsol Select(["Random Initialization", "Maximum Log-Likelihood Solution"])
-
 # ╔═╡ 4acb0dbf-6d10-42f9-adba-4a9358f54b38
-begin
-    if linmllsol == "Random Initialization"
-        theta02 = randn()/2
-        theta12 = randn()/2
-        sigma0 = 2*rand()
-    else
-        theta02 = -1.1246030250560215
-        theta12 = 2.468858219596663
-        sigma0 = 0.29951788038174776
-    end
-end;
+# begin
+#     if linmllsol == "Random Initialization"
+#         theta02 = randn()/2
+#         theta12 = randn()/2
+#         sigma0 = 2*rand()
+#     else
+#         theta02 = -1.1246030250560215
+#         theta12 = 2.468858219596663
+#         sigma0 = 0.29951788038174776
+#     end
+# end;
+# 
 
+# ╔═╡ c0610eee-9d7e-40cf-8b46-5317b0070de9
+# @bind linmllsol Select(["Random Initialization", "Maximum Log-Likelihood Solution"])
 
 # ╔═╡ 65c228c1-f6f2-4542-9870-066448b182ee
-md"""θ₀ = $(linmllsol; @bind θ₀₂ Slider(-1.8:.1:1.8, default = theta02, show_value = true))
+md"""θ₀ = $(@bind θ₀₂ Slider(-1.8:.1:1.8, default = 0, show_value = true))
 
-θ₁ = $(linmllsol; @bind θ₁₂ Slider(-3:.1:3, default = theta12, show_value = true))
+θ₁ = $(@bind θ₁₂ Slider(-3:.1:3, default = 0, show_value = true))
 
-σ = $(@bind sigma Slider(.1:.1:2, default = sigma0, show_value = true))
+σ = $(@bind sigma Slider(.1:.1:2, default = .3, show_value = true))
 """
 
 # ╔═╡ 5ba1c12a-75ce-4d01-aca5-8804d8e747cf
