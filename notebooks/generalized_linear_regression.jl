@@ -698,6 +698,7 @@ predict_mean(m4)
 """
 ,
 """
+nothing
 """
 )
 
@@ -708,6 +709,7 @@ predict_mode(m4)
 """
 ,
 """
+nothing
 """
 )
 
@@ -723,6 +725,7 @@ prediction_type(LinearRegressor())
 """
 ,
 """
+nothing
 """
 )
 
@@ -733,6 +736,7 @@ prediction_type(LogisticClassifier())
 """
 ,
 """
+nothing
 """
 )
 
@@ -743,6 +747,7 @@ prediction_type(LinearCountRegressor())
 """
 ,
 """
+nothing
 """
 )
 

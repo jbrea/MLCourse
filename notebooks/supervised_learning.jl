@@ -928,7 +928,7 @@ md"Our weather data set contains multiple measurements.
 With `weather.columns` we see all the names of the columns of the the weather data frame.
 Try it in a new cell!
 
-With `weather.dtypes` we get additionally information about the type of data.
+With `weather.dtypes, weather.head(), weather.info()` we get additionally information about the type of data.
 "
 )
 

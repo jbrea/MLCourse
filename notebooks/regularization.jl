@@ -240,9 +240,11 @@ fitted_params(mach)
 """
 from sklearn.linear_model import Ridge, Lasso
 from sklearn.linear_model import LassoCV
+
 ridge = Ridge(alpha=3.82, fit_intercept=True)
 ridge.fit(x.reshape(-1, 1), y)
-ridge.coef_
+
+("coeff : ", ridge.coef_, "intercept : ", ridge.intercept_)
 """
 )
 
@@ -268,12 +270,13 @@ fitted_params(mach)
 """
 lasso = Lasso(alpha=0.1, fit_intercept=True, tol=1e-8)
 lasso.fit(x.reshape(-1, 1), y)
-lasso.coef_
+("coeff : ", lasso.coef_, "intercept : ", lasso.intercept_)
 """
 )
 
 # ╔═╡ 6c87eb35-ddb3-44a3-b4ae-77a371e28960
-md"There is also the `ElasticNetRegressor` that allows to fit with L1 and L2 penalties of different strengths. Look up the documentation to learn more about it."
+mlstring(md"There is also the `ElasticNetRegressor` that allows to fit with L1 and L2 penalties of different strengths. Look up the documentation to learn more about it.",
+"There is also the `ElasticNet` that allows to fit a Linear regression with combined L1 and L2 priors as regularizer")
 
 # ╔═╡ bb19c718-c401-4c0c-a6ec-5efc83e6588f
 md"""
@@ -325,14 +328,45 @@ report(self_tuning_mach)
 """
 ,
 """
+import pandas as pd
+
+def f(x):
+    return 0.3 * np.sin(10*x) + 0.7*x
+x = np.random.rand(50)
+df = pd.DataFrame({'x': x, 'y': f(x) + 0.1*np.random.randn(50)})
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.model_selection import GridSearchCV
+
+pipeline = Pipeline ([("polynomial",PolynomialFeatures()),("model",Ridge())])
+
+param_grid = [
+    {'polynomial__degree': np.arange(1,20,1),
+	'model__alpha' : np.arange(10**-12,10**-3,10)}]
+
+grid_search = GridSearchCV(pipeline, param_grid, cv=5,
+                           scoring='neg_mean_squared_error')
+
+grid_search.fit(df["x"].values.reshape(-1,1), df["y"].values.reshape(-1,1))
+("best_accuracy",grid_search.best_score_, "best_parameters", grid_search.best_params_)
 """
 )
 
 # ╔═╡ 7b4daae4-20d3-4992-94e9-46882e47b840
-md"With the report function we can have a look at the best hyper-parameter values (`polynomial.degree`= $(report(M.self_tuning_mach).best_model.polynomial.degree) and
+mlstring(md"With the report function we can have a look at the best hyper-parameter values (`polynomial.degree`= $(report(M.self_tuning_mach).best_model.polynomial.degree) and
  `ridge_regressor.lambda` = $(report(M.self_tuning_mach).best_model.ridge_regressor.lambda)) found by the self-tuning machine.
 
-The result of the self-tuning machine can be visualized with the `plot` function."
+The result of the self-tuning machine can be visualized with the `plot` function.",
+"
+The best hyper-parameter values (`polynomial__degree`= 6 and
+ `model__alpha` = 1.0e-12 found by the self-tuning machine.
+
+NB : we could have also use the sklearn function `RidgeCV` : a Ridge regression with built-in cross-validation.
+Use `grid_search.cv_results_` to see all results.
+
+The result of the self-tuning machine can be visualized with the `plot` function.
+")
 
 # ╔═╡ f5057d4a-1103-4728-becc-287d93d682ba
 mlcode(
@@ -342,15 +376,45 @@ plot(self_tuning_mach)
 """
 ,
 """
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+def plot_hyperparameters (df) :
+  g = sns.PairGrid(results, 
+					diag_sharey=False, 
+					corner=True, 
+					hue = "test_score", 
+					x_vars=list(df.columns)[:-1], 
+					y_vars=list(df.columns))
+  g.map(sns.scatterplot, s=50)
+  g.add_legend(fontsize=14, bbox_to_anchor=(1.2,0.55))
+  for ax in g.axes.flat:
+    if not (ax==None) :
+      if ax.get_xlabel() in ["model__alpha"]:
+        ax.set(xscale="log")
+      if ax.get_ylabel() in ["model__alpha"]:
+        ax.set(yscale="log")
+
+results = pd.DataFrame(grid_search.cv_results_)
+results = results[['param_model__alpha', 'param_polynomial__degree', 'mean_test_score']]
+results.columns = ['model__alpha', 'polynomial__degree', 'test_score']
+plot_hyperparameters(results)
 """
 )
 
 # ╔═╡ adfe4bb8-f3db-4557-b5d8-6efc33f5e321
-md"
- In the plot **at the top**, we see the root mean square error estimated with cross-validation for different values of the polynomial degree. We see, for example, that for low polynomial degrees (below degree 4) the self-tuning machine did not find any low errors. For every degree we see multiple blue points, because the self-tuning machine tried for every degree multiple values for the regularization constant.
+mlstring(md"
+In the plot **at the top**, we see the root mean square error estimated with cross-validation for different values of the polynomial degree. We see, for example, that for low polynomial degrees (below degree 4) the self-tuning machine did not find any low errors. For every degree we see multiple blue points, because the self-tuning machine tried for every degree multiple values for the regularization constant.
 In the plot **at the right** we see the root mean squared error as for different values of the regularization constant `lambda`. We see, for example, that for high regression values (above ``10^{-6}``) the self-tuning machine did not find any low errors. Again, we see multiple blue points for every value of the regularization constant, because multiple polynomial degrees were tested (the line of blue values at the top of the figure is probably produced by low polynomial degrees). In the plot **at the bottom left** we see with a color-and-size code the loss for different values of polynomial degree and regularization constant lambda. The smaller and darker the circle, the lower the error.
 
 Let us have a look how well the model with the best hyper-parameters fits the data."
+,
+"
+In the plot **at the bottom right**, we see the root mean square error estimated with cross-validation for different values of the polynomial degree. We see, for example, that for low polynomial degrees (below degree 4) the self-tuning machine did not find any low errors. For every degree we see multiple points, because the self-tuning machine tried for every degree multiple values for the regularization constant.
+In the plot **at the bottom left** we see the root mean squared error as for different values of the regularization constant `lambda`. We see, for example, that for high regression values (above ``10^{-6}``) the self-tuning machine did not find any low errors. Again, we see multiple points for every value of the regularization constant, because multiple polynomial degrees were tested (the line of blue values at the top of the figure is probably produced by low polynomial degrees). In the plot **at the middle** we see with a color code the loss for different values of polynomial degree and regularization constant lambda. Thedarker the circle, the lower the error.
+
+Let us have a look how well the model with the best hyper-parameters fits the data.
+")
 
 # ╔═╡ 596fd0f2-eee0-46ca-a203-e7cbac6f9788
 mlcode(
@@ -367,6 +431,31 @@ mlcode(
 """
 ,
 """
+import matplotlib.pyplot as plt
+p1 = plt.scatter(df["x"], df["y"], label="training data")
+
+x= np.linspace(0, 1, 100)
+plt.plot(x,f(x),label="generator", color="green",linewidth=2)
+
+grid = np.arange(0, 1.01, 0.01)
+test_pipeline = Pipeline([
+				("polynomial", 
+				PolynomialFeatures(degree = grid_search.best_params_["polynomial__degree"])), 
+				("model",
+				Ridge(alpha = grid_search.best_params_["model__alpha"]))
+				])
+test_pipeline.fit(df["x"].values.reshape(-1,1), df["y"].values.reshape(-1,1))
+
+pred = test_pipeline.predict(grid.reshape(-1,1))
+plt.plot(grid, pred, label="fit", linewidth=3, color="red")
+
+# Add annotation
+reducible_error_str = str(round(np.mean((pred - f(grid))**2), 3))
+plt.annotate("reducible error ≈ " + reducible_error_str, xy=(0.28, 0.6))
+
+# Add legend and show plot
+plt.legend(loc="upper left")
+plt.show()
 """
 )
 
@@ -421,9 +510,25 @@ coerce!(spam_train, :spam_or_ham => OrderedFactor)
 spam_test = CSV.read(download("https://go.epfl.ch/bio322-spam_test.csv"), DataFrame)
 spam_test.spam_or_ham = String.(spam_test.spam_or_ham)
 coerce!(spam_test, :spam_or_ham => OrderedFactor)
+spam_train
 """
 ,
 """
+import pandas as pd
+
+# Read training data from CSV file
+spam_train = pd.read_csv("https://go.epfl.ch/bio322-spam_train.csv")
+spam_train["spam_or_ham"] = spam_train["spam_or_ham"].astype(str).astype("category")
+
+# Convert column to ordered factor
+spam_train["spam_or_ham"] = pd.Categorical(spam_train["spam_or_ham"], ordered=True)
+
+# Read test data from CSV file and Convert column to ordered factor
+spam_test = pd.read_csv("https://go.epfl.ch/bio322-spam_test.csv")
+spam_test["spam_or_ham"] = spam_test["spam_or_ham"].astype(str).astype("category")
+spam_test["spam_or_ham"] = pd.Categorical(spam_test["spam_or_ham"], ordered=True)
+
+spam_train
 """
 )
 
@@ -442,6 +547,17 @@ confusion_matrix(predict_mode(spam_mach, select(spam_train, Not(:spam_or_ham))),
 """
 ,
 """
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
+spam_mach = LogisticRegression(penalty="l2", C=10)
+spam_mach.fit(spam_train.drop("spam_or_ham", axis=1), spam_train["spam_or_ham"])
+
+cm = confusion_matrix(spam_train["spam_or_ham"], 	spam_mach.predict(spam_train.drop("spam_or_ham", axis=1)))
+color = 'white'
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=spam_mach.classes_)
+disp.plot()
+plt.show()
 """
 )
 
@@ -454,17 +570,30 @@ confusion_matrix(predict_mode(spam_mach, select(spam_test, Not(:spam_or_ham))),
 """
 ,
 """
+cm = confusion_matrix(spam_test["spam_or_ham"], 	spam_mach.predict(spam_test.drop("spam_or_ham", axis=1)))
+color = 'white'
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=spam_mach.classes_)
+disp.plot()
+plt.show()
 """
 )
 
 # ╔═╡ 19bdd76c-4131-422d-983e-1b29cd9edd30
-md"We see that the test misclassification rate with regularization
+mlstring(md"We see that the test misclassification rate with regularization
 is lower than in our original fit without regularization
-(notebook \"Generalized Linear Regression\"; 48 false negatives and 48 false
+(notebook \"Generalized Linear Regression\"; 50 false negatives and 34 false
 positives). The misclassification rate on the training set is higher. This
 indicates that unregularized logistic regression is too flexible for our spam
 data set.
+",
 "
+We see that the test misclassification rate with regularization
+is lower than in our original fit without regularization
+(notebook \"Generalized Linear Regression\"; 56 false negatives and 36 false
+positives). The misclassification rate on the training set is higher. This
+indicates that unregularized logistic regression is too flexible for our spam
+data set.
+")
 
 # ╔═╡ 13655a50-fbbb-46c7-bdf7-ed5644646966
 md"# 4. The Lasso Path for the Weather Data
@@ -480,6 +609,8 @@ weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
 """
 ,
 """
+weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
+weather
 """
 )
 
@@ -493,6 +624,27 @@ weather_fits = glmnet(Array(weather_input), weather_output)
 """
 ,
 """
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import explained_variance_score
+
+weather_input = weather.drop("LUZ_wind_peak", axis=1).iloc[:-5, :]
+weather_output = weather["LUZ_wind_peak"].iloc[5:]
+
+scaler = StandardScaler().fit(weather_input)
+weather_input = scaler.transform(weather_input)
+
+# Create Lasso regression model
+alphas = np.logspace(-6,1,10)
+lasso = Lasso(max_iter=10000)
+coefs = []
+var = []
+
+for a in alphas :
+	lasso.set_params(alpha=a)
+	lasso.fit(weather_input, weather_output)
+	coefs.append(lasso.coef_)
+	var.append(explained_variance_score(weather_output, lasso.predict(weather_input)))
+	explained_variance_score(weather_output, lasso.predict(weather_input))
 """
 )
 
@@ -511,6 +663,23 @@ let fits = M.weather_fits,
     PP.PlutoPlot(PP.Plot(p, PP.Layout(xaxis_title = "log(λ)")))
 end
 
+# ╔═╡ 83fe757f-a9aa-4a60-8a49-dce5e9fcf56c
+mlstring("",md"Python version :")
+
+# ╔═╡ 35913b1d-86d0-4338-9f7c-41a89651b2dc
+mlcode(
+"""
+""",
+"""
+df = pd.DataFrame ({"parameters":np.tile(weather.drop("LUZ_wind_peak", axis=1).columns, len(alphas)),
+                    "log_alpha": np.log(np.repeat(alphas,len(coefs[0]))),
+                    "coefs": np.array(coefs).reshape(-1)})
+
+import plotly.express as px
+fig = px.line(df,x="log_alpha", y="coefs", color="parameters")
+fig.show()
+""")
+
 # ╔═╡ 6f5b0cd1-ba68-46a5-a348-fed201da4a15
 md"Indeed, if we were allowed to use only one predictor, the wind peak in Bern is most informative about the wind peak in Luzern five hours later. The correlation is positive, but there is a lot of noise."
 
@@ -524,6 +693,10 @@ scatter(weather_input.BER_wind_peak, weather_output,
 """
 ,
 """
+plt.scatter(weather["BER_wind_peak"].iloc[:-5], weather_output.values)
+plt.xlabel("wind peak in Bern [km/h]")
+plt.ylabel("wind peak in Luzern 5 hours later [km/h]")
+plt.show()
 """
 )
 
@@ -541,6 +714,13 @@ p2 = plot(lambda, reshape(sum(weather_fits.betas .!= 0, dims = 1), :),
 plot(p1, p2, layout = (2, 1), legend = false)
 """,
 """
+fig, (ax1, ax2) = plt.subplots(2, sharex = True)
+ax1.plot(np.log(alphas), var)
+ax1.set_ylabel("variance explained")
+ax2.plot(np.log(alphas), np.count_nonzero(coefs, axis =1))
+ax2.set_ylabel("non zeros parameters")
+ax2.set_xlabel("log(alpha)")
+plt.show()
 """
 )
 
@@ -593,8 +773,14 @@ intercept. We would like to study L1- and L2-regularized multiple linear regress
 Create an artificial dataset with 100 points, 4 predictors ``X_1, X_2, X_3, X_4``
 and ``Y = X_1 + \epsilon`` with ``\mathrm{Var}(\epsilon) = 0.1^2``.
 
-You can use the following function to create the dataset
-```julia
+You can use the following function to create the dataset"
+
+
+
+# ╔═╡ 2cc54793-37cb-4e4a-b805-2fec2b609d41
+mlcode(
+"""
+using Random
 function data_generator(β; rng = Xoshiro(1), n = 100)
     X = randn(rng, n, 4)
     Y = X * β .+ randn(rng, n) * 0.1
@@ -603,18 +789,44 @@ function data_generator(β; rng = Xoshiro(1), n = 100)
     data
 end
 data1 = data_generator([1, 0, 0, 0])
-```
+""",
+"""
+def data_generator(beta, n=100):
+    X = rng=np.random.standard_normal((n, 4))
+    Y = np.dot(X, beta) + np.random.standard_normal(n) * 0.1
+    data = pd.DataFrame(X, columns=["x1", "x2", "x3", "x4"])
+    data["y"] = Y
+    return data
 
-1. Find with 20-fold cross-validation and the lasso the best model. *Hint:* use a self-tuning machine.
+data1 = data_generator([1, 0, 0, 0])
+data1
+"""
+)
+
+# ╔═╡ 118aa359-7108-4150-bc07-e820711eacab
+md"1. Find with 20-fold cross-validation and the lasso the best model. *Hint:* use a self-tuning machine.
 2. Find with 20-fold cross-validation and the ridge regression the best model.
-3. Which of the two best models has the lowest test error? *Hint:* use a large test set with ``10^6`` points and a different random seed and the `rmse` loss, e.g.
-```julia
+3. Which of the two best models has the lowest test error? *Hint:* use a large test set with ``10^6`` points and a different random seed and the `rmse` loss, e.g."
+
+# ╔═╡ 21b6ae65-a4fc-4221-af62-4a193cf99e90
+mlcode("""
 test_data1 = data_generator([1, 0, 0, 0], rng = Xoshiro(1234), n = 10^6);
 function average_test_error(mach, test_data)
     MLJ.rmse(predict(mach, select(test_data, Not(:y))), test_data.y)
 end
-```
-4. Repeat the above 3 steps on an artificial data set with 100 points and 4 predictors with ``Y = 10X_1 + X_2 + .1 * X_3 + .01 * X_4 + \epsilon``.
+"""
+,
+"""
+from sklearn.metrics import mean_squared_error
+
+test_data1 = data_generator([1, 0, 0, 0], n = 10^6);
+def average_test_error(mach, test_data):
+    y_pred = mach.predict(test_data.drop("y", axis=1).values)
+	return mean_squared_error(y_pred,test_data["y"])**0.5
+""")
+
+# ╔═╡ 6531afc9-313f-4456-b7af-8b6dfcd1a63e
+md"4. Repeat the above 3 steps on an artificial data set with 100 points and 4 predictors with ``Y = 10X_1 + X_2 + .1 * X_3 + .01 * X_4 + \epsilon``.
 "
 
 # ╔═╡ e04c5e8a-15f8-44a8-845d-60acaf795813
@@ -664,11 +876,17 @@ MLCourse.FOOTER
 # ╟─ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
 # ╟─f6158ed5-bd0d-4781-b9cd-22b271e86ef8
 # ╟─4652a904-5edb-463c-a046-5c5d378f7cca
+# ╟─83fe757f-a9aa-4a60-8a49-dce5e9fcf56c
+# ╟─35913b1d-86d0-4338-9f7c-41a89651b2dc
 # ╟─6f5b0cd1-ba68-46a5-a348-fed201da4a15
 # ╟─c9ed011c-8d36-4926-9ec4-84be3b4878d7
 # ╟─45df70c6-4c5a-419b-af9d-05d276b3759a
 # ╟─40bb385f-1cbd-4555-a8ab-544a67f33595
 # ╟─8262b948-6d54-4348-87d1-4c762c74db30
+# ╟─2cc54793-37cb-4e4a-b805-2fec2b609d41
+# ╟─118aa359-7108-4150-bc07-e820711eacab
+# ╟─21b6ae65-a4fc-4221-af62-4a193cf99e90
+# ╟─6531afc9-313f-4456-b7af-8b6dfcd1a63e
 # ╟─e04c5e8a-15f8-44a8-845d-60acaf795813
 # ╟─c48dff95-8028-4e97-8ec6-705ea2b9c72e
 # ╟─2e9ce2a9-217e-4910-b6ce-d174f2f2668e
