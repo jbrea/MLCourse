@@ -94,6 +94,60 @@ gradient_descent(loss, params, η = .1, T = 100)
 """
 ,
 """
+import numpy as np
+import random
+from sklearn.datasets import make_regression
+import pandas as pd
+
+def initialize(dim):
+	b=random.random()
+	theta=np.random.rand(dim)
+	return b,theta
+
+def predict_Y(b,theta,X):
+	return b + np.dot(X,theta)
+
+def gradient_descent(X,y, learning_rate, num_iterations, loss_fct, fct_gradient, sg = False):
+
+	b,theta=initialize(X.shape[1])
+	gd_iterations_df=pd.DataFrame(columns=['cost'])
+	result_idx=0
+	
+	for each_iter in range(num_iterations):
+		if sg==True :
+			X1,y1 = select_indices(X,y)
+		else :
+			X1,y1 = X,y
+			
+		y_hat=predict_Y(b,theta,X1)
+		b,theta=fct_gradient(X1,y1,y_hat,b,theta,learning_rate)
+		gd_iterations_df.loc[result_idx]=[loss_fct(y1, y_hat)]
+		result_idx+=1
+
+	return gd_iterations_df,b,theta
+
+###
+### Linear regression loss function
+###
+
+def lin_reg_loss(y, y_hat):
+    return np.mean((y - y_hat)**2)
+
+def lin_reg_gradient(x,y,y_hat,b,theta,learning_rate) :
+  db=(np.sum(y_hat-y)*2)/len(y)        
+  dw=(np.dot((y_hat-y),x)*2)/len(y) # Calculating the gradients
+  b_1=b-learning_rate*db 			# Updating weights and bias
+  theta_1=theta-learning_rate*dw
+  return b_1,theta_1
+
+###
+### Running gradient descent for linear regression
+###
+
+X, y = make_regression(40, 1) # create dataset
+
+gd_iterations_df,b,theta=gradient_descent(X,y,0.1,100,lin_reg_loss,lin_reg_gradient)
+gd_iterations_df
 """
 ,
 showoutput = false,
@@ -180,10 +234,42 @@ X2, y2 = make_regression(50, 1, binary = true, rng = 161)
 logloss = log_reg_loss_function(X2, y2)
 params = [.1, .2] # initial parameters
 gradient_descent(logloss, params, η = .1, T = 100)
-
 """
 ,
 """
+from sklearn.datasets import make_classification
+
+###
+### Logistic regression loss function
+###
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+def log_reg_loss(y, y_hat):
+	p = sigmoid(y_hat)
+	return -np.mean(y * np.log(p) + (1-y) * np.log(1 - p)) # negative log-likelihood
+
+def log_reg_gradient(x,y,y_hat,b,theta,learning_rate) :
+	db=(np.sum(sigmoid(y_hat)-y)*2)/len(y)        
+	dw=(np.dot((sigmoid(y_hat)-y),x)*2)/len(y) # Calculating the gradients
+	b_1=b-learning_rate*db 			# Updating weights and bias
+	theta_1=theta-learning_rate*dw
+	return b_1,theta_1
+
+###
+### Running gradient descent for Logistic regression
+###
+
+X2, y2 = make_classification(n_samples=50,
+							n_features=1,
+							  n_informative=1,
+							  n_redundant=0,
+							  n_classes=2,
+							n_clusters_per_class=1)
+
+gd_iterations_df,b,theta=gradient_descent(X2,y2,0.1,100,log_reg_loss,log_reg_gradient)
+gd_iterations_df
 """
 ,
 showoutput = false,
@@ -316,6 +402,15 @@ end
 """
 ,
 """
+def select_indices(X,y):
+	batch = np.random.randint(1, 4)                 # select batch
+	idxs = np.arange((batch-1)*10, batch*10)     # compute indices for this batch
+	return X[idxs], y[idxs]
+
+X, y = make_regression(40, 1) # create dataset
+
+gd_iterations_df,b,theta=gradient_descent(X,y,0.1,100,lin_reg_loss, lin_reg_gradient,True)
+gd_iterations_df
 """
 ,
 showoutput = false,
@@ -448,7 +543,7 @@ begin
 	regression_valid = regression_data_generator(n = 50, seed = 123)
 end;
 
-# ╔═╡ c72dc506-fb1d-42ee-83cf-cc49753ecd4f
+# ╔═╡ 4dabcbed-9c35-4226-a78f-e7afa5115d92
 begin
     h_training = Array(select(MLCourse.poly(regression_data, 12), Not(:y)))
     h_valid = Array(select(MLCourse.poly(regression_valid, 12), Not(:y)))
@@ -497,15 +592,26 @@ and does not need to be fitted.
 
 (a) Generate a training set of 100 points with the following data generator.
 Notice that the noise follows a Laplace distribution instead of a normal distribution.
-For once, we do not use a `DataFrame` here but represent the input explicitly as a matrix and the full dataset as a `NamedTuple`. If you run `data = data_generator()`, you can access the input matrix as `data.x` and the output vector as `data.y`.
-```julia
+For once, we do not use a `DataFrame` here but represent the input explicitly as a matrix and the full dataset as a `NamedTuple`. If you run `data = data_generator()`, you can access the input matrix as `data.x` and the output vector as `data.y`."
+
+# ╔═╡ 8f3a30c3-0d7b-4028-a8cd-185fb1858b40
+mlcode("""
 function data_generator(; n = 100, β = [1., 2., 3.])
     x = randn(n, 3)
     y = x * β .+ rand(Laplace(0, 0.3), n)
     (x = x, y = y)
 end
-```
+""",
+"""
+def data_generator(n=100, beta=[1., 2., 3.]):
+    x = np.random.randn(n, 3)
+    y = np.dot(x, beta) + np.random.laplace(0, 0.3, n)
+    return {'x': x, 'y': y}
+""")
 
+
+# ╔═╡ c0285107-0131-404f-9617-229f1c88f091
+md"
 (b) Calculate with paper and pencil the negative log-likelihood loss. Apply transformations to the negative log-likelihood function to obtain a good loss function for gradient descent based on the practical considerations in the slides.
 The solution you should find is
 ```math
@@ -564,7 +670,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─75528011-05d9-47dc-a37b-e6bb6be52c25
 # ╟─7541c203-f0dc-4445-9d2a-4cf16b7e912a
 # ╟─913cf5ee-ca1e-4063-bd34-6cccd0cc548b
-# ╟─2739fb52-fb1b-46d6-9708-e24bfdc459e2
+# ╠═2739fb52-fb1b-46d6-9708-e24bfdc459e2
 # ╟─7b57c3f0-ef5a-4dd7-946f-72c8dde2ae8f
 # ╟─166472c5-c0f4-4261-a476-4c9b0f82abd6
 # ╟─eb289254-7167-4183-a4d0-52f68be66b04
@@ -572,8 +678,10 @@ MLCourse.save_cache(@__FILE__)
 # ╟─075f35cf-4271-4676-b9f3-e2bcf610c2d1
 # ╟─0d431c00-9eef-4ce4-9542-9571728d1501
 # ╟─dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
-# ╟─c72dc506-fb1d-42ee-83cf-cc49753ecd4f
+# ╟─4dabcbed-9c35-4226-a78f-e7afa5115d92
 # ╟─e0cc188c-9c8f-47f1-b1fe-afc2a578973d
+# ╟─8f3a30c3-0d7b-4028-a8cd-185fb1858b40
+# ╟─c0285107-0131-404f-9617-229f1c88f091
 # ╟─cb9f858a-f60a-11eb-3f0e-a9b68cf33921
 # ╟─8459f86e-bce7-4839-9c51-57335ac6353c
 # ╟─7aa547f8-25d4-488d-9fc3-f633f7f03f57

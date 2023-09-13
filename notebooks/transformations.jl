@@ -60,6 +60,12 @@ datam = DataFrame(age = [12, missing, 41, missing, 38, 35],
 """
 ,
 """
+import pandas as pd
+
+datam = pd.DataFrame({
+		"age":[12,None,41,None,38,35], 
+		"gender": pd.Categorical([None,"female","male","male","male","female"])})
+datam
 """
 ,
 )
@@ -76,17 +82,27 @@ dropmissing(datam)
 """
 ,
 """
+datam1=datam.copy()
+datam1.dropna(inplace=True)
+datam1
 """
 )
 
 # ╔═╡ 315f536b-4f10-4471-8e22-18c385ca80f2
-md"""### Imputation
+mlstring(md"""### Imputation
 
 Alternatively, one can fill in the missing values with some standard values.
 This process is also called "imputation",
 How to impute is not a priori clear; it depends a lot on domain knowledge and, for example, for time series one may want to impute differently than for stationary data.
 
-For our artificial dataset the default $(mlstring(md"`FillImputer`", "")) fills in the median of all age values rounded to the next integer and gender \"male\" because this dataset contains more \"male\"s than \"female\"s."""
+For our artificial dataset the default $(mlstring(md"`FillImputer`", "")) fills in the median of all age values rounded to the next integer and gender \"male\" because this dataset contains more \"male\"s than \"female\"s.""",
+"""
+Alternatively, one can fill in the missing values with some standard values.
+This process is also called "imputation",
+How to impute is not a priori clear; it depends a lot on domain knowledge and, for example, for time series one may want to impute differently than for stationary data.
+
+For our artificial dataset the default `SimpleImputer` fills in the the age values by the most_frequent age and gender \"male\" because this dataset contains more \"male\"s than \"female\"s. The parameter `strategy` define different way to create data.
+""")
 
 # ╔═╡ 69bc41cb-862c-4334-8b71-7f9974fedfe2
 mlcode(
@@ -97,6 +113,10 @@ MLJ.transform(mach, datam)
 """
 ,
 """
+from sklearn.impute import SimpleImputer
+import numpy as np
+imp_mean = SimpleImputer(strategy='most_frequent')
+imp_mean.fit_transform(datam)
 """
 )
 
@@ -115,6 +135,8 @@ df = DataFrame(a = ones(5), b = randn(5), c = 1:5, d = 2:2:10, e = zeros(5))
 """
 ,
 """
+df = pd.DataFrame({"a": np.ones(5), "b" : np.random.randn(5), "c" : np.linspace(1,5,5), "d": np.linspace(2,10,5), "e" : np.zeros(5)})
+df
 """
 ,
 )
@@ -129,11 +151,17 @@ df_clean_const = df[:, std.(eachcol(df)) .!= 0]
 """
 ,
 """
+df_clean_const = df.loc[:, np.std(df, axis=0) != 0]
+df_clean_const
 """
 )
 
 # ╔═╡ fa66ac8b-499d-49ae-be7d-2bdd3c1e6e0e
-md"We can also check for perfectly correlated predictors using the `cor` function. For our data we find that column 3 and 2 are perfectly correlated:"
+mlstring(md"We can also check for perfectly correlated predictors using the `cor` function. For our data we find that column 3 and 2 are perfectly correlated:"
+,
+"
+We can also check for perfectly correlated predictors using the `cor` function of pandas. We could have also used the pearson correlation function of scipy for exemple. For our data we find that column 3 and 2 are perfectly correlated:
+")	
 
 # ╔═╡ 68fdc6b3-423c-42df-a067-f91cf3f3a332
 mlcode(
@@ -145,6 +173,11 @@ idxs -> filter(x -> x[1] > x[2], idxs)  # keep only upper off-diagonal indices
 """
 ,
 """
+correlation = np.array(df_clean_const.corr().values) #compute correlation
+correlation = np.triu(correlation, k=0) # remove values in double
+np.fill_diagonal(correlation,0) # remove "self column" correlation
+df_clean_const = df_clean_const.drop(df.columns[np.where(correlation==1)[1]], axis=1) #remove one of the column with exact correlation
+df_clean_const
 """
 )
 
@@ -158,6 +191,8 @@ df_clean = df_clean_const[:, [1, 2]]
 """
 ,
 """
+df_clean = df_clean_const
+df_clean_const
 """
 )
 
@@ -174,6 +209,9 @@ height_weight = DataFrame(height = [165., 175, 183, 152, 171],
 """
 ,
 """
+height_weight = pd.DataFrame({"height" : [165., 175, 183, 152, 171],
+                            "weight" : [60., 71, 89, 47, 70] })
+height_weight
 """
 )
 
@@ -186,6 +224,9 @@ fitted_params(height_weight_mach)
 """
 ,
 """
+from sklearn.preprocessing import StandardScaler
+scaler = StandardScaler()
+scaler 
 """
 )
 
@@ -201,6 +242,9 @@ data_height_weight_s = MLJ.transform(height_weight_mach, height_weight)
 """
 ,
 """
+scaled_data = pd.DataFrame(scaler.fit_transform(height_weight), 
+							columns = ["height", "weight"])
+scaled_data
 """
 )
 
@@ -216,6 +260,7 @@ combine(data_height_weight_s,
 """
 ,
 """
+("means : ", scaled_data.mean(), "standart deviation : ", scaled_data.std())
 """
 )
 
@@ -263,6 +308,10 @@ coerce!(cdata, :gender => Multiclass, :treatment => Multiclass)
 """
 ,
 """
+cdata = pd.DataFrame({
+		'gender': pd.Categorical(['male', 'male', 'female', 'female', 'female']),
+		'treatment': pd.Categorical([1, 2, 2, 1, 3])})
+cdata
 """
 )
 
@@ -275,6 +324,12 @@ MLJ.transform(m, cdata)
 """
 ,
 """
+from sklearn.preprocessing import OneHotEncoder
+
+enc = OneHotEncoder(handle_unknown='ignore')
+cdata_enc = enc.fit_transform(cdata).toarray()
+
+("categories : ", enc.categories_, "data : ", cdata_enc)
 """
 )
 
@@ -293,6 +348,9 @@ MLJ.transform(m, cdata)
 """
 ,
 """
+enc = OneHotEncoder(drop='first')
+cdata_enc = enc.fit_transform(cdata).toarray()
+cdata_enc
 """
 )
 
@@ -311,10 +369,23 @@ wage = OpenML.load(534) |> DataFrame
 """
 ,
 """
+import openml
+
+wage,_,_,_ = openml.datasets.get_dataset(534).get_data(dataset_format="dataframe")
+wage
 """
 ,
 cache = false
 )
+
+# ╔═╡ cf54136a-cef4-4784-9f03-74784cdd3a88
+mlcode("""
+DataFrame(schema(wage))
+"""
+,
+"""
+wage.dtypes
+""")
 
 # ╔═╡ 1bf42b12-5fd1-4b4c-94c6-14a52317b15f
 mlcode(
@@ -325,6 +396,10 @@ MLJ.transform(preprocessor, select(wage, Not(:WAGE)))
 """
 ,
 """
+#here we use OneHotEncoder on the all parameters
+enc = OneHotEncoder(drop='first')
+cdata_enc =enc.fit_transform(wage.drop(["WAGE"], axis=1)).toarray()
+cdata_enc
 """
 )
 
@@ -341,11 +416,38 @@ fitted_params(wage_mach)
 """
 ,
 """
+from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LinearRegression
+from sklearn.compose import make_column_transformer
+
+#here we use OneHotEncoder only on the categorical parameters
+categorical_columns = ["RACE", "OCCUPATION", "SECTOR", "MARR", "UNION", "SEX", "SOUTH"]
+numerical_columns = ["EDUCATION", "EXPERIENCE", "AGE"]
+
+preprocessor = make_column_transformer(
+    (OneHotEncoder(drop="if_binary"), categorical_columns),
+    remainder="passthrough",
+    verbose_feature_names_out=False,  # avoid to prepend the preprocessor names
+)
+
+pipeline = Pipeline ([("encoder",preprocessor),
+					("regressor",LinearRegression())])
+
+pipeline.fit(wage.drop(["WAGE"], axis=1),wage["WAGE"])
+
+feature_names = pipeline[:-1].get_feature_names_out().tolist()
+coefs = pd.DataFrame({"Parameters" : feature_names,
+					"Coefficients" : pipeline[-1].coef_.reshape(-1), })
+coefs
 """
 )
 
 # ╔═╡ 85c9650d-037a-4e9f-a15c-464ad479ff44
-md"From the fitted parameters we can see, for example, that years of education correlate positively with wage, women earn on average ≈2 USD per hour less than men (keeping all other factors fixed) or persons in a management position earn ≈4 USD per hour more than those in a sales position (keeping all other factors fixed)."
+mlstring(md"From the fitted parameters we can see, for example, that years of education correlate positively with wage, women earn on average ≈2 USD per hour less than men (keeping all other factors fixed) or persons in a management position earn ≈4 USD per hour more than those in a sales position (keeping all other factors fixed).",
+"The AGE coefficient is expressed in “dollars/hour per living years” while the EDUCATION one is expressed in “dollars/hour per years of education”. This representation of the coefficients has the benefit of making clear the practical predictions of the model: an increase of year in AGE means a decrease of 0.158028 dollars/hour, while an increase of year in EDUCATION means an increase of  0.812791 dollars/hour.
+
+
+From the fitted parameters we can see, for example, Women earn on average ≈2 USD per hour less than men (keeping all other factors fixed) or persons in a management position earn ≈3 USD per hour more than those in a sales position (keeping all other factors fixed).")
 
 # ╔═╡ f2955e10-dbe1-47c3-a831-66209d0f426a
 md"## Splines
@@ -444,18 +546,36 @@ xor_data = xor_generator()
 """
 ,
 """
+def xor_generator(n=200):
+    x = 2 * np.random.rand(n, 2) - 1
+    df = pd.DataFrame({'X1': x[:, 0], 'X2': x[:, 1], 'y': np.logical_xor(x[:, 0] > 0, x[:, 1] > 0)})
+    return df
+
+xor_data = xor_generator()
+xor_data
 """
 ,
 cache = false
 )
 
-# ╔═╡ fa7cf2ae-9777-4ba9-9fe0-df545b94c5d8
-begin
-	scatter(M.xor_data.X1, M.xor_data.X2, c = int.(M.xor_data.y) .+ 1,
-            label = nothing, xlabel = "X₁", ylabel = "X₂")
-	hline!([0], label = nothing, c = :black)
-	vline!([0], label = nothing, c = :black, size = (400, 300))
-end
+# ╔═╡ 8cd98650-7f52-40d9-b92d-ce564e57cfa7
+mlcode("""
+scatter(xor_data.X1, xor_data.X2, c = int.(xor_data.y) .+ 1,
+		label = nothing, xlabel = "X₁", ylabel = "X₂")
+hline!([0], label = nothing, c = :black)
+vline!([0], label = nothing, c = :black, size = (400, 300))
+""",
+"""
+import matplotlib.pyplot as plt
+
+plt.scatter(xor_data['X1'], xor_data['X2'], c=np.array(xor_data['y'], dtype=int)+1, label=None, cmap ='coolwarm')
+plt.axhline(y=0, color='black', linestyle='-', label=None)
+plt.axvline(x=0, color='black', linestyle='-', label=None)
+plt.xlabel('X₁')
+plt.ylabel('X₂')
+plt.show()
+"""
+)
 
 # ╔═╡ 99d3ae30-6bc2-47bf-adc4-1cc1d3ff178d
 mlcode(
@@ -469,6 +589,15 @@ lin_pred = predict_mode(lin_mach, select(xor_data, Not(:y)))
 """
 ,
 """
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+lin_mach = LogisticRegression(penalty=None)
+lin_mach.fit(xor_data[['X1', 'X2']], xor_data['y'])
+lin_pred = lin_mach.predict(xor_data[['X1', 'X2']])
+training_misclassification_rate = np.mean(xor_data['y'] != lin_pred)
+
+("training_misclassification_rate",training_misclassification_rate,)
 """
 )
 
@@ -486,6 +615,14 @@ xor_data_h = DataFrame(H1 = max.(0, xor_data.X1 + xor_data.X2),
 """
 ,
 """
+xor_data_h = pd.DataFrame({
+		'H1': np.maximum(0, xor_data['X1'] + xor_data['X2']), 
+		'H2': np.maximum(0, xor_data['X1'] - xor_data['X2']), 
+		'H3': np.maximum(0, -xor_data['X1'] + xor_data['X2']), 
+		'H4': np.maximum(0, -xor_data['X1'] - xor_data['X2']), 
+		'y': xor_data['y']})
+
+xor_data_h
 """
 )
 
@@ -504,6 +641,15 @@ lin_pred_h = predict_mode(lin_mach_h, select(xor_data_h, Not(:y)))
 """
 ,
 """
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+lin_mach = LogisticRegression(penalty=None)
+lin_mach.fit(xor_data_h.drop(["y"], axis=1), xor_data_h['y'])
+lin_pred = lin_mach.predict(xor_data_h.drop(["y"], axis=1))
+training_misclassification_rate = np.mean(xor_data_h['y'] != lin_pred)
+
+("training_misclassification_rate", training_misclassification_rate,)
 """
 )
 
@@ -561,10 +707,27 @@ gammapred = GLM.predict(gls)
 """
 ,
 """
+from sklearn import linear_model
+
+weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
+X = weather[['LUZ_pressure']]
+y = weather['LUZ_wind_peak']
+
+# Linear Regression
+linreg = linear_model.LinearRegression()
+linreg.fit(X, y)
+linreg_pred = linreg.predict(X)
+
+# Linear Regression on Log-Responses
+loglinreg = linear_model.LinearRegression()
+loglinreg.fit(X, np.log(y))
+loglinreg_pred = np.exp(loglinreg.predict(X))
+
+# Gamma Regression
+gamreg= linear_model.GammaRegressor()
+gamreg.fit(X, y)
+gamreg_pred = gamreg.predict(X)
 """
-,
-collapse = "Details",
-showoutput = false
 )
 
 # ╔═╡ 5e6d6155-c254-4ae9-a0e1-366fc6ce6403
@@ -658,6 +821,9 @@ cldata
 """
 ,
 """
+cldata = pd.DataFrame(2*np.random.rand(400, 2)-1, columns=['x1', 'x2'])
+cldata['y'] = cldata['x1']**2 > cldata['x2']
+cldata
 """
 )
 
@@ -672,6 +838,10 @@ scatter(cldata.x1, cldata.x2,
 """
 ,
 """
+plt.scatter(cldata["x1"], cldata["x2"], c=cldata["y"].astype(int) + 1, label=None, cmap ='coolwarm')
+plt.xlabel('X₁')
+plt.ylabel('X₂')
+plt.show()
 """
 )
 
@@ -724,6 +894,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─81fc52cd-e67b-4188-a028-79abcc77cb92
 # ╟─e928e4f7-0ebc-4db5-b83e-0c5d22c0ff3c
 # ╟─8f6f096b-eb5c-42c5-af7b-fb9c6b787cb3
+# ╟─cf54136a-cef4-4784-9f03-74784cdd3a88
 # ╟─1bf42b12-5fd1-4b4c-94c6-14a52317b15f
 # ╟─0a22b68c-1811-4de1-b3f8-735ee50299d2
 # ╟─85c9650d-037a-4e9f-a15c-464ad479ff44
@@ -739,7 +910,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─ac4e0ade-5a1f-4a0d-b7ba-f8386f5232f1
 # ╟─a10b3fa1-358b-4a94-b927-5e0f71edd1f3
 # ╟─b66c7efc-8fd8-4152-9b0f-9332f760b51b
-# ╟─fa7cf2ae-9777-4ba9-9fe0-df545b94c5d8
+# ╟─8cd98650-7f52-40d9-b92d-ce564e57cfa7
 # ╟─99d3ae30-6bc2-47bf-adc4-1cc1d3ff178d
 # ╟─1c13dd1a-83ce-47e7-98b5-b6a0d8d2426f
 # ╟─3da4ce70-d4ab-4d9b-841d-d1f3fb385b81

@@ -212,11 +212,15 @@ Our goal is to predict the wind speed in Lucerne from 5 hours old measurements.
 # ╔═╡ f63c052e-eefe-11eb-3a14-e5e8f3d578a8
 mlcode(
 """
+using CSV
+
 weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
                    DataFrame)
 """
 ,
 """
+import pandas as pd
+
 weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
 weather
 """
@@ -925,6 +929,7 @@ With `DataFrame(schema(weather))` we get additionally information about the type
 ",
 md"Our weather data set contains multiple measurements.
 With `weather.columns` we see all the names of the columns of the the weather data frame.
+With `weather.dtypes, weather.head(), weather.info()` we get additionally information about the type of data.
 "
 )
 
@@ -934,7 +939,9 @@ mlcode(
 DataFrame(schema(weather))
 """
 ,
-nothing
+"""
+weather.columns.to_frame()
+"""
 )
 
 # ╔═╡ 8307e205-3bcd-4e68-914e-621fd8d29e43
