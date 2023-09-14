@@ -17,14 +17,17 @@ end
 # ╔═╡ 34beb7d6-fba9-11eb-15b8-e34afccc9f88
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, CSV
+using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, CSV
 import Distributions: Beta, Normal, Gamma
 import Distributions, GLM
 import PlutoPlotly as PP
 const M = MLCourse.JlMod
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -371,6 +374,8 @@ import openml
 wage,_,_,_ = openml.datasets.get_dataset(534).get_data(dataset_format="dataframe")
 wage
 """
+,
+cache = false
 )
 
 # ╔═╡ cf54136a-cef4-4784-9f03-74784cdd3a88
@@ -549,6 +554,8 @@ def xor_generator(n=200):
 xor_data = xor_generator()
 xor_data
 """
+,
+cache = false
 )
 
 # ╔═╡ 8cd98650-7f52-40d9-b92d-ce564e57cfa7
@@ -849,6 +856,9 @@ MLCourse.list_notebooks(@__FILE__)
 # ╔═╡ 951f6957-0ff7-4b2e-ba91-1b69122bbe47
 MLCourse.FOOTER
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─4e30f307-7b07-4cb7-a34e-ada7e2f6946d
 # ╟─000e5d2f-19da-42f8-8bd8-9a2a3943228d
@@ -926,3 +936,4 @@ MLCourse.FOOTER
 # ╟─e688a9de-2dba-4fab-b4e6-9803c5361a62
 # ╟─951f6957-0ff7-4b2e-ba91-1b69122bbe47
 # ╟─34beb7d6-fba9-11eb-15b8-e34afccc9f88
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

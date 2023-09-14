@@ -17,13 +17,16 @@ end
 # ╔═╡ 8fa836a6-1133-4a54-b996-a02083fc6bba
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, Statistics, NearestNeighborModels
+using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, Statistics, NearestNeighborModels
 import MLCourse: fitted_linear_func
 import PlutoPlotly as PP
 const M = MLCourse.JlMod
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -98,8 +101,8 @@ def classification_data_generator(n, s=20):
 	#generate classification data
 """
 ;
-showoutput = false,
-collapse = "Data Generators"
+collapse = "Data Generators",
+cache = false
 )
 
 
@@ -694,7 +697,8 @@ def expected_error(f_hat, x, sigma=0.1):
 f_hat = lambda x: 0.1 + x #test function f̂
 """
 ;
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 # ╔═╡ 3d77d753-b247-4ead-a385-7cbbcfc3190b
@@ -821,7 +825,7 @@ let Ktest = 18, dataticks = range(.39, .58, Ktest), fitticks = range(.12, .31, b
     scatter!(fitticks, pred, markershape = :utriangle, c = bvd.colors, label = "fit", xticks = ([dataticks; fitticks], [1:Ktest; 1:bvd.K]))
     plot!([.35, .35], [f, bvd.avg[i]], arrow = :both, c = :orange, label = "bias")
     plot!([.485, .485], [f-.2, f+.2], arrow = :both, c = :green, label = "irreducible error")
-    plot!([.215, .215], [bvd.avg[i]-2estd, bvd.avg[i]+2estd], arrow = :both, c = :red, label = "irreducible error")
+    plot!([.215, .215], [bvd.avg[i]-2estd, bvd.avg[i]+2estd], arrow = :both, c = :red, label = "variance")
     plot!(legend_position = :outertopright,
           ylabel = "y", xlabel = "fit id                                    test data id",
           yrange = (-.3, 1.1), size = (700, 350))
@@ -894,6 +898,9 @@ MLCourse.list_notebooks(@__FILE__)
 
 # ╔═╡ 2320f424-7652-4e9f-83ef-fc011b722dcc
 MLCourse.FOOTER
+
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
 
 # ╔═╡ Cell order:
 # ╟─cdbcc51d-4cc6-4ab7-b0ef-c6272b5728af
@@ -971,3 +978,4 @@ MLCourse.FOOTER
 # ╟─12942f34-efb1-11eb-3eb4-c1a38396cfb8
 # ╟─2320f424-7652-4e9f-83ef-fc011b722dcc
 # ╟─8fa836a6-1133-4a54-b996-a02083fc6bba
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

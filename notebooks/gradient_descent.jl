@@ -17,12 +17,15 @@ end
 # ╔═╡ 7aa547f8-25d4-488d-9fc3-f633f7f03f57
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux, Zygote
+using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux, Zygote
 import PlutoPlotly as PP
 const M = MLCourse.JlMod
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -147,7 +150,8 @@ gd_iterations_df,b,theta=gradient_descent(X,y,0.1,100,lin_reg_loss,lin_reg_gradi
 gd_iterations_df
 """
 ,
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 # ╔═╡ e65c80e2-c951-4ff0-aeff-2cdddac26479
@@ -268,7 +272,8 @@ gd_iterations_df,b,theta=gradient_descent(X2,y2,0.1,100,log_reg_loss,log_reg_gra
 gd_iterations_df
 """
 ,
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 
@@ -408,7 +413,8 @@ gd_iterations_df,b,theta=gradient_descent(X,y,0.1,100,lin_reg_loss, lin_reg_grad
 gd_iterations_df
 """
 ,
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 # ╔═╡ 75528011-05d9-47dc-a37b-e6bb6be52c25
@@ -630,6 +636,9 @@ MLCourse.list_notebooks(@__FILE__)
 # ╔═╡ 8459f86e-bce7-4839-9c51-57335ac6353c
 MLCourse.FOOTER
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─e03882f9-843e-4552-90b1-c47b6cbba19b
 # ╟─06479d01-5c03-4b26-9d1c-2ee71032c3ae
@@ -674,3 +683,4 @@ MLCourse.FOOTER
 # ╟─cb9f858a-f60a-11eb-3f0e-a9b68cf33921
 # ╟─8459f86e-bce7-4839-9c51-57335ac6353c
 # ╟─7aa547f8-25d4-488d-9fc3-f633f7f03f57
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

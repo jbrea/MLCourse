@@ -17,12 +17,15 @@ end
 # ╔═╡ 48d87103-4c23-4144-a121-1e33d2bb87f3
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, MLJMultivariateStatsInterface, OpenML, MLJClusteringInterface, StatsPlots, Distributions, Distances
+using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, MLJMultivariateStatsInterface, OpenML, MLJClusteringInterface, Distributions, Distances
 import PlutoPlotly as PP
 const M = MLCourse.JlMod
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -37,8 +40,20 @@ begin
     PlutoUI.TableOfContents()
 end
 
+# ╔═╡ eb6a77fa-fc7e-4546-8748-2438e9a519b8
+md"The goal of this week is to
+1. Understand and learn how to use K-means clustering.
+2. Understand and learn how to use Hierarchical clustering.
+3. See a comparison of K-means clustering, hierarchical clustering and DBSCAN.
+"
+
 # ╔═╡ da8f8ce7-c3ad-4e1a-bb9e-c7be15646d72
-md"# K-means Clustering"
+md"# 1. K-means Clustering
+
+The [iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) is an old and famous dataset containing measurements on 150 iris flowers of three different species.
+For each flower, the length and width of sepal and petal were measured.
+Although the species is known for each flower, we explore here, if clustering methods can discover three clusters that correspond to the three flower species.
+"
 
 # ╔═╡ 49a1493b-ba68-4e7a-8c3d-47423f7a8204
 mlcode("""
@@ -83,6 +98,8 @@ g.map_upper(sns.kdeplot, fill=True,cmap="Reds")
 # ╔═╡ 4dfeee20-ac92-48d2-9ba1-40baea227100
 md"
 If you want to dive a bit deeper into some quantitative approaches that are used to select the number of clusters please have a look at [this wikipedia article](https://en.wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set) or this [opinionated tutorial](https://towardsdatascience.com/silhouette-method-better-than-elbow-method-to-find-optimal-clusters-378d62ff6891).
+
+Number of clusters $(@bind nclust Slider(2:8, show_value = true))
 "
 
 # ╔═╡ e187d7a8-4ccd-4b0a-8c71-f79219623142
@@ -149,7 +166,7 @@ plt.show()
 """)
 
 # ╔═╡ 70b3f1bb-7c47-4bb0-aa17-cda6fdbe0469
-md"## KMeans Clustering Applied to MNIST"
+md"## KMeans Clustering Applied to MNIST
 
 # ╔═╡ 58220aaf-9f85-4de7-82fa-dec8bc9842fd
 Markdown.parse("
@@ -164,7 +181,10 @@ mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     df.class
 end
 
-mnist_mach = fit!(machine(KMeans(k = 10), mnist_x));
+Random.seed!(213)
+
+mnist_mach = machine(KMeans(k = 10), mnist_x)
+fit!(mnist_mach, verbosity = 0)
 
 mnist_pred = predict(mnist_mach)
 
@@ -205,6 +225,9 @@ plt.show()
 # ╔═╡ a0af5510-8585-4c38-9166-5284d3b2923e
 Markdown.parse("$(MLCourse.embed_figure("mnist_kmeans.png"))
 
+
+# ╔═╡ b5165fda-1bdd-4837-9eed-42ce9db40529
+md"
 Some clusters (rows in the figure above) seem indeed to have specialised on some
 digit classes. This can further be seen by looking at the confusion_matrix.")
 
@@ -227,7 +250,10 @@ We see that the ninth cluster (9th row in this table and in the figure above) ha
 ")
 
 # ╔═╡ 12317841-c1f8-4022-970e-8ef613c79b78
-md"# Hierarchical Clustering"
+md"# 2. Hierarchical Clustering
+
+In the following we run hierarchical clustering to find 3 clusters in the iris dataset.
+"
 
 # ╔═╡ 872e95fd-fac0-4c39-bc65-e4cdcf0050bb
 mlcode("""
@@ -329,20 +355,38 @@ plot(p2, p1, layout = (1, 2), size = (700, 500))
 """)
 
 # ╔═╡ e266ada3-ba4d-4177-8129-f1220f293c72
-let
-	pred = cutter(h = hclusth)
-    p1 = scatter(iris.petallength, iris.petalwidth,
+let rep = report(M.hc)
+	pred = rep.cutter(h = hclusth, k = nothing)
+    p1 = scatter(M.iris.petallength, M.iris.petalwidth,
                  legend = false, c = Int.(int(pred)),
                  title = "prediction", xlabel = "petal length",
                  ylabel = "petal width")
-    p2 = plot(dendrogram)
+    p2 = plot(rep.dendrogram)
     hline!([hclusth], c = :red, w = 3)
     plot(p2, p1, layout = (1, 2), size = (700, 500))
 end
 
 
+# ╔═╡ c4bde04d-23e8-4fb0-9e66-88b443a12926
+mlcode(
+"""
+hc_report = report(hc)
+cutter = hc_report.cutter
+cutter(h = 2, k = nothing) # get predictions at different cutting heights
+dendrogram = hc_report.dendrogram # get the dendrogram
+plot(dendrogram)
+"""
+,
+"""
+"""
+,
+showoutput = false,
+collapse = "How to show and cut a dendrogram"
+)
+
+
 # ╔═╡ 675e3a37-8044-4e8a-9821-cf2e71cf38f2
-md"# DBSCAN
+md"# 3. DBSCAN
 
 Density-Based Spatial Clustering of Applications with Noise (DBSCAN) is another popular clustering method.
 It captures the insight that clusters are dense groups of points.
@@ -443,6 +487,10 @@ In this exercise, you will perform clustering manually, with ``K = 2``, on a sma
 
 (g) Apply hierarchical clustering with complete linkage and Euclidean metric to the same data set.  Draw the dendrogram with the links at the correct heights.
 
+"
+
+# ╔═╡ 1ed55c9f-1301-4553-84ee-26ada25f9b76
+md"""
 ## Applied
 
 ###
@@ -505,6 +553,10 @@ md"to fit an unsupervised machine called `PCA` (with at most 2 output dimensions
 
 (h) *Optional:* Create other artificial data sets where scaling does not affect the result of clustering or where it improves the result of clustering.
 
+"""
+
+# ╔═╡ 9bf65d2c-b8ab-4f84-9774-8d7c6a3fc6f0
+md"""
 #### Exercise 3
 
 On the website of the text book, there is a gene expression data set that consists of 40 tissue samples with measurements on 1000 genes. Some samples are from healthy patients, while others are from a diseased group.
@@ -538,6 +590,9 @@ MLCourse.list_notebooks(@__FILE__)
 # ╔═╡ 35ac2056-ab72-44b0-9972-723a0887a622
 MLCourse.FOOTER
 
+# ╔═╡ b24d7fbf-bd2b-4bd7-90ef-c77ec9099bc8
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─48d87103-4c23-4144-a121-1e33d2bb87f3
 # ╟─da8f8ce7-c3ad-4e1a-bb9e-c7be15646d72
@@ -569,7 +624,7 @@ MLCourse.FOOTER
 # ╠═f6b3f577-d893-4c7f-a0c5-df5a267f2d1e
 # ╠═e266ada3-ba4d-4177-8129-f1220f293c72
 # ╟─675e3a37-8044-4e8a-9821-cf2e71cf38f2
-# ╠═6d845685-ac31-4df7-9d18-f1fab6c08e3d
+# ╟─6d845685-ac31-4df7-9d18-f1fab6c08e3d
 # ╟─9ca4cac1-f378-42cd-ba60-d174a47e23a8
 # ╟─8ea10eb7-8b37-4026-a7ec-e44bba7532ea
 # ╟─88cd7a57-5d9d-45ae-968e-b3b5a8d3a824
@@ -584,3 +639,5 @@ MLCourse.FOOTER
 # ╟─15830699-57c5-4bc2-bc92-54105597ab26
 # ╟─7b013132-0ee2-11ec-1dd2-25a9f16f0568
 # ╟─35ac2056-ab72-44b0-9972-723a0887a622
+# ╟─48d87103-4c23-4144-a121-1e33d2bb87f3
+# ╟─b24d7fbf-bd2b-4bd7-90ef-c77ec9099bc8

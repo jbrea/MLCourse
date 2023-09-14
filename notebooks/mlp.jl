@@ -17,13 +17,16 @@ end
 # ╔═╡ 87f59dc7-5149-4eb6-9d81-440ee8cecd72
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux
+using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux
 import PlutoPlotly as PP
 import MLCourse: heaviside
 const M = MLCourse.JlMod
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -35,10 +38,10 @@ end
 
 # ╔═╡ c1cbcbf4-f9a9-4763-add8-c5ed7cbd2889
 md"The goal of this week is to
-1.
-2.
-3.
-4.
+1. understand, how the XOR problem can be solved without feature engineering.
+2. understand, how neurons and neural networks can be written in code.
+3. learn how to run regression with neural networks.
+4. learn how to run classification with neural networks.
 "
 
 # ╔═╡ c95ad296-5191-4f72-a7d7-87ddebc43a65
@@ -91,7 +94,8 @@ def log_reg_loss_function(X, y, theta):
         return -np.mean(y * logp(tmp) + (1 - y) * logp(-tmp))
     return loss_function
 """,
-showoutput = false
+showoutput = false,
+cache = false
 )
 
 # ╔═╡ 235c6588-8210-4b8e-812c-537a72ce950f
@@ -122,6 +126,13 @@ end;
 mlcode(
 """
     using MLJFlux
+
+    function xor_generator(; n = 200)
+        x = 2 * rand(n, 2) .- 1
+        DataFrame(X1 = x[:, 1], X2 = x[:, 2],
+                  y = (x[:, 1] .> 0) .⊻ (x[:, 2] .> 0))
+    end
+
     function fit_xor(n_hidden)
         x = select(xor_data, Not(:y))
         y = coerce(xor_data.y, Binary)
@@ -139,7 +150,9 @@ mlcode(
                   training_accuracy = mean(predict_mode(mach, x) .== y),
                   test_accuracy = mean(predict_mode(mach, x_test) .== y_test))
     end
+
     xor_results = vcat([fit_xor(n_hidden) for n_hidden in [4, 10], _ in 1:10]...)
+
     @df xor_results dotplot(:n_hidden, :training_accuracy,
                             xlabel = "number of hidden units",
                             ylabel = "accuracy",
@@ -160,7 +173,8 @@ collapse = "Implementation details"
 # ╔═╡ 5c2154ef-2a35-4d91-959d-f72100049894
 md"# 2. Multilayer Perceptrons
 
-Below you see three equivalent ways to implement a neural network:
+Below you see three equivalent ways to implement a neural network. It is recommendable to read and try to understand this code, to get a feeling for the different ways, how a neural network can be implemented. Later we will use dedicated deep learning packages instead of this custom code, however. The deep learning packages usually work with the matrix version.
+
 1. In the `expanded` form all parameters and activation functions are explicitely written out in \"one line\". With more neurons or hidden layers, this form quickly becomes annoying to write.
 2. In the `neuron` form we see clearly that the neural network is composed of multiple simple neurons with different input weights and biases.
 3. The `matrix` form is the most succinct form and most commonly used in modern implementations. In this form the biases of each layer are organized in a vector and the input weights of all neurons in the same layer are organized in a matrix.
@@ -251,7 +265,7 @@ def neural_net_matrix(x, w10_1, w11_1, w20_1, w21_1, w30_1, w31_1, w40_1, w41_1,
     return neural_net_m(x, b1, w1, g1, b2, w2, g2)
 """
 ,
-showoutput = false
+cache = false
 )
 
 
@@ -364,6 +378,82 @@ end
 # ╔═╡ c3fe95e4-d7f4-4258-94fd-fa5c994e6627
 md"""# 3. Regression with MLPs
 
+## Constructing Multilayer Neural Networks
+
+There is no need to use custom code to construct neural networks, because there are many good software packages that allow to construct networks very easily.
+
+In the first example we construct a neural network with 3-dimensional input, 30 hidden relu neurons and 2-dimensional output. We can confirm that the weight matrix of the first layers is of shape (30, 3) and there are 30 biases.
+"""
+
+# ╔═╡ 4bbae793-059d-4741-a761-c38be74b274c
+mlcode(
+"""
+using Flux
+
+nn = Chain(Dense(3, 30, relu), # input to hidden layer (with relu non-linearity)
+           Dense(30, 2))       # hidden layer to output (without non-linearity)
+
+(w¹ = nn.layers[1].weight, b¹ = nn.layers[1].bias)
+"""
+,
+"""
+"""
+)
+
+# ╔═╡ 114201bf-d841-496f-8ca5-2fbd43726995
+md"""
+Note that neural networks are often by default generated with single precision (float32) parameters. We will usually want to make sure that the input also has single precision and use for example type promotion like $(mlstring(md"`Float32.(X)`", "")), if the input `X` is not given in single precision.
+
+We can also confirm that the network computes what we expect it to compute.
+We generate a 3-dimensional input and compute the output of the neural network in two ways:
+"""
+
+# ╔═╡ 6944c24e-67e7-47ba-aea6-5f75f58dae5a
+mlcode(
+"""
+x = rand(Float32, 3)
+nn(x) # apply neural network to input x
+"""
+,
+"""
+"""
+)
+
+# ╔═╡ 03b2c815-65ef-4c74-a673-21830dbcb40e
+mlcode(
+"""
+w¹ = nn.layers[1].weight
+b¹ = nn.layers[1].bias
+w² = nn.layers[2].weight
+b² = nn.layers[2].bias
+b² + w² * relu.(b¹ + w¹ * x)
+"""
+,
+"""
+"""
+)
+
+# ╔═╡ 631d3ab5-817a-4ccf-88fb-950f85fc6be3
+md"Creating arbitrarily deep and wide neural networks is straightforward.
+In the following example we create a neural network with 20-100-50-100-10 neurons in input-hidden1-hidden2-hidden3-output layers with different non-linearities.
+"
+
+# ╔═╡ bf6bf8f3-dbc9-496a-ac5b-1aaf6e7824e1
+mlcode(
+"""
+nn2 = Chain(Dense(20, 100, relu),
+            Dense(100, 50, tanh),
+            Dense(50, 100, Flux.σ),
+            Dense(100, 10))
+nn2(rand(Float32, 20))
+"""
+,
+"""
+"""
+)
+
+# ╔═╡ a869d11a-2124-4d2b-8517-5cca4382309e
+md"""
 ## Fitting the Weather Data
 
 Let us find out if with an MLP we can get better predictions than with multiple
@@ -374,11 +464,9 @@ linear regression on the weather data set.
 mlstring(md"""
 !!! note
 
-    We use here a `Pipeline` (`|>`) that standardizes with a `Standardizer`
-    the input first to mean zero and standard deviation one.
+    We standardize the input and the output to mean zero and standard deviation one.
     We do this, because the usual initializations
     of neural networks work best with standardized input.
-    With the `TransformedTargetModel` we also standardize the output variable.
 
     To learn more about the usual initializations you can have a look at this [blog post](https://towardsdatascience.com/weight-initialization-in-neural-networks-a-journey-from-the-basics-to-kaiming-954fb9b47c79) (optional).
 
@@ -397,6 +485,19 @@ We use here a `Pipeline` that standardizes with a `StandardScaler`
 Our builder constructs a neural network with one hidden layer of 128 relu neurons.
 """)
 
+# ╔═╡ 6393aae7-a8ac-4dff-b188-5e682f6ab1f9
+mlstring(
+md"""
+Some explanations for the code below:
+1. The neural network used for regression in the `NeuralNetworkRegressor` is specified with the argument `builder`. Here we use the `MLJFlux.Short` builder, to construct a neural network with one hidden layer of 128 relu-neurons that are trained with dropout rate 0.5
+2. The `TransformedTargetModel` allows to fit to standardized output data. When making predictions, the machine automatically applies the inverse of the standardization.
+"""
+,
+"""
+"""
+)
+
+
 # ╔═╡ a5568dfb-4467-4dca-b1c7-714bbfcbd6e6
 mlcode(
 """
@@ -405,8 +506,10 @@ using CSV, DataFrames
 
 weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
                    DataFrame)
+coerce!(weather, Count => Continuous)
 weather_test = CSV.read(download("https://go.epfl.ch/bio322-weather2019-2020.csv"),
                         DataFrame)
+coerce!(weather_test, Count => Continuous)
 weather_x = select(weather, Not([:LUZ_wind_peak, :time]))[1:end-5, :]
 weather_y = weather.LUZ_wind_peak[6:end]
 weather_test_x = select(weather_test, Not([:LUZ_wind_peak, :time]))[1:end-5, :]
@@ -454,6 +557,8 @@ pipeline.fit(weather_x,weather_y)
 from sklearn.metrics import mean_squared_error
 ("training_error", mean_squared_error(pipeline.predict(weather_x), weather_y)**0.5, "test_error", mean_squared_error(pipeline.predict(weather_test_x), weather_test_y)**0.5)
 """
+,
+cache = true
 )
 
 
@@ -700,29 +805,196 @@ y = x[7]**2 - 1
 ;
 eval = false)
 
+# ╔═╡ 0ba71a2a-f2f9-4fc7-aa81-416799e79e57
+md"""## Parametrizing Variances of Log-Normal Distributions with MLPs
+
+A key insight is that neural networks and gradient descent are very flexible tools to fit any function or probability distribution/density. To illustrate this, we use a neural network with two outputs to parametertrize the mean *and* the standard deviation of a conditional normal distribution. This is considerably more flexible than standard linear regression, where the mean is a linear function of the input and the standard deviation is fixed. With this neural network, both the mean and the standard deviation can be non-linear functions of the input.
+
+The fun thing is that we do not need to code up much to get this running.
+Basically, all we need is
+1. a loss function,
+2. a neural network,
+3. run stochastic gradient descent.
+"""
+
+# ╔═╡ 3d6ae9f2-105a-4c7f-bf2f-c42afe2683cf
+mlcode(
+"""
+function loss(x, y)
+    output = nn(x)
+    m = output[1, :]
+    s = softplus.(output[2, :])
+    mean((m .- y) .^ 2 ./ (2 * s) .+ 1/2 * log.(s))
+end
+
+"""
+,
+"""
+"""
+)
+
+# ╔═╡ 67d386dc-18c8-4dbe-8e13-cfc8541e8b6c
+md"""
+This function computes the two output dimensions of the neural network.
+The first output dimension is our mean. The second output dimension is transformed
+to positive values with the `softplus` function ``x \mapsto \log(\exp(x) + 1)``
+to enode the variance of the normal distribution. In the log-likelihood loss we
+drop the constant term ``\frac12\log2\pi``.
+"""
+
+# ╔═╡ 6701f32c-015e-45f5-a59b-4d5bf9412f99
+mlcode(
+"""
+# Standardization of input and output
+using CSV, MLJ
+
+weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
+                   DataFrame)
+input_standardizer = machine(Standardizer(), weather.LUZ_pressure[1:end-5])
+fit!(input_standardizer, verbosity = 0)
+weather_input = Float32.(MLJ.transform(input_standardizer,
+                                       weather.LUZ_pressure[1:end-5]))
+output_standardizer = machine(Standardizer(), log.(weather.LUZ_wind_peak[6:end]))
+fit!(output_standardizer, verbosity = 0)
+weather_output = Float32.(MLJ.transform(output_standardizer,
+                                        log.(weather.LUZ_wind_peak[6:end])))
+
+# Neural network
+using Flux
+
+nn = Chain(Dense(1, 50, tanh), Dense(50, 2)) # note that we define 2 output dims
+
+# Training with stochastic gradient descent
+opt = ADAMW()
+p = Flux.params(nn) # these are the parameters to be adapted.
+data = Flux.DataLoader((weather_input', weather_output), batchsize = 32)
+for epoch in 1:20 # run for 20 epochs
+    for batch in data # in each epoch we run through the whole dataset
+        l, ∇ = Flux.withgradient(p) do
+            loss(batch...)
+        end
+        Flux.update!(opt, p, ∇)
+    end
+end
+
+# Plotting
+grid = Float32.(collect(-5:.1:3.5))
+pred = nn(grid')
+m = pred[1, :]
+s = sqrt.(softplus.(pred[2, :]))
+u_x(x) = inverse_transform(input_standardizer, x) # function to "un-standardize"
+u_y(y) = exp.(inverse_transform(output_standardizer, y))
+histogram2d(u_x.(weather_input), u_y.(weather_output), bins = (250, 200),
+            markersize = 3, xlabel = "LUZ_pressure [hPa]",
+            ylabel = "LUZ_wind_peak [km/h]", label = nothing, cbar = false)
+plot!(u_x.(grid), u_y.(m), c = :red, w = 3, label = "mean")
+plot!(u_x.(grid), u_y.(m .+ s), c = :red, linestyle = :dash, w = 3,
+      label = "± standard deviation")
+plot!(u_x.(grid), u_y.(m .- s), c = :red, linestyle = :dash, w = 3,
+      label = nothing)
+"""
+,
+"""
+"""
+,
+collapse = "Code for training and plotting",
+showoutput = false
+)
+
+# ╔═╡ 23051a87-a4b2-49c2-984b-305f3d16a9f7
+mlcode("plot!()", "", showinput = false)
+
+# ╔═╡ 6bf6598b-590e-4794-b8de-b48cc3fd2c84
+md"
+We see that the neural network found a slightly non-linear relationship between
+input and average output and the variance of the noise is smaller for high
+pressure values than for low pressure values. Note that the dashed lines are not symmetric around the mean, because we fitted a log-normal distribution; the dashed lines would be symmetric around the mean if we plotted the logarithm of the wind peak on the y-axis.
+"
+
+# ╔═╡ 4bd63efb-0aef-41cd-a9b7-9fa78db107a0
+md"""
+## Fitting a Polynomial in 1000 Input Dimensions
+The following artificial data set has ``n=10^5`` points of ``p = 1000`` dimensions.
+The response ``y = x_7^2 - 1`` depends only on the seventh input dimension.
+Although neural networks are not specifically designed to fit polynomials and this is a somewhat silly and artificial example,
+this demonstrates that with only 50 hidden relu-neurons an accurate fit
+can be found in this high-dimensional noisy dataset.
+"""
+
+# ╔═╡ ec0e41bb-0b13-4cb7-abfe-d52bc9e2389d
+mlcode(
+"""
+# dataset
+x = DataFrame(randn(Float32, 10^5, 1000), :auto)
+y = x.x7 .^2 .- 1
+
+# fitting
+model = NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 50,
+                                                       dropout = 0,
+                                                       σ = relu),
+                               batch_size = 128,
+                               epochs = 10^2)
+mach = machine(model, x, y)
+fit!(mach, verbosity = 0)
+
+# plotting
+grid = -3:.1f0:3
+x_test = DataFrame(randn(Float32, length(grid), 1000), :auto)
+x_test.x7 = grid
+plot(grid, grid.^2 .- 1, label = \"ground truth\", w = 3, legend = :bottomright)
+plot!(grid, predict(mach, x_test),
+      label = \"fit\", xlabel = \"x₇\", ylabel = \"y\", w = 3)
+"""
+,
+"""
+"""
+)
+
+# ╔═╡ a7657bf1-7036-4093-a6b8-0b3f8fb30d29
+M.eval(:(using MLJFlux)) # hack to have @builder work in the next cell
+
 # ╔═╡ 14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
-md"# Classification with MLPs
+md"# 4. Classification with MLPs
 
 ## Fitting MNIST
 
-The following code to fit the MNIST data with a multilayer perceptron takes a
-few minutes to run.
+The difference between regression and classification with neural networks is exactly the same as between linear and logistic regression: the only thing that changes is the negative log-likelihood loss function. In the case of regression it is based on the normal distribution and leads to the mean squared error applied to an output layer without any non-linearity, whereas for classification it is based on the categorical distribution and leads to the negative log-likelihood function applied to a softmax output layer.
+"
 
-```julia
+# ╔═╡ 429b5335-c468-4f95-8351-f3652926d023
+mlstring(
+md"""
+When using MLJ, we do not actually need to think about the softmax output layer.
+Using the `NeuralNetworkClassifier` takes care of this automatically.
+
+In the code snippet below we do not use the `MLJFlux.Short` builder, but use the generic `MLJFlux.@builder` where we can feed in any `Chain`. Note that the arguments `n_in` and `n_out` indicate that the builder should determine automatically the number of input and output neurons. In this case, we could use `MLJFlux.Short(n_hidden = 100, dropout = 0, σ = relu)` to get exactly the same result, but `MLJFlux.@builder` allows to build arbitrary neural networks, whereas `MLJFlux.Short` limits to neural networks with a single hidden layer.
+"""
+,
+"""
+"""
+)
+
+# ╔═╡ 5f8a6035-059d-4288-8007-e9176ed5c297
+mlcode(
+"""
+using OpenML, DataFrames, MLJ, MLJFlux
+
+# data loading
 mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     coerce!(df, :class => Multiclass)
     coerce!(df, Count => MLJ.Continuous)
     Float32.(df[:, 1:end-1] ./ 255),
     df.class
 end
-mnist_mach = machine(NeuralNetworkClassifier(
+
+# fitting
+model = NeuralNetworkClassifier(
                          builder = MLJFlux.@builder(Chain(Dense(n_in, 100, relu),
                                                           Dense(100, n_out))),
                          batch_size = 32,
-                         epochs = 20),
-                      mnist_x[1:60000, :],
-                      mnist_y[1:60000])
-fit!(mnist_mach, verbosity = 2)
+                         epochs = 20)
+mnist_mach = machine(model, mnist_x[1:60000, :], mnist_y[1:60000])
+fit!(mnist_mach, verbosity = 0)
 mean(predict_mode(mnist_mach, mnist_x[60001:70000, :]) .!= mnist_y[60001:70000])
 ```
 import openml
@@ -851,6 +1123,9 @@ Markdown.parse("$(MLCourse.embed_figure("poly.png"))
 # ╔═╡ 8c72c4b5-452d-4ba3-903b-866cac1c799d
 MLCourse.FOOTER
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─c1cbcbf4-f9a9-4763-add8-c5ed7cbd2889
 # ╟─c95ad296-5191-4f72-a7d7-87ddebc43a65
@@ -894,9 +1169,13 @@ MLCourse.FOOTER
 # ╟─ba4b183f-65d1-41a3-a613-b787b04afc17
 # ╠═b7041be4-0c9c-48ae-a078-03e077467a42
 # ╟─14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
+# ╟─429b5335-c468-4f95-8351-f3652926d023
+# ╟─5f8a6035-059d-4288-8007-e9176ed5c297
+# ╟─4266ce96-d65a-42f9-bd44-ab6cbf7e92ea
 # ╟─2f034d19-1c00-4a10-a880-99436ab00957
 # ╟─7c6951e8-726a-4181-b15f-b629a2835d03
 # ╟─825c40e9-de99-4829-aad0-0c5c901df5e9
 # ╟─83e2c454-042f-11ec-32f7-d9b38eeb7769
 # ╟─8c72c4b5-452d-4ba3-903b-866cac1c799d
 # ╟─87f59dc7-5149-4eb6-9d81-440ee8cecd72
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

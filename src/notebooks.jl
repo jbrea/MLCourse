@@ -163,13 +163,93 @@ const CSS_STYLE =
       transition: max-height 0.2s ease-out;
     }
 
+    .edit_or_run {
+        display: none;
+    }
+
     </style>
 
 
     """
 
-const PyMod = Module()
-const JlMod = Module()
+module PyMod
+const _OUTPUT_CACHE = Dict{Any, Any}()
+end
+module JlMod
+using Serialization
+const _OUTPUT_CACHE = Dict{Any, Any}()
+end
+function _cache_path(file, ending = ".jld2")
+    path = splitpath(split(file, "#")[1] * ending)
+    insert!(path, length(path), ".cache")
+    joinpath(path)
+end
+function _usings(s)
+    pkgs = ""
+    structs = ""
+    lines = split(s, '\n')
+    for (i, line) in pairs(lines)
+        if match(r"using ", line) !== nothing ||
+           match(r"import ", line) !== nothing
+           if match(r"#.*using ", line) === nothing &&
+              match(r"#.*import ", line) === nothing
+                j = i
+                while j ≤ length(lines)
+                    pkgs *= lines[j]
+                    sl = strip(lines[j])
+                    sl[end] != ',' && break
+                    j += 1
+                end
+                pkgs *= "\n"
+            end
+        end
+        if match(r"struct ", line) !== nothing
+           if match(r"#.*struct ", line) === nothing
+                j = i
+                while j ≤ length(lines)
+                    structs *= lines[j] * "\n"
+                    match(r"end", lines[j]) !== nothing && break
+                    j += 1
+                end
+                structs *= "\n"
+            end
+        end
+    end
+    pkgs, structs
+end
+function save_cache(file)
+    fn = _cache_path(file)
+    pkgs = ""
+    structs = ""
+    for k in keys(JlMod._OUTPUT_CACHE)
+        isa(k, Symbol) && continue
+        p, s = _usings(k)
+        pkgs *= p
+        structs *= s
+    end
+    write(fn * "-using", pkgs * structs)
+    FileIO.save(fn, Dict("jl" => JlMod._OUTPUT_CACHE, "py" => PyMod._OUTPUT_CACHE))
+end
+function load_cache(file)
+    fn = _cache_path(file)
+    isfile(fn) || return
+    JlMod.eval(Meta.parseall(read(fn * "-using", String)))
+    cache = FileIO.load(fn)
+    jlc = cache["jl"]
+    pyc = cache["py"]
+    for (k, v) in jlc
+        JlMod._OUTPUT_CACHE[k] = v
+        if isa(k, Symbol)
+            setproperty!(JlMod, k, v)
+        end
+    end
+    for (k, v) in pyc
+        PyMod._OUTPUT_CACHE[k] = v
+        if isa(k, Symbol)
+            pyexec("$k = $v", PyMod)
+        end
+    end
+end
 
 function embed(out)
     isnothing(out) && return ""
@@ -177,24 +257,50 @@ function embed(out)
 end
 
 function convert_py_output(pyout)
+#     @show typeof(pyout)
     if hasproperty(pyout, :__class__)
         cname = pyconvert(String, pyout.__class__.__name__)
+#         @show cname
         if cname ∈ ("ndarray", "list")
-            pyconvert(Array, pyout)
+            elname = pyconvert(String, pyout[0].__class__.__name__)
+#             @show elname
+            if elname == "str"
+                pyconvert(Array{String}, pyout)
+            else
+                pyconvert(Array, pyout)
+            end
         elseif cname == "DataFrame"
-            DataFrame(PyTable(pyout))
+            DataFrame(PyPandasDataFrame(pyout))
         elseif cname == "dict"
-            pyconvert(Dict, pyout)
+            tmp = pyconvert(Dict, pyout)
+            Dict(k => convert_py_output(e) for (k, e) in tmp)
+        elseif cname == "tuple"
+            tuple((convert_py_output(e) for e in pyout)...)
+        elseif cname == "Series"
+            convert_py_output(pyout.to_frame())
+        elseif cname == "Categorical"
+            convert_py_output(pyout.to_frame())
+        elseif cname == "PairGrid"
+            error("Use plt.show()")
         else
             pyconvert(Any, pyout)
         end
+    elseif isa(pyout, PyArray)
+        convert(Array, pyout)
+    elseif isa(pyout, PyList)
+        convert(Array, pyout)
     else
         pyconvert(Any, pyout)
     end
 end
+function _py_png(; plt = "plt")
+    fn = tempname() * ".png"
+    pyeval("$plt.savefig(\"$fn\")", PyMod)
+    Markdown.parse("![](data:img/png; base64, $(open(base64encode, fn)))")
+end
 function py_output(lastline)
     if match(r"plt\.show()", lastline) != nothing
-        pyeval("plt.gcf()", PyMod)
+        _py_png()
     elseif match(r"^\w* ?= ?\w", lastline) == nothing &&
            match(r"^ ", lastline) == nothing &&
            match(r"^\t", lastline) == nothing
@@ -226,7 +332,7 @@ a = rand(12)
 scatter(a) # some comments
 \"\"\"
 ,
-py\"\"\"
+\"\"\"
 a = np.random.random(12)
 plt.scatter(range(12), a)
 plt.show()
@@ -235,31 +341,70 @@ plt.show()
 mlcode(
 "2+2"
 ,
-py"2+2"
+"2+2"
 ;
 eval = false,
 collapse = "click to see more"
 )
 ```
 """
-function mlcode(jlcode, pycode; eval = true, showoutput = true, showinput = true, collapse = nothing)
+function mlcode(jlcode, pycode;
+                eval = true,
+                showoutput = true,
+                showinput = true,
+                collapse = nothing,
+                cache = true,
+                recompute = false,
+                cache_jl_vars = nothing,
+                cache_py_vars = nothing,
+                )
     nojl = jlcode === nothing
     nopy = pycode === nothing
 	ojl = if eval && !nojl
-        if isa(jlcode, String)
-            _eval(Meta.parse("begin\n"*jlcode*"\nend"))
+        if cache && haskey(JlMod._OUTPUT_CACHE, jlcode) && !recompute
+#             @info "loading jl from cache"
+            JlMod._OUTPUT_CACHE[jlcode]
+        elseif isa(jlcode, String)
+            tmp = _eval(Meta.parse("begin\n"*jlcode*"\nend"))
+            tmp = isa(tmp, Function) ? nothing : embed(tmp)
+            if cache
+                JlMod._OUTPUT_CACHE[jlcode] = showoutput ? tmp : nothing
+            end
+            tmp
         else
             error("jlcode is a $(typeof(jlcode)) but needs to be a `String`.")
         end
     end
+    if cache_jl_vars !== nothing
+        for var in cache_jl_vars
+            JlMod._OUTPUT_CACHE[var] = getproperty(JlMod, var)
+        end
+    end
     opy = if eval && !nopy && pycode != ""
-        if isa(pycode, String)
+        if cache && haskey(PyMod._OUTPUT_CACHE, pycode) && !recompute
+#             @info "loading py from cache"
+            PyMod._OUTPUT_CACHE[pycode]
+        elseif isa(pycode, String)
             lines = split(pycode, '\n')
-            lastline = lines[end-1]
-            pyexec(join(lines[1:end-2], "\n"), PyMod)
-            py_output(lastline)
+            lastline = length(lines) == 1 ? lines[end] : lines[end-1]
+            tmp = if match(r"^[a-z0-9_]* = ", lastline) !== nothing
+                pyexec(pycode, PyMod)
+                nothing
+            else
+                pyexec(join(lines[1:end-2], "\n"), PyMod)
+                embed(py_output(lastline))
+            end
+            if cache
+                PyMod._OUTPUT_CACHE[pycode] = showoutput ? tmp : nothing
+            end
+            tmp
         else
             error("pycode is a $(typeof(pycode)) but needs to be a `String`.")
+        end
+    end
+    if cache_py_vars !== nothing
+        for var in cache_py_vars
+            PyMod._OUTPUT_CACHE[var] = py_output(string(var))
         end
     end
 	s1 = nojl ? nothing : @htl """
@@ -282,12 +427,12 @@ $(!nopy && !nojl && showinput ? language_selector() : nothing)
 <div class="julia_code">
     $(showinput ? s1 : nothing)
 
-    $(showoutput && !nojl ? embed(ojl) : nothing)
+    $(showoutput && !nojl ? ojl : nothing)
 </div>
 <div class="python_code">
     $(showinput ? s2 : nothing)
 
-    $(showoutput && !nopy ? embed(opy) : nothing)
+    $(showoutput && !nopy ? opy : nothing)
 </div>
 """)
 if !isnothing(collapse)
@@ -361,4 +506,5 @@ const FOOTER = @htl """
 
 <p> This page is part of an <a href="https://bio322.epfl.ch">introductory machine learning course</a> taught by Johanni Brea.<br>The course is inspired by <a href="https://www.statlearning.com/">"An Introduction to Statistical Learning"</a>.</p> <a href="https://www.epfl.ch"><img src="https://www.epfl.ch/wp/5.5/wp-content/themes/wp-theme-2018/assets/svg/epfl-logo.svg"></img></a>
 """
+
 

@@ -18,11 +18,13 @@ end
 begin
 using Pkg
 Base.redirect_stdio(stderr = devnull, stdout = devnull) do
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Statistics
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)end
 import MLCourse: poly, Polynomial
 import PlutoPlotly as PP
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -142,7 +144,8 @@ y = 2.2 * x + 0.3 + 0.2 * np.random.randn(n)
 """
 ;
 showoutput = false,
-collapse = "custom code"
+collapse = "custom code",
+cache = false
 )
 end
 
@@ -351,6 +354,8 @@ grid_search = GridSearchCV(pipeline, param_grid, cv=5,
 grid_search.fit(df["x"].values.reshape(-1,1), df["y"].values.reshape(-1,1))
 ("best_accuracy",grid_search.best_score_, "best_parameters", grid_search.best_params_)
 """
+,
+cache = false
 )
 
 # ╔═╡ 7b4daae4-20d3-4992-94e9-46882e47b840
@@ -612,6 +617,8 @@ weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
 weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
 weather
 """
+,
+cache = false
 )
 
 # ╔═╡ ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
@@ -646,6 +653,8 @@ for a in alphas :
 	var.append(explained_variance_score(weather_output, lasso.predict(weather_input)))
 	explained_variance_score(weather_output, lasso.predict(weather_input))
 """
+,
+cache = false
 )
 
 # ╔═╡ f6158ed5-bd0d-4781-b9cd-22b271e86ef8
@@ -835,6 +844,9 @@ MLCourse.list_notebooks(@__FILE__)
 # ╔═╡ c48dff95-8028-4e97-8ec6-705ea2b9c72e
 MLCourse.FOOTER
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─7c52d913-65a9-456f-8c54-9ae9c6e4c815
 # ╟─78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
@@ -891,3 +903,4 @@ MLCourse.FOOTER
 # ╟─c48dff95-8028-4e97-8ec6-705ea2b9c72e
 # ╟─2e9ce2a9-217e-4910-b6ce-d174f2f2668e
 # ╟─150d58e7-0e73-4b36-836c-d81eef531a9c
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

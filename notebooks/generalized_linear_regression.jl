@@ -17,13 +17,16 @@ end
 # ╔═╡ 94f8e29e-ef91-11eb-1ae9-29bc46fa505a
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
+using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal, Poisson
 import MLCourse: fitted_linear_func
 import PlutoPlotly as PP
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -229,6 +232,7 @@ pdf.(p̂, "A")
 """
 ("Probability of A : ", p[:,0])
 """
+,
 )
 
 # ╔═╡ 34c49e49-a5e7-48ad-807b-c0624a59a367
@@ -247,6 +251,7 @@ predict_mode(mach3, DataFrame(x = -1:.5:2))
 """
 mach3.predict(np.arange(-1, 2.5, 0.5).reshape(-1,1))
 """
+,
 )
 
 # ╔═╡ 38ccf735-5195-4e00-868f-95a895c05985
@@ -629,6 +634,8 @@ import openml
 bikesharing,_,_,_ = openml.datasets.get_dataset(42712).get_data(dataset_format="dataframe")
 bikesharing
 """
+,
+cache = false
 )
 
 # ╔═╡ db0f6302-333f-4e65-bff8-cd6c64f72cce
@@ -642,6 +649,8 @@ DataFrame(schema(bikesharing))
 bikesharing.dropna(inplace=True) # remove rows with missing data
 bikesharing.dtypes
 """
+,
+cache = false
 )
 
 # ╔═╡ b9ba1df0-5086-4c0f-a2c9-200c2be27294
@@ -966,6 +975,8 @@ let
     PP.PlutoPlot(plot)
 end
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
 
 # ╔═╡ Cell order:
 # ╟─661e96c4-9432-4e39-b67e-6d0de2b76635
@@ -1051,3 +1062,4 @@ end
 # ╟─fbc70eaa-df15-423a-9885-93a5fa27fbc5
 # ╟─12d5824c-0873-49a8-a5d8-f93c73b633ae
 # ╟─94f8e29e-ef91-11eb-1ae9-29bc46fa505a
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d

@@ -17,12 +17,16 @@ end
 # ╔═╡ f63c04d4-eefe-11eb-3fda-1729ac6de2cb
 begin
 using Pkg
-Base.redirect_stdio(stderr = devnull, stdout = devnull) do
+stdout_orig = stdout
+stderr_orig = stderr
+redirect_stdio(stdout = devnull, stderr = devnull)
 	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-end
-using Revise, MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
+using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal
 import PlutoPlotly as PP
+# Base.download(s::AbstractString) = joinpath(@__DIR__, "..", "data", replace(s, "https://go.epfl.ch/bio322-" => ""))
+redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
+MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
@@ -77,6 +81,8 @@ mnist.class
 """
 mnist['class']
 """
+,
+recompute = false
 )
 
 # ╔═╡ f63c04fc-eefe-11eb-35b6-5345dda134e7
@@ -206,6 +212,8 @@ Our goal is to predict the wind speed in Lucerne from 5 hours old measurements.
 # ╔═╡ f63c052e-eefe-11eb-3a14-e5e8f3d578a8
 mlcode(
 """
+using CSV
+
 weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
                    DataFrame)
 """
@@ -214,6 +222,7 @@ weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
 weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
 weather
 """
+,
 )
 
 # ╔═╡ 0f475660-ccea-453d-9ee5-96e6d27bc35a
@@ -288,6 +297,8 @@ import seaborn as sns
 # ╔═╡ f63c054c-eefe-11eb-13db-171084b417a9
 mlcode(
 """
+using StatsPlots
+
 @df weather corrplot([:BAS_pressure :LUG_pressure :LUZ_pressure :LUZ_wind_peak],
                      grid = false, fillcolor = cgrad(), size = (700, 600))
 """
@@ -298,6 +309,8 @@ g.map_lower(sns.regplot, line_kws={'color': 'black'})
 g.map_diag(sns.histplot, color = 'darkorange' )
 g.map_upper(sns.kdeplot, fill=True,cmap="Reds")
 """
+,
+recompute = false
 )
 
 # ╔═╡ f63c0574-eefe-11eb-2d7c-bd74b7d83f23
@@ -310,24 +323,24 @@ You can control the parameters ``\theta_0`` and ``\theta_1`` to find the
 function that visually matches the data well.
 "
 
-# ╔═╡ 782a1b8a-d15e-47a3-937d-0c25b136da3d
-@bind linregsol Select(["Random Initialization", "Minimal Loss Solution"])
-
 # ╔═╡ d8a3bb08-df1e-4cf9-a04f-6156d27f0992
-begin
-    if linregsol == "Random Initialization"
-        theta0 = randn()/2
-        theta1 = randn()/2
-    else
-        theta0 = -1.1246030250560215
-        theta1 = 2.468858219596663
-    end
-end;
+# begin
+#     if linregsol == "Random Initialization"
+#         theta0 = randn()/2
+#         theta1 = randn()/2
+#     else
+#         theta0 = -1.1246030250560215
+#         theta1 = 2.468858219596663
+#     end
+# end;
+
+# ╔═╡ 782a1b8a-d15e-47a3-937d-0c25b136da3d
+# @bind linregsol Select(["Random Initialization", "Minimal Loss Solution"])
 
 # ╔═╡ f63c057e-eefe-11eb-1672-19db9efd0d32
-md"""θ₀ = $(linregsol; @bind θ₀ Slider(-1.8:.1:1.8, default = theta0, show_value = true))
+md"""θ₀ = $(@bind θ₀ Slider(-1.8:.1:1.8, default = 0, show_value = true))
 
-θ₁ = $(linregsol; @bind θ₁ Slider(-3:.1:3, default = theta1, show_value = true))
+θ₁ = $(@bind θ₁ Slider(-3:.1:3, default = 0, show_value = true))
 """
 
 # ╔═╡ f63c0588-eefe-11eb-0687-a7c44f9177a4
@@ -356,29 +369,29 @@ md"**Left:** The data is given by the blue points, the current function by the b
 ## Supervised Learning as Likelihood Maximization
 "
 
-# ╔═╡ c0610eee-9d7e-40cf-8b46-5317b0070de9
-@bind linmllsol Select(["Random Initialization", "Maximum Log-Likelihood Solution"])
-
 # ╔═╡ 4acb0dbf-6d10-42f9-adba-4a9358f54b38
-begin
-    if linmllsol == "Random Initialization"
-        theta02 = randn()/2
-        theta12 = randn()/2
-        sigma0 = 2*rand()
-    else
-        theta02 = -1.1246030250560215
-        theta12 = 2.468858219596663
-        sigma0 = 0.29951788038174776
-    end
-end;
+# begin
+#     if linmllsol == "Random Initialization"
+#         theta02 = randn()/2
+#         theta12 = randn()/2
+#         sigma0 = 2*rand()
+#     else
+#         theta02 = -1.1246030250560215
+#         theta12 = 2.468858219596663
+#         sigma0 = 0.29951788038174776
+#     end
+# end;
+# 
 
+# ╔═╡ c0610eee-9d7e-40cf-8b46-5317b0070de9
+# @bind linmllsol Select(["Random Initialization", "Maximum Log-Likelihood Solution"])
 
 # ╔═╡ 65c228c1-f6f2-4542-9870-066448b182ee
-md"""θ₀ = $(linmllsol; @bind θ₀₂ Slider(-1.8:.1:1.8, default = theta02, show_value = true))
+md"""θ₀ = $(@bind θ₀₂ Slider(-1.8:.1:1.8, default = 0, show_value = true))
 
-θ₁ = $(linmllsol; @bind θ₁₂ Slider(-3:.1:3, default = theta12, show_value = true))
+θ₁ = $(@bind θ₁₂ Slider(-3:.1:3, default = 0, show_value = true))
 
-σ = $(@bind sigma Slider(.1:.1:2, default = sigma0, show_value = true))
+σ = $(@bind sigma Slider(.1:.1:2, default = .3, show_value = true))
 """
 
 # ╔═╡ 5ba1c12a-75ce-4d01-aca5-8804d8e747cf
@@ -525,11 +538,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 training_data = pd.DataFrame({'x': [0., 2., 2.], 'y': [-1., 4., 3.]})
+plt.figure()
 plt.scatter(training_data['x'], training_data['y'], label="training data")
 plt.plot([-1, 3], [2*(-1) - 1, 2*3 - 1], c='red', label="mean data generator")
 plt.legend(loc="upper left")
 plt.show()
-"""
+""",
 )
 
 # ╔═╡ f63c05b2-eefe-11eb-21dc-1f79ae779316
@@ -803,6 +817,7 @@ training_set1 = pd.DataFrame({
 				})
 training_set1
 """
+,
 )
 
 # ╔═╡ 34e527f2-ef80-4cb6-be3a-bee055eca125
@@ -821,8 +836,7 @@ X_train = training_set1['LUZ_pressure'].values.reshape(-1, 1)
 y_train = training_set1['wind_peak_in5h'].values.reshape(-1, 1)
 m1.fit(X_train,y_train) # Fit the model to the data, with the Input features and the Output variables
 """
-;
-showoutput = false
+,
 )
 
 # ╔═╡ e4712ebe-f395-418b-abcc-e10ada4b05c2
@@ -920,7 +934,6 @@ md"## Wind speed prediction with multiple predictors
 mlstring(
 md"Our weather data set contains multiple measurements.
 With `names(weather)` we see all the columns of the the weather data frame.
-Try it in a new cell!
 
 With `DataFrame(schema(weather))` we get additionally information about the type of data. `MLJ` distinguished between the [scientific type](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types) and the number type of a column. This distinction is useful, because e.g. categorical variables (class 1, class 2, class 3, ...) can be represented as an integer but also count variables (e.g. number of items) can be represented as an integer, but suitability of a given machine learning method depends more on the scientific type than on the number type.
 ",
@@ -1163,6 +1176,9 @@ MLCourse.list_notebooks(@__FILE__)
 # ╔═╡ e3aa458a-486c-4d5b-a330-67fb68e6f516
 MLCourse.FOOTER
 
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
 # ╔═╡ Cell order:
 # ╟─f63c04dc-eefe-11eb-1e24-1d02a686920a
 # ╟─f63c04e8-eefe-11eb-1a14-8305504a6f1c
@@ -1209,8 +1225,6 @@ MLCourse.FOOTER
 # ╟─f63c05b2-eefe-11eb-21dc-1f79ae779316
 # ╟─f63c05ba-eefe-11eb-18b5-7522b326ab65
 # ╟─813238b8-3ce3-4ce8-98f6-cbdcbd1746d6
-# ╟─92bf4b9c-4bda-4430-bd0f-d85e09dd5d54
-# ╟─5911642f-151b-4d28-8109-6feb4d418ddf
 # ╟─25eb24a4-5414-481b-88d5-5ad50d75f8c9
 # ╟─bd9a7214-f39e-4ae5-995a-6ec02d613fda
 # ╟─f0f6ac8f-2e61-4b08-9383-45ff5b02c5b1
@@ -1262,3 +1276,4 @@ MLCourse.FOOTER
 # ╟─11e350b2-70bd-437b-acef-af5103a6eb96
 # ╟─e3aa458a-486c-4d5b-a330-67fb68e6f516
 # ╟─f63c04d4-eefe-11eb-3fda-1729ac6de2cb
+# ╟─9d250061-e570-4537-b1aa-f6a9019f343d
