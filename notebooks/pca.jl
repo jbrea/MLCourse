@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.9
+# v0.19.27
 
 using Markdown
 using InteractiveUtils
@@ -180,11 +180,63 @@ md"""The second principal component points in the direction of maximal variance 
 # ╔═╡ 2b73abbb-8cef-4da0-b4cf-b640fe0ad102
 md"The `PCA` function in `MLJ` has three important keyword arguments as explained in the doc string (see Live docs). If the keyword argument `variance_ratio = 1` all principal components are computed."
 
+# ╔═╡ cab663a7-4b05-4125-b396-a419755dbe1f
+mlcode("""
+function data_generator(; seed = 71,  N = 100, rng = MersenneTwister(seed))
+	h = [2.5 1.5 .8] .* randn(rng, N, 3)
+    a1 = rand(rng); a2 = rand(rng)
+	G = [1 0 0
+         0 cos(a1) -sin(a1)
+         0 sin(a1) cos(a1)] * [cos(a2) 0 sin(a2)
+                               0       1   0
+                               -sin(a2) 0 cos(a2)]
+	x = h * G
+end;
+
+using Random
+pca_data = data_generator(seed = 241)
+""",
+"""
+import numpy as np
+
+seed = 71
+def data_generator(N=100, rng=np.random.default_rng(seed)):
+    h = np.multiply([2.5, 1.5, 0.8], rng.normal(size=(N, 3)))
+    a1 = rng.random()
+    a2 = rng.random()
+    G = np.dot([[1, 0, 0], [0, np.cos(a1), -np.sin(a1)], [0, np.sin(a1), np.cos(a1)]], [[np.cos(a2), 0, np.sin(a2)], [0, 1, 0], [-np.sin(a2), 0, np.cos(a2)]])
+    x = np.dot(h, G)
+    return x
+
+seed = 241
+pca_data = data_generator()
+pca_data
+""")
+
+# ╔═╡ 927627e0-9614-4234-823d-eb2e13229784
+mlcode("""
+pca = fit!(machine(PCA(variance_ratio = 1), DataFrame(pca_data, :auto)), verbosity = 0)
+""","""
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=2)
+pca.fit(X)
+""")
+
+# ╔═╡ c7935f29-21f3-414a-b013-a1abd0f9f502
+fitted_params(pca) # shows the loadings as columns
+
 # ╔═╡ 45ee714c-9b73-492e-9422-69f27be79de2
 md"The report of a `PCA` machine returns the number of dimensions `indim` of the data. the number of computed principal components `outdim`, the total variance `tvar` and the `mean` of the data set, together with the variances `principalvars` along the computed principal components. The sum of the variances `principalvars` is given in `tprincipalvar` and the rest in `tresidualvar = tvar - tprincipalvar`. If you change the `variance_ratio` to a lower value above you will see that not all principal components are computed."
 
+# ╔═╡ b52d72e3-64a3-4b7e-901b-3512b97aec23
+report(pca)
+
 # ╔═╡ ecc77003-c138-4ea9-93a7-27df46aa1e89
 md"Biplots are useful to see loadings and scores at the same time. The scores of each data point are given by the coordinates of the numbers plotted in gray when reading the bottom and the left axis. For example, the score for point 22 would be approximately (0, 4.8). The loadings are given by the red labels (not the tips of the arrows) when reading the top and the right axis. For examples the loadings of the first principal component are approximately (0.65, 0.09, 0.76) (see also `fitted_params` above)."
+
+# ╔═╡ 89406c26-7cba-4dd2-a6a3-8d572b440e01
+biplot(pca)
 
 # ╔═╡ 18ad4980-2960-4ea9-8c9a-bf17cd3546ff
 function data_generator(; seed = 71,  N = 100, rng = MersenneTwister(seed))
@@ -200,18 +252,6 @@ end;
 
 # ╔═╡ b2688c20-a578-445f-a5c4-335c85931862
 pca_data = data_generator(seed = 241);
-
-# ╔═╡ 927627e0-9614-4234-823d-eb2e13229784
-pca = fit!(machine(PCA(variance_ratio = 1), DataFrame(pca_data, :auto)), verbosity = 0);
-
-# ╔═╡ c7935f29-21f3-414a-b013-a1abd0f9f502
-fitted_params(pca) # shows the loadings as columns
-
-# ╔═╡ b52d72e3-64a3-4b7e-901b-3512b97aec23
-report(pca)
-
-# ╔═╡ 89406c26-7cba-4dd2-a6a3-8d572b440e01
-biplot(pca)
 
 # ╔═╡ 743477bb-6cf0-419e-814b-e774738e8d89
 m2 = fit!(machine(PCA(maxoutdim = 2), DataFrame(pca_data, :auto)), verbosity = 0);
@@ -988,6 +1028,7 @@ MLCourse.footer()
 # ╟─f9a506bb-6bdf-48aa-8f81-8fb6de078533
 # ╟─884a7428-2dd4-4091-b889-3acfbfa45d5b
 # ╟─2b73abbb-8cef-4da0-b4cf-b640fe0ad102
+# ╟─cab663a7-4b05-4125-b396-a419755dbe1f
 # ╠═927627e0-9614-4234-823d-eb2e13229784
 # ╠═c7935f29-21f3-414a-b013-a1abd0f9f502
 # ╟─45ee714c-9b73-492e-9422-69f27be79de2

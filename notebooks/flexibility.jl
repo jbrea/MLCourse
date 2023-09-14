@@ -79,21 +79,23 @@ import numpy as np
 import random
 
 def f(x):
-    return 0.3 * np.sin(10*x) + 0.7*x
+	return 0.3 * np.sin(10*x) + 0.7*x
 
 def sigma(x):
-    return 1 / (1 + np.exp(-x))
+	return 1 / (1 + np.exp(-x))
 
-def regression_data_generator(n, sigma=0.1, rng=random):
-    x = rng.rand(n)
-    y = f(x) + sigma * rng.randn(n)
-    return pd.DataFrame({'x': x, 'y': y})
+def regression_data_generator(n, sigma=0.1):
+	x = np.random.rand (n)
+	y = f(x) + sigma * np.random.randn(n)
+	return pd.DataFrame({'x': x, 'y': y})
+	#generate regression data
 
-def classification_data_generator(n, s=20, rng=random):
-    X1 = rng.rand(n)
-    X2 = rng.rand(n)
-    y = (sigma(s * (f(X1) - X2)) > rng.rand(n)).astype(int)
+def classification_data_generator(n, s=20):
+    X1 = np.random.rand(n)
+    X2 = np.random.rand(n)
+    y = (sigma(s * (f(X1) - X2)) > np.random.rand(n)).astype(int)
     return pd.DataFrame({'X1': X1, 'X2': X2, 'y': y})
+	#generate classification data
 """
 ;
 showoutput = false,
@@ -276,6 +278,18 @@ fit!(m3, verbosity = 0)
 """
 ,
 """
+regression_data = regression_data_generator(n = 50)
+
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LinearRegression
+
+m3 = PolynomialFeatures(degree=3, include_bias=False)
+poly_features = m3.fit_transform(regression_data.drop(['y'], axis=1).values)
+
+poly_reg_model = LinearRegression()
+poly_reg_model.fit(poly_features, regression_data["y"])
+
+y_predicted = poly_reg_model.predict(poly_features)
 """
 ;
 showoutput = false
@@ -418,6 +432,18 @@ fit!(m4, verbosity = 0)
 """
 ,
 """
+classification_data = classification_data_generator(50)
+
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.linear_model import LogisticRegression
+
+m3 = PolynomialFeatures(degree=3, include_bias=False)
+poly_features = m3.fit_transform(classification_data.drop(['y'], axis=1).values)
+
+poly_reg_model = LogisticRegression()
+poly_reg_model.fit(poly_features, classification_data["y"])
+
+y_predicted = poly_reg_model.predict(poly_features)
 """
 ;
 showoutput = false
@@ -479,6 +505,7 @@ mlcode(
 using NearestNeighborModels
 # WARNING: running KNNRegressor on more than a few predictors
 # does not make much sense (curse of dimensionality) and is very slow.
+
 mach = machine(KNNRegressor(K = 4),
 	          select(regression_data, :x),
 	          regression_data.y)
@@ -486,9 +513,17 @@ fit!(mach, verbosity = 0)
 """
 ,
 """
+from sklearn.neighbors import KNeighborsRegressor
+# WARNING: running KNNRegressor on more than a few predictors
+# does not make much sense (curse of dimensionality) and is very slow.
+
+knn = KNeighborsRegressor(n_neighbors=4)
+knn.fit(regression_data.drop(['y'], axis=1).values, regression_data['y'])
+y_predicted = knn.predict(regression_data.drop(['y'], axis=1).values)
+y_predicted
 """
 ;
-showoutput = false
+#showoutput = false
 )
 
 # ╔═╡ 12942f8c-efb1-11eb-284c-393f6a694818
@@ -556,6 +591,12 @@ fit!(mach, verbosity = 0)
 """
 ,
 """
+from sklearn.neighbors import KNeighborsClassifier
+# WARNING: running KNNRegressor on more than a few predictors
+# does not make much sense (curse of dimensionality) and is very slow.
+knn = KNeighborsClassifier(n_neighbors=4)
+knn.fit(classification_data.drop(['y'], axis=1).values, classification_data['y'])
+y_predicted = knn.predict(classification_data.drop(['y'], axis=1).values)
 """
 ;
 showoutput = false
@@ -584,6 +625,7 @@ mnist_x, mnist_y = let df = OpenML.load(554) |> DataFrame
     df[:, 1:end-1] ./ 255,
     df.class
 end
+
 m5 = fit!(machine(KNNClassifier(K = 1),
                   mnist_x[1:60000, :],
                   mnist_y[1:60000]))
@@ -592,6 +634,19 @@ mnist_errorrate = mean(test_predictions .!= mnist_y[60001:70000])
 """
 ,
 """
+import openml
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+
+mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
+X_train, X_test, y_train, y_test = train_test_split(mnist.loc[:, mnist.columns != "class"].values, mnist["class"].values, test_size=1/7, random_state=42)
+
+knn = KNeighborsClassifier(n_neighbors=4)
+knn.fit(X_train, y_train)
+test_predictions = knn.predict(X_test)
+
+mnist_errorrate = np.mean(test_predictions != y_test)
+mnist_errorrate
 """
 ;
 eval = false
@@ -627,6 +682,16 @@ f̂(x) = 0.1 + x
 """
 ,
 """
+def f(x):
+    return 0.3 * np.sin(10*x) + 0.7*x
+
+def conditional_generator(x, n=50, sigma=0.1):
+    return f(x) + sigma * np.random.randn(n)
+
+def expected_error(f_hat, x, sigma=0.1):
+    return np.mean((conditional_generator(x, 10**6, sigma) - f_hat(x))**2)
+
+f_hat = lambda x: 0.1 + x #test function f̂
 """
 ;
 showoutput = false
@@ -642,6 +707,7 @@ expected_error(f̂, 0.1) # estimated total expected error at 0.1
 """
 ,
 """
+expected_error(f_hat, 0.1) # estimated total expected error at 0.1
 """
 )
 
@@ -652,6 +718,7 @@ mlcode(
 """
 ,
 """
+(f(0.1) - f_hat(0.1))**2 # reducible error
 """
 )
 
@@ -662,6 +729,7 @@ expected_error(f, 0.1) # estimated irreducible error
 """
 ,
 """
+expected_error(f, 0.1) # estimated irreducible error
 """
 )
 

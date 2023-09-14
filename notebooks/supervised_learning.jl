@@ -46,13 +46,15 @@ The MNIST Handwritten Digit dataset consists of 70'000 standardized photos of ha
 
 # ╔═╡ f63c04e8-eefe-11eb-1a14-8305504a6f1c
 mlcode(
-"
+"""
 using OpenML, DataFrames
-mnist = OpenML.load(554) |> DataFrame"
+mnist = OpenML.load(554, maxbytes = 10^5) |> DataFrame
+"""
 ,
 """
 import pandas as pd
 import openml
+
 mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
 mnist
 """
@@ -89,21 +91,28 @@ mnist.shape
 )
 
 # ╔═╡ f63c04fc-eefe-11eb-043c-7fec2fc41913
-md"""
-Note that we loaded only a small fraction of images, which is why the result of $(mlstring(md"`size(mnist)` is equal to `(56, 785)`, i.e. 56 images of 28x28=784 pixels plus one column for the class labels.", ""))
+mlstring(md"Note that we loaded only a small fraction of images, which is why the result of size(mnist) is equal to `(56, 785)`, i.e. 56 images of 28x28=784 pixels plus one column for the class labels.
+"
+,
+"
+"
+)
 
-We can plot different input images with the following code.
-"""
+# ╔═╡ 601a953d-68f7-4fd0-a793-fef3c72a6821
+md"We can plot different input images with the following code."
+
 
 # ╔═╡ f63c0506-eefe-11eb-1857-e3eaf731c152
 mlcode(
 """
 using Plots
+
 plot(Gray.(reshape(Array(mnist[19, 1:end-1]) ./ 255, 28, 28)'))
 """
 ,
 """
 import matplotlib.pyplot as plt
+
 plt.imshow(mnist.iloc[18, :-1].values.reshape(28, 28).astype(float)/255,
            cmap='gray')
 plt.show()
@@ -120,7 +129,14 @@ The symbol `'` transposes the matrix (alternatively we could use `PermutedDimsAr
 Not surprisingly, the class label for the image plotted above is \"6\", as we can confirm below.
 "
 ,
-""
+md"
+Explanation: `data.iloc[18, :-1]` gets all pixels of the 19th image.
+Then we reshape the vector of 784 entries to a matrix of size 28x28 with `reshape`.
+Next we transform to values between 0 and 1 by dividing by 255.
+`cmap='gray'`interpret these numbers as grayscale values.
+
+Not surprisingly, the class label for the image plotted above is \"6\", as we can confirm below.
+"
 )
 
 # ╔═╡ f63c0506-eefe-11eb-399f-455ee06548da
@@ -155,8 +171,6 @@ using CSV
 spam = CSV.read(download("https://go.epfl.ch/bio322-spam.csv"), DataFrame)
 """,
 """
-import pandas as pd
-import numpy as np
 spam = pd.read_csv("https://go.epfl.ch/bio322-spam.csv")
 spam
 """
@@ -168,7 +182,7 @@ mlcode(
 spam[spam.label .== "ham", :] # only show non-spam email
 """,
 """
-spam[spam['label'] == 'ham']
+spam[spam['label'] == 'ham'] # only show non-spam email
 """
 )
 
@@ -197,6 +211,8 @@ weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
 """
 ,
 """
+weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
+weather
 """
 )
 
@@ -206,20 +222,28 @@ md"The data that we loaded contains already a column with name `LUZ_wind_peak`. 
 # ╔═╡ f63c052e-eefe-11eb-0884-7bd433ce0c5e
 mlcode(
 """
-y = weather.LUZ_wind_peak[6:end] # from hour 6 until the end we take all wind values
+y = weather.LUZ_wind_peak[6:end] 
+# from hour 6 until the end we take all wind values
 """
 ,
 """
+y = weather["LUZ_wind_peak"][5:].values 
+# from hour 6 until the end we take all wind values
+y
 """
 )
 
 # ╔═╡ f63c0538-eefe-11eb-2a4b-d19efe6b6689
 mlcode(
 """
-X = weather.LUZ_pressure[1:end-5] # pressure from the first hour until the fifth last hour
+X = weather.LUZ_pressure[1:end-5] 
+# pressure from the first hour until the fifth last hour
 """
 ,
 """
+X = weather["LUZ_pressure"][:-5].values 
+# pressure from the first hour until the fifth last hour
+X
 """
 )
 
@@ -231,6 +255,13 @@ histogram2d(X, y, markersize = 3, xlabel = "LUZ_pressure [hPa]",
 """
 ,
 """
+from matplotlib.colors import LogNorm
+plt.hist2d(X, y, bins=(50, 50), cmap=plt.cm.jet, norm=LogNorm())
+cb = plt.colorbar()
+cb.set_label('counts')
+plt.xlabel("LUZ_pressure [hPa]")
+plt.ylabel("LUZ_wind_peak [km/h]")
+plt.show()
 """
 )
 
@@ -250,6 +281,7 @@ using StatsPlots
 """
 ,
 """
+import seaborn as sns
 """
 )
 
@@ -261,6 +293,10 @@ mlcode(
 """
 ,
 """
+g = sns.PairGrid(weather[['BAS_pressure', 'LUG_pressure', 'LUZ_pressure', 'LUZ_wind_peak']])
+g.map_lower(sns.regplot, line_kws={'color': 'black'})
+g.map_diag(sns.histplot, color = 'darkorange' )
+g.map_upper(sns.kdeplot, fill=True,cmap="Reds")
 """
 )
 
@@ -516,6 +552,13 @@ fitted_params(mach) # show the result
 """
 ,
 """
+from sklearn.linear_model import LinearRegression
+import numpy as np
+
+model = LinearRegression()  # Create a linear regression model
+X_train = np.array(training_data['x']).reshape(-1, 1)
+y_train = np.array(training_data['y']).reshape(-1, 1)
+model.fit(X_train,y_train) # Fit the model to the data, with the Input features and the Output variables
 """
 )
 
@@ -530,6 +573,7 @@ fitted_params(mach).intercept
 """
 ,
 """
+model.intercept_
 """
 )
 
@@ -540,6 +584,7 @@ fitted_params(mach).coefs[1].second # or fitted_params(mach).coefs[1][2]
 """
 ,
 """
+model.coef_
 """
 )
 
@@ -557,6 +602,7 @@ predict(mach) # predictions on the training input x = [0, 2, 2]
 """
 ,
 """
+model.predict(X_train)
 """
 )
 
@@ -567,6 +613,7 @@ predict(mach, DataFrame(x = [0.5, 1.5])) # the second argument is the test input
 """
 ,
 """
+model.predict(np.array([0.5, 1.5]).reshape(-1, 1))
 """
 )
 
@@ -581,6 +628,15 @@ my_mse(mach, training_data) # this is the training data
 """
 ,
 """
+def my_mse(model, data):
+    x = np.array(data['x']).reshape(-1, 1)
+    y_true = np.array(data['y']).reshape(-1, 1)
+    y_pred = model.predict(x)
+    mse = np.mean((y_pred - y_true) ** 2)
+    return mse
+
+mse = my_mse(model, training_data)
+mse
 """
 )
 
@@ -595,6 +651,10 @@ rmse(predict(mach), training_data.y)^2
 """
 ,
 """
+from sklearn.metrics import mean_squared_error
+
+mse = mean_squared_error(y_train, model.predict(X_train))
+mse
 """
 )
 
@@ -613,6 +673,16 @@ end
 """
 ,
 """
+def fitted_linear_func(mach):
+    theta_hat = mach.coef_
+    theta_hat_0 = mach.intercept_
+    theta_hat_1 = theta_hat[0]
+    
+    def linear_func(x):
+        return theta_hat_0 + theta_hat_1 * x
+    
+    return linear_func
+fitted_func = fitted_linear_func(model)
 """
 )
 
@@ -626,6 +696,24 @@ plot!(fitted_linear_func(mach), color = :green, label = "fit")
 """
 ,
 """
+import numpy as np
+
+plt.scatter(training_data['x'], training_data['y'], label="training data") 
+
+x_range = np.linspace(-1, 3, 100)
+mean_data_generator = lambda x: 2 * x - 1
+plt.plot(x_range, mean_data_generator(x_range), color = "orange", label="mean data generator")
+
+fitted_func = fitted_linear_func(model)
+plt.plot(x_range, fitted_func(x_range), color="green", label="fit")
+
+# Set plot properties
+plt.xlabel('x')
+plt.ylabel('y')
+plt.legend(loc="upper left")
+
+# Show the plot
+plt.show()
 """
 )
 
@@ -643,6 +731,12 @@ end
 """
 ,
 """
+def data_generator(x, sigma):
+    y = 2 * x - 1 + sigma * np.random.randn(len(x))
+    df = pd.DataFrame({'x': x, 'y': y})
+    return df
+
+data_generator(np.full((10**4,), 1.5), 0.5)
 """
 )
 
@@ -656,6 +750,7 @@ my_mse(mach, data_generator(fill(1.5, 10^4), .5)) # test loss at 1.5 for σ = 0.
 """
 ,
 """
+my_mse(model, data_generator(np.full((10**4,), 1.5), .5)) # test loss at 1.5 for σ = 0.5
 """
 )
 
@@ -666,6 +761,7 @@ my_mse(mach, data_generator(randn(10^4), .5)) # test loss of the joint generator
 """
 ,
 """
+my_mse(model, data_generator(np.random.randn(10**4), .5)) # test loss of the joint generator
 """
 )
 
@@ -701,6 +797,11 @@ training_set1 = DataFrame(LUZ_pressure = weather.LUZ_pressure[1:end-5],
 """
 ,
 """
+training_set1 = pd.DataFrame({
+				'LUZ_pressure': weather['LUZ_pressure'][:-5].values,
+				'wind_peak_in5h': weather['LUZ_wind_peak'][5:].values
+				})
+training_set1
 """
 )
 
@@ -711,10 +812,14 @@ m1 = machine(LinearRegressor(),
 			 select(training_set1, :LUZ_pressure),
 	         training_set1.wind_peak_in5h)
 fit!(m1, verbosity = 0)
-fitted_params(m1)
+fitted_params(m1) # Fit the model to the data, with the Input features and the Output variables
 """
 ,
 """
+m1 = LinearRegression()  # Create a linear regression model
+X_train = training_set1['LUZ_pressure'].values.reshape(-1, 1)
+y_train = training_set1['wind_peak_in5h'].values.reshape(-1, 1)
+m1.fit(X_train,y_train) # Fit the model to the data, with the Input features and the Output variables
 """
 ;
 showoutput = false
@@ -737,6 +842,7 @@ predict(m1, (LUZ_pressure = [930., 960., 990.],))
 """
 ,
 """
+m1.predict(np.array([930., 960., 990.]).reshape(-1, 1))
 """
 )
 
@@ -755,6 +861,18 @@ plot!(X, predict(m1), linewidth = 3)
 """
 ,
 """
+# Create the 2D histogram plot
+plt.hist2d(X, y, bins=(50, 50), cmap=plt.cm.jet, norm=LogNorm())
+
+# Set plot labels and properties
+plt.xlabel('LUZ_pressure [hPa]')
+plt.ylabel('LUZ_wind_peak [km/h]')
+plt.colorbar(label='Counts')
+
+plt.plot(X, m1.predict(X_train), linewidth=3, color='red')
+
+# Show the plot
+plt.show()
 """
 )
 
@@ -770,6 +888,7 @@ rmse(predict(m1), training_set1.wind_peak_in5h)
 """
 ,
 """
+mean_squared_error(m1.predict(X_train), training_set1["wind_peak_in5h"]) ** 0.5
 """
 )
 
@@ -784,18 +903,34 @@ rmse(predict(m1, select(test_set1, :LUZ_pressure)), test_set1.wind_peak_in5h)
 """
 ,
 """
+weather_test = pd.read_csv("https://go.epfl.ch/bio322-weather2019-2020.csv")
+test_set1 = pd.DataFrame({
+				'LUZ_pressure': weather_test['LUZ_pressure'][:-5].values,
+				'wind_peak_in5h': weather_test['LUZ_wind_peak'][5:].values
+})
+mean_squared_error(m1.predict(test_set1["LUZ_pressure"].values.reshape(-1, 1)), test_set1["wind_peak_in5h"]) ** 0.5
 """
 )
 
 # ╔═╡ da6462d8-3343-41d8-82dd-48770176d4ba
 md"## Wind speed prediction with multiple predictors
+"
 
-Our weather data set contains multiple measurements.
+# ╔═╡ 6eca3452-d47d-4d70-82d1-bedbe91e9820
+mlstring(
+md"Our weather data set contains multiple measurements.
 With `names(weather)` we see all the columns of the the weather data frame.
 Try it in a new cell!
 
 With `DataFrame(schema(weather))` we get additionally information about the type of data. `MLJ` distinguished between the [scientific type](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types) and the number type of a column. This distinction is useful, because e.g. categorical variables (class 1, class 2, class 3, ...) can be represented as an integer but also count variables (e.g. number of items) can be represented as an integer, but suitability of a given machine learning method depends more on the scientific type than on the number type.
+",
+md"Our weather data set contains multiple measurements.
+With `weather.columns` we see all the names of the columns of the the weather data frame.
+Try it in a new cell!
+
+With `weather.dtypes, weather.head(), weather.info()` we get additionally information about the type of data.
 "
+)
 
 # ╔═╡ 25e1f89f-a5b2-4d5c-a6e8-a990b3bebddb
 mlcode(
@@ -804,13 +939,21 @@ DataFrame(schema(weather))
 """
 ,
 """
+weather.dtypes
 """
 )
 
 # ╔═╡ 8307e205-3bcd-4e68-914e-621fd8d29e43
+mlstring(
 md"When loading data one should check if the scientific type is correctly detected by the data loader. For the weather data the wind direction is automatically detected as a count variable, because the angle of the wind is measured in integer degrees. But it makes more sense to interpret the angle as a continuous variable. Therefore we use the `MLJ` function `coerce!` to transform all `Count` columns to `Continuous`.
 
-After the transformation to the correct scientific type, we fill define a machine and fit it on all measurements, except the response variable and the time variable."
+After the transformation to the correct scientific type, we will define a machine and fit it on all measurements, except the response variable and the time variable.
+"
+,
+md"
+We define a machine and fit it on all measurements, except the response variable and the time variable.
+"
+)
 
 # ╔═╡ 753ec309-1363-485d-a2bd-b9fa100d9058
 mlcode(
@@ -823,6 +966,8 @@ fit!(m2, verbosity = 0)
 """
 ,
 """
+m2 = LinearRegression()  # Create a linear regression model
+m2.fit(weather.iloc[:-5].drop(['LUZ_wind_peak', 'time'], axis=1),weather['LUZ_wind_peak'][5:].values.reshape(-1, 1))
 """
 ;
 showoutput = false
@@ -839,6 +984,11 @@ sort!(DataFrame(predictor = names(select(weather, Not([:LUZ_wind_peak, :time])))
 """
 ,
 """
+new_df = pd.DataFrame({
+	'predictor': weather.columns.difference(['LUZ_wind_peak', 'time']).tolist(),
+	'value': m2.coef_[0]
+	})
+new_df.sort_values(by='value')
 """
 )
 
@@ -850,6 +1000,7 @@ rmse(predict(m2, select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
 """
 ,
 """
+np.sqrt(mean_squared_error(m2.predict(weather.iloc[:-5, :].drop(['LUZ_wind_peak', 'time'], axis=1)), weather['LUZ_wind_peak'][5:]))
 """
 )
 
@@ -861,6 +1012,7 @@ rmse(predict(m2, select(weather_test[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
 """
 ,
 """
+np.sqrt(mean_squared_error(m2.predict(weather_test.iloc[:-5, :].drop(['LUZ_wind_peak', 'time'], axis=1)), weather_test['LUZ_wind_peak'][5:]))
 """
 )
 
@@ -1018,6 +1170,7 @@ MLCourse.FOOTER
 # ╟─f63c04f2-eefe-11eb-3ceb-ff1e36a2a302
 # ╟─f63c04fc-eefe-11eb-35b6-5345dda134e7
 # ╟─f63c04fc-eefe-11eb-043c-7fec2fc41913
+# ╟─601a953d-68f7-4fd0-a793-fef3c72a6821
 # ╟─f63c0506-eefe-11eb-1857-e3eaf731c152
 # ╟─c82fb649-e60d-43fc-b158-444b27b6e9cf
 # ╟─f63c0506-eefe-11eb-399f-455ee06548da
@@ -1066,7 +1219,7 @@ MLCourse.FOOTER
 # ╟─8fe94709-3673-44cc-8702-83bd7e2cad51
 # ╟─27f44b28-f6d6-4e1f-8dbe-6fe7789b9a18
 # ╟─43b28121-5d07-4400-8710-287de7b978a4
-# ╟─f63c05d8-eefe-11eb-2a11-fd8f954bf059
+# ╠═f63c05d8-eefe-11eb-2a11-fd8f954bf059
 # ╟─f63c05d8-eefe-11eb-0a2e-970192b02d61
 # ╟─f63c05e4-eefe-11eb-012a-9bae1d87f2b5
 # ╟─f63c0592-eefe-11eb-2a76-15de55eff3ad
@@ -1088,10 +1241,11 @@ MLCourse.FOOTER
 # ╟─7923a0a8-3033-4dde-91e8-22bf540c9866
 # ╟─57f352dc-55ee-4e14-b68d-698938a97d92
 # ╟─b0de002f-3f39-4378-8d68-5c4606e488b7
-# ╟─da6462d8-3343-41d8-82dd-48770176d4ba
+# ╠═da6462d8-3343-41d8-82dd-48770176d4ba
+# ╟─6eca3452-d47d-4d70-82d1-bedbe91e9820
 # ╟─25e1f89f-a5b2-4d5c-a6e8-a990b3bebddb
 # ╟─8307e205-3bcd-4e68-914e-621fd8d29e43
-# ╟─753ec309-1363-485d-a2bd-b9fa100d9058
+# ╠═753ec309-1363-485d-a2bd-b9fa100d9058
 # ╟─fac51c63-f227-49ac-89f9-205bf03e7c08
 # ╟─618ef3c7-0fda-4970-88e8-1dac195545de
 # ╟─2d25fbb6-dc9b-40ad-bdce-4c952cdad077
