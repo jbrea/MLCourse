@@ -282,6 +282,12 @@ MLCourse.FOOTER
 # ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
 MLCourse.save_cache(@__FILE__)
 
+# ╔═╡ fac88373-4f6d-4661-9a1c-be173a725d4b
+rand(100)
+
+# ╔═╡ 87aa211a-c383-4da2-b18a-f06567a4d3bf
+mlcode("rand(100)", nothing)
+
 # ╔═╡ Cell order:
 # ╟─f3508747-da29-47c9-a98e-22ea15caaf2f
 # ╟─7343bb19-ed3f-4db1-be83-ca165099dcc3
@@ -306,3 +312,5 @@ MLCourse.save_cache(@__FILE__)
 # ╟─065a1e67-6b63-43df-9d6d-303af08d8434
 # ╟─2b67233e-76ba-40be-81e2-787fbe5d3641
 # ╟─9d250061-e570-4537-b1aa-f6a9019f343d
+# ╠═fac88373-4f6d-4661-9a1c-be173a725d4b
+# ╟─87aa211a-c383-4da2-b18a-f06567a4d3bf
