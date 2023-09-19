@@ -222,6 +222,8 @@ rand(100) .> 0.7
 """
 ,
 """
+import random
+np.random.rand(100) <= 0.7
 """
 )
 

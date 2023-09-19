@@ -20,7 +20,7 @@ using Pkg
 stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, Statistics, NearestNeighborModels
 import MLCourse: fitted_linear_func
 import PlutoPlotly as PP
@@ -642,7 +642,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import train_test_split
 
 mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
-X_train, X_test, y_train, y_test = train_test_split(mnist.loc[:, mnist.columns != "class"].values, mnist["class"].values, test_size=1/7, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(mnist.loc[:, mnist.columns != "class"].values /255, mnist["class"].values, test_size=1/7, random_state=42)
 
 knn = KNeighborsClassifier(n_neighbors=4)
 knn.fit(X_train, y_train)

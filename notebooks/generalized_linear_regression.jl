@@ -20,7 +20,7 @@ using Pkg
 stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal, Poisson
 import MLCourse: fitted_linear_func
@@ -230,7 +230,8 @@ pdf.(p̂, "A")
 """
 ,
 """
-("Probability of A : ", p[:,0])
+# Probability of A:
+p[:,0]
 """
 ,
 )
@@ -380,7 +381,7 @@ dropmissing!(spamdata) # remove entries without any text (missing values).
 """
 ,
 """
-spamdata = pd.read_csv("https://go.epfl.ch/bio322-spam.csv", nrows=5000)
+spamdata = pd.read_csv("https://go.epfl.ch/bio322-spam.csv", nrows = 6000)
 spamdata.dropna(inplace=True) # Drop rows with missing values
 spamdata
 """
@@ -411,6 +412,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 vectorizer = CountVectorizer()
 word_counts = vectorizer.fit_transform(spamdata["text"].values[:2000]).toarray()
+ 
 """
 )
 
@@ -472,8 +474,9 @@ predict(m3)
 """
 ,
 """
-m3 = LogisticRegression(penalty=None)
+m3 = LogisticRegression(penalty=None, max_iter = 1000)
 m3.fit(normalized_word_counts, spam_or_ham)
+ 
 """
 )
 
@@ -647,7 +650,7 @@ DataFrame(schema(bikesharing))
 ,
 """
 bikesharing.dropna(inplace=True) # remove rows with missing data
-bikesharing.dtypes
+bikesharing.dtypes.to_frame().reset_index()
 """
 ,
 cache = false
@@ -706,9 +709,7 @@ mlcode(
 predict_mean(m4)
 """
 ,
-"""
 nothing
-"""
 )
 
 # ╔═╡ caa11dd3-577d-4692-b889-3a38d0bf61e0
@@ -717,9 +718,7 @@ mlcode(
 predict_mode(m4)
 """
 ,
-"""
 nothing
-"""
 )
 
 # ╔═╡ 9ec91fbc-b756-4074-a623-1d47925c8239
@@ -733,9 +732,7 @@ mlcode(
 prediction_type(LinearRegressor())
 """
 ,
-"""
 nothing
-"""
 )
 
 # ╔═╡ b8bb7c85-0be8-4a87-96da-4e1b37aea96d
@@ -744,9 +741,7 @@ mlcode(
 prediction_type(LogisticClassifier())
 """
 ,
-"""
 nothing
-"""
 )
 
 # ╔═╡ d3d7fa67-ca7d-46e1-b705-e30ec9b09f6a
@@ -755,9 +750,7 @@ mlcode(
 prediction_type(LinearCountRegressor())
 """
 ,
-"""
 nothing
-"""
 )
 
 # ╔═╡ 8b0451bf-59b0-4e71-be84-549e23b5bfe7
