@@ -1,6 +1,7 @@
 [deps]
 scikit-learn = ""
 openml = ""
+tqdm = ""
 pandas = ""
 matplotlib = ""
 plotly = ""

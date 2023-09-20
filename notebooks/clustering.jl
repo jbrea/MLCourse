@@ -93,7 +93,9 @@ using StatsPlots
 """
 ,
 """
+import matplotlib.pyplot as plt
 import seaborn as sns
+
 g = sns.PairGrid(iris.drop(["class"], axis =1))
 g.map_lower(sns.regplot, line_kws={'color': 'black'})
 g.map_diag(sns.histplot, color = 'darkorange' )
@@ -232,11 +234,15 @@ predict(hc, select(iris, Not(:class)))
 ,
 """
 from sklearn.cluster import AgglomerativeClustering
-hc = make_pipeline(StandardScaler(), AgglomerativeClustering(distance_threshold=0, n_clusters = None, metric = "euclidean", linkage = "complete")).fit(iris.drop(["class"], axis =1))
-hc
-hc
+hc = make_pipeline(StandardScaler(),
+                   AgglomerativeClustering(distance_threshold=0,
+                                           n_clusters = None,
+                                           metric = "euclidean",
+                                           linkage = "complete"))
+hc.fit(iris.drop(["class"], axis = 1))
 """
 ,
+py_showoutput = false,
 cache_jl_vars = [:hc]
 )
 
@@ -323,16 +329,21 @@ md"""Seed of random number generator $(@bind seed Slider(collect(1:50), show_val
 
 Cluster assignment with $(@bind method Select(["DBSCAN", "k-means", "hierarchical clustering"]))"""
 
+# ╔═╡ 52f99e00-7493-4d56-8557-511e897223bb
+md"Here is an example of how DBSCAN can be used."
+
 # ╔═╡ 3c6c668f-d5a0-48f8-8f87-e448e71f4554
 mlcode("""
-nothing""",
+X = DataFrame(X1 = [1., 2, 2, 8, 8, 25], X2 = [2., 2, 3, 7, 8, 80])
+predict(machine(DBSCAN()), X)
+""",
 """
-# here is the python code to run DBSCAN
 from sklearn.cluster import DBSCAN
 import numpy as np
 X = np.array([[1, 2], [2, 2], [2, 3],
                [8, 7], [8, 8], [25, 80]])
 clustering = DBSCAN(eps=3, min_samples=2).fit(X)
+clustering.labels_
 """
 )
 
@@ -555,7 +566,7 @@ md"to fit an unsupervised machine called `PCA` (with at most 2 output dimensions
 # ╟─d1c88a44-be52-4b0e-bc23-cca00d10ffb6
 # ╟─0e7f34b9-e24f-447b-840b-e2750d2e778b
 # ╟─70b3f1bb-7c47-4bb0-aa17-cda6fdbe0469
-# ╠═260a1fb7-58b8-4d83-b8d7-a0bd8e6836ac
+# ╟─260a1fb7-58b8-4d83-b8d7-a0bd8e6836ac
 # ╟─b5165fda-1bdd-4837-9eed-42ce9db40529
 # ╟─fdf190cc-0426-4327-a710-80fe2ead632c
 # ╟─ab161204-bbcd-4608-ae67-fcde39b2539b
@@ -569,7 +580,8 @@ md"to fit an unsupervised machine called `PCA` (with at most 2 output dimensions
 # ╟─6d845685-ac31-4df7-9d18-f1fab6c08e3d
 # ╟─9ca4cac1-f378-42cd-ba60-d174a47e23a8
 # ╟─8ea10eb7-8b37-4026-a7ec-e44bba7532ea
-# ╠═3c6c668f-d5a0-48f8-8f87-e448e71f4554
+# ╟─52f99e00-7493-4d56-8557-511e897223bb
+# ╟─3c6c668f-d5a0-48f8-8f87-e448e71f4554
 # ╟─9d54fbb8-44f8-46c8-90ef-de85746c410b
 # ╟─85d574c2-b823-4dcf-b711-efc755e724b7
 # ╟─1ed55c9f-1301-4553-84ee-26ada25f9b76

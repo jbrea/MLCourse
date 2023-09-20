@@ -176,12 +176,12 @@ from sklearn.linear_model import LogisticRegression
 
 mach3 = LogisticRegression(penalty=None)
 mach3.fit(
-    classification_data['x'].values.reshape(-1, 1), 
+    classification_data['x'].values.reshape(-1, 1),
     classification_data['y']
     )
 ("coeff : ", mach3.coef_ , "intercept", mach3.intercept_)
 """
-	
+,
 )
 
 # ╔═╡ a9c7ca33-ce22-49b3-a976-8c180916fa5e
@@ -220,7 +220,7 @@ mlstring(md"
 If we want to extract the probability of a given response, we can use the `pdf` function."
 ,
 "
-The probability of a given response is store in one column of p. For the probability of response A : 
+The probability of a given response is store in one column of p. For the probability of response A :
 ")
 
 # ╔═╡ 5224d406-4e02-424d-9502-a22e0614cb96
@@ -279,6 +279,7 @@ def ll(theta):
 
 ll([-1.28858, 0.338548]) # the parameters we obtained above
 """
+,
 )
 
 # ╔═╡ b8b81c1b-0faf-4ce9-b690-2f6cc9542b0f
@@ -299,6 +300,7 @@ from sklearn.metrics import log_loss
 classification_data["y"].values
 -log_loss(classification_data["y"].values, mach3.predict_proba(classification_data['x'].values.reshape(-1, 1)), normalize=False)
 """
+,
 )
 
 # ╔═╡ f7117513-283f-4e32-a2a1-3594c794c94d
@@ -412,8 +414,9 @@ from sklearn.feature_extraction.text import CountVectorizer
 
 vectorizer = CountVectorizer()
 word_counts = vectorizer.fit_transform(spamdata["text"].values[:2000]).toarray()
- 
 """
+,
+py_showoutput = false
 )
 
 # ╔═╡ a37baeec-4252-40bd-8022-88cbedc504ed
@@ -476,8 +479,9 @@ predict(m3)
 """
 m3 = LogisticRegression(penalty=None, max_iter = 1000)
 m3.fit(normalized_word_counts, spam_or_ham)
- 
 """
+,
+py_showoutput = false
 )
 
 # ╔═╡ 21b66582-3fda-401c-9421-73ae2f455a75
@@ -501,6 +505,7 @@ confusion_matrix(predict_mode(m3), spam_or_ham)
 from sklearn.metrics import confusion_matrix
 confusion_matrix(m3.predict(normalized_word_counts), spam_or_ham)
 """
+,
 )
 
 # ╔═╡ 4e4f4adf-364f-49b9-9391-5050a4c1286a
@@ -523,6 +528,7 @@ test_input = vectorizer.fit_transform(spamdata["text"].values[2000:]).toarray()
 test_labels = list(spamdata["label"][2000:])
 confusion_matrix(m3.predict(test_input), test_labels)
 """
+,
 )
 
 # ╔═╡ ef9489c3-2bff-431b-92c4-f1b9778040cf
@@ -570,6 +576,7 @@ training_auc = auc(fprs1, tprs1)
 test_auc = auc(fprs2, tprs2)
 (training_auc, test_auc)
 """
+,
 )
 
 # ╔═╡ a30578dd-aecb-46eb-b947-f009282cf2fc
@@ -600,6 +607,7 @@ def losses(machine, input, response):
 
 losses(m3, normalized_word_counts, spam_or_ham)
 """
+,
 )
 
 
@@ -612,6 +620,7 @@ losses(m3, test_input, test_labels)
 """
 losses(m3, test_input, test_labels)
 """
+,
 )
 
 # ╔═╡ b6689b27-e8a2-44e4-8791-ce237767ee63
@@ -650,16 +659,16 @@ DataFrame(schema(bikesharing))
 ,
 """
 bikesharing.dropna(inplace=True) # remove rows with missing data
-bikesharing.dtypes.to_frame().reset_index()
 """
 ,
 cache = false
 )
 
 # ╔═╡ b9ba1df0-5086-4c0f-a2c9-200c2be27294
-md"Above we see that the `:count` column is detected as `Continuous`, whereas it should be `Count`. We will therefore coerce it to the correct scientific type in the first line of the cell below.
+mlstring(md"Above we see that the `:count` column is detected as `Continuous`, whereas it should be `Count`. We will therefore coerce it to the correct scientific type in the first line of the cell below.
 
-For count variables we can use Poisson regression. Following the standard recipe, we parametrize ``f(x) = \theta_0 + \theta_1 x_1 + \cdots +\theta_d x_d``, plug this into the formula of the Poisson distribution and fit the parameters ``\theta_0, \ldots, \theta_d`` by maximizing the log-likelihood. In `MLJ` this is done by the `CountRegressor()`."
+For count variables we can use Poisson regression. Following the standard recipe, we parametrize ``f(x) = \theta_0 + \theta_1 x_1 + \cdots +\theta_d x_d``, plug this into the formula of the Poisson distribution and fit the parameters ``\theta_0, \ldots, \theta_d`` by maximizing the log-likelihood. In `MLJ` this is done by the `CountRegressor()`.",
+md"")
 
 # ╔═╡ 81c55206-bf59-4c4e-ac5e-77a46e31bec7
 mlcode(
@@ -682,6 +691,7 @@ m4.fit(bikesharing[['temp', 'humidity']], bikesharing['count']) # Fitting the mo
 
 m4.coef_ # Retrieving the fitted parameters
 """
+,
 )
 
 # ╔═╡ 6ea40424-22a0-42b9-bfab-8d4903ab8d64
@@ -698,6 +708,7 @@ predict(m4)
 """
 m4.predict(bikesharing[['temp', 'humidity']])
 """
+,
 )
 
 # ╔═╡ aa96bbe7-49f4-4244-9c71-8d9b2b3ee065
@@ -788,7 +799,7 @@ In the multiple linear regression of the weather data set above we used all
 md"""
 #### Exercise 5
 - Read the section on [scientific types in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types).
-- Coerce the `count` variable of the bike sharing data to `Continuous` and fit a linear model (`LinearRegressor`) with predictors `:temp` and `:humidity`. 
+- Coerce the `count` variable of the bike sharing data to `Continuous` and fit a linear model (`LinearRegressor`) with predictors `:temp` and `:humidity`.
 Create a scatter plot with the true counts `bikesharing.count` on the x-axis and the predicted mode (`predict_mode`) of the counts for the linear regression model and the Poisson model on the y-axis. If the model perfectly captures the data, the plotted points should lie on the diagonal; you can add `plot!(identity)` to the figure to display the diagonal.
 Comment on the differences you see in the plot between the Poisson model and the linear regression model.
 """
@@ -917,7 +928,7 @@ begin
 end;
 
 # ╔═╡ 4f89ceab-297f-4c2c-9029-8d2d7fad084f
-let 
+let
 	Random.seed!(17)
     xgrid = -3:.25:3; ygrid = -3:.25:3
     wireframe = [[PP.scatter3d(x = fill(x, length(ygrid)),

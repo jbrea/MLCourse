@@ -299,16 +299,21 @@ function _py_png(; plt = "plt")
     Markdown.parse("![](data:img/png; base64, $(open(base64encode, fn)))")
 end
 function py_output(lastline)
-    if match(r"plt\.show()", lastline) != nothing
+    if match(r"plt\.show()", lastline) !== nothing
         _py_png()
-    elseif match(r"^\w* ?= ?\w", lastline) == nothing &&
-           match(r"^ ", lastline) == nothing &&
-           match(r"^\t", lastline) == nothing
+    elseif match(r"^\w* ?= ?\w", lastline) === nothing &&
+           match(r"^ ", lastline) === nothing &&
+           match(r"^\t", lastline) === nothing
         pyeval(lastline, PyMod) |> convert_py_output
     else
         nothing
     end
 end
+
+# function _is_py_output(line)
+#     !isnothing(match(r"^[^ ]*$", line)) && return true
+#     false
+# end
 
 _eval(ex) = Base.eval(JlMod, ex)
 
@@ -355,6 +360,7 @@ function mlcode(jlcode, pycode;
                 collapse = nothing,
                 cache = true,
                 recompute = false,
+                py_showoutput = showoutput,
                 cache_jl_vars = nothing,
                 cache_py_vars = nothing,
                 )
@@ -387,12 +393,12 @@ function mlcode(jlcode, pycode;
         elseif isa(pycode, String)
             lines = split(pycode, '\n')
             lastline = length(lines) == 1 ? lines[end] : lines[end-1]
-            tmp = if match(r"^[a-z0-9_]* = ", lastline) !== nothing
-                pyexec(pycode, PyMod)
-                nothing
-            else
+            tmp = if py_showoutput && length(lastline) > 0 && lastline[1] != ' '
                 pyexec(join(lines[1:end-2], "\n"), PyMod)
                 embed(py_output(lastline))
+            else
+                pyexec(pycode, PyMod)
+                nothing
             end
             if cache
                 PyMod._OUTPUT_CACHE[pycode] = showoutput ? tmp : nothing

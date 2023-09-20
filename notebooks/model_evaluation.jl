@@ -20,7 +20,7 @@ using Pkg
 stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal, Poisson
 import MLCourse: poly, Polynomial
@@ -368,7 +368,8 @@ nested_score=cross_val_score(model, X, y, cv=outer_cv,
                            scoring='neg_mean_squared_error') 
 
 nested_scores = nested_score.mean()
-"""
+""",
+py_showoutput = false
 )
 
 # ╔═╡ 171fbe78-5e1d-4a6b-8d7b-f602db1162fb

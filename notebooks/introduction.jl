@@ -126,6 +126,14 @@ in a terminal.
 """
 ,
 md"""
+* [Python for Beginners](https://www.python.org/about/gettingstarted/)
+* [Youtube channels to learn python](https://mikkegoes.com/youtube-channels-learn-python/)
+* [Python documentation](https://www.python.org/doc/)
+
+If you decide to use Python, we recommend to download [miniconda](https://docs.conda.io/projects/miniconda/en/latest/).
+
+To check if installation went well the terminal command `conda --version` should work without any issues.
+If it doesn't work, sometimes closing and reopening your terminal helps.
 """
 )
 
@@ -135,7 +143,7 @@ md"""
 # 2. Setup Programming Environment
 
 Once you have chosen the programming language, you should decide which editor to use.
-We recommend for all languages the [VS Code Editor](https://code.visualstudio.com/).
+We recommend for all languages the [VS Code Editor](https://code.visualstudio.com/download).
 Alternatives include VIM/NeoVIM, Emacs, Rstudio, PyCharm, Jupyter Notebooks/Lab.
 
 For $(MLCourse.language_selector())
@@ -154,8 +162,8 @@ In the julia REPL press `]` to enter the package manager.
 Create a new environment with
 
 ```julia
-(@v1.9) pkg> activate MLCourseSolutions # creates a new environment
-(MLCourseSolutions) pkg> add DataFrames, Distributions, Plots, CSV, OpenML
+(@v1.9) pkg> activate MLCourse # creates a new environment
+(MLCourse) pkg> add DataFrames, Distributions, Plots, CSV, OpenML
 ```
 Leave package mode with the `backspace` key and load the packages you want with
 ```julia
@@ -166,12 +174,82 @@ Whenever you want to go back to working with this environment, navigate to the f
 ```julia
 (@v1.9) pkg> activate MLCourseSolutions
 ```
+
+If you want to know more about julia's package manager, have a look [here](https://pkgdocs.julialang.org/v1/getting-started/).
 """
 ,
 md"""
+#### MLCourse environment
+Create an MLCourse python environment using:
+
+```python
+conda create -n MLCourse python=3.10.8
+conda activate MLCourse
+pip install numpy
+pip install scikit-learn
+pip install matplotlib
+pip install pandas
+pip install openml
+pip install seaborn
+```
+
+#### VSCode extensions
+Download these extensions in the VSCode extensions tab
+
+- Python from Microsoft
+- Pylance from Microsoft
+- Python Indent from Kevin Rose
+- if you want to work with Jupyter notebooks: all the Jupyter extensions from Microsoft
+- (optional): autoDocstrings from Nils Werner
+
+How to use your newly created environment with VSCode:
+
+In VSCode you can open a terminal by clicking in the bottom left corner.
+A pop-up with Terminal, Problemsn Output, Debug Console, ... should appear.
+
+#### Working with Python files
+
+Create a new python script (.py) file.
+Click in the bottom right corner and a pop-up "Select Interpreter" should
+appear. Please choose your 'MLCourse':conda environment.
+Now you can click on the play button on the top right corner to execute a
+script or Shift+Enter to run singles lines or blocks of code.
+
+If you prefer terminal commands you can always use:
+```
+conda activate MLCourse
+python my_file_name.py
+```
+
+#### Working with Conda
+
+Download a new package:
+
+```bash
+conda activate MLCourse
+pip install new_package_name # via pip (preferred option)
+conda install new_package_name # via Conda
+
+conda list # make a list of all the package you have
+```
 """
 )
 
+
+# ╔═╡ 79d6ef3e-bd23-4d91-afc2-d1d9c12ff619
+md"""
+#### Jupyter Notebooks in VSCode
+Independently of the language you use, you can work with Jupyter notebooks.
+I'm unsure, if I should recommend working with Jupyter notebooks, however.
+Although I used them in the past, I prefer now working with scripts and
+work interactively with an open REPL. For example, in VSCode you can select a block of code and send it to the terminal with Shift+Enter.
+
+If you prefer to work with jupyter notebooks, create a new jupyter notebook (.ipynb) file.
+In top right corner click on "Select Kernel" and choose your MLCourse environment.
+Execute cells by hitting Shift + Enter.
+Other useful commands: https://noteable.io/blog/jupyter-notebook-shortcuts-boost-productivity/
+
+"""
 
 # ╔═╡ 4a03cfae-9876-4cf0-a498-d750853191cb
 md"""# 3. Exercises
@@ -194,6 +272,9 @@ md"""
 """
 ,
 md"""
+* [pandas](https://pandas.pydata.org/)
+* [matplotlib](https://matplotlib.org/)
+* [openml](https://www.openml.org/apis)
 """
 )
 
@@ -226,8 +307,10 @@ rand(100) .≤ 0.7
 """
 import numpy as np
 
-[np.random.rand() <= 0.7 for _ in range(100)]
+np.random.rand(100) <= 0.7
 """
+,
+recompute = true,
 )
 
 # ╔═╡ 4ffa4078-67f7-4e0c-a196-80d94ff49196
@@ -242,7 +325,7 @@ $(MLCourse.language_selector())` `
 
 Comprehension is a useful tool to generate artificial data.
 
-   1. Use comprehension (see $(mlstring(md"[here](https://docs.julialang.org/en/v1/manual/arrays/#man-comprehensions)", ""))) to create a vector with all numbers of the form ``x^y`` with ``x=1, \ldots, 10``, ``y = 2, \ldots, 7`` and ``y > x``.
+1. Use comprehension (see $(mlstring(md"[here](https://docs.julialang.org/en/v1/manual/arrays/#man-comprehensions)", md"[here](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions)"))) to create a vector with all numbers of the form ``x^y`` with ``x=1, \ldots, 10``, ``y = 2, \ldots, 7`` and ``y > x``.
    2. Compute the sum of the square root of these numbers.
 """
 
@@ -299,6 +382,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─c3ec2db2-a9fd-4118-90f8-1f59c54c42aa
 # ╟─67209e5c-0d11-4d61-ba1d-deb66f66efc4
 # ╟─8ea85113-8872-4f9f-87d0-63cf8c8293ba
+# ╟─79d6ef3e-bd23-4d91-afc2-d1d9c12ff619
 # ╟─4a03cfae-9876-4cf0-a498-d750853191cb
 # ╟─4e55d688-15c4-49bd-be7c-5ea49add645d
 # ╟─20f339a8-4f56-45c8-9ea3-d2da256565af
@@ -314,5 +398,3 @@ MLCourse.save_cache(@__FILE__)
 # ╟─065a1e67-6b63-43df-9d6d-303af08d8434
 # ╟─2b67233e-76ba-40be-81e2-787fbe5d3641
 # ╟─9d250061-e570-4537-b1aa-f6a9019f343d
-# ╠═fac88373-4f6d-4661-9a1c-be173a725d4b
-# ╟─87aa211a-c383-4da2-b18a-f06567a4d3bf

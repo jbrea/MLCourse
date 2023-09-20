@@ -20,7 +20,7 @@ using Pkg
 stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, CSV
 import Distributions: Beta, Normal, Gamma
 import Distributions, GLM
@@ -116,7 +116,7 @@ MLJ.transform(mach, datam)
 from sklearn.impute import SimpleImputer
 import numpy as np
 imp_mean = SimpleImputer(strategy='most_frequent')
-imp_mean.fit_transform(datam)
+pd.DataFrame(imp_mean.fit_transform(datam), columns = ['age', 'gender'])
 """
 )
 
@@ -135,7 +135,11 @@ df = DataFrame(a = ones(5), b = randn(5), c = 1:5, d = 2:2:10, e = zeros(5))
 """
 ,
 """
-df = pd.DataFrame({"a": np.ones(5), "b" : np.random.randn(5), "c" : np.linspace(1,5,5), "d": np.linspace(2,10,5), "e" : np.zeros(5)})
+df = pd.DataFrame({"a": np.ones(5),
+                   "b" : np.random.randn(5),
+                   "c" : np.linspace(1,5,5),
+                   "d": np.linspace(2,10,5),
+                   "e" : np.zeros(5)})
 df
 """
 ,
@@ -210,7 +214,7 @@ height_weight = DataFrame(height = [165., 175, 183, 152, 171],
 ,
 """
 height_weight = pd.DataFrame({"height" : [165., 175, 183, 152, 171],
-                            "weight" : [60., 71, 89, 47, 70] })
+                              "weight" : [60., 71, 89, 47, 70] })
 height_weight
 """
 )
@@ -226,8 +230,9 @@ fitted_params(height_weight_mach)
 """
 from sklearn.preprocessing import StandardScaler
 scaler = StandardScaler()
-scaler 
 """
+,
+py_showoutput = false
 )
 
 # ╔═╡ adca81d5-2453-4954-91ba-7cc24d45e8ef
@@ -302,15 +307,15 @@ For categorical predictors the canonical transformation is one-hot encoding.
 # ╔═╡ b43365c6-384e-4fde-95f3-b2ad1ebc421a
 mlcode(
 """
-cdata = DataFrame(gender = ["male", "male", "female", "female", "female"],
-                  treatment = [1, 2, 2, 1, 3])
+cdata = DataFrame(gender = ["male", "male", "female", "female", "female", "male"],
+                  treatment = [1, 2, 2, 1, 3, 2])
 coerce!(cdata, :gender => Multiclass, :treatment => Multiclass)
 """
 ,
 """
 cdata = pd.DataFrame({
-		'gender': pd.Categorical(['male', 'male', 'female', 'female', 'female']),
-		'treatment': pd.Categorical([1, 2, 2, 1, 3])})
+		'gender': pd.Categorical(['male', 'male', 'female', 'female', 'female', 'male']),
+		'treatment': pd.Categorical([1, 2, 2, 1, 3, 2])})
 cdata
 """
 )
@@ -329,8 +334,12 @@ from sklearn.preprocessing import OneHotEncoder
 enc = OneHotEncoder(handle_unknown='ignore')
 cdata_enc = enc.fit_transform(cdata).toarray()
 
-("categories : ", enc.categories_, "data : ", cdata_enc)
+cdata_enc_df = pd.DataFrame(cdata_enc,
+                            columns = np.concatenate((enc.categories_[0],                                                        enc.categories_[1].astype('str'))))
+cdata_enc_df
 """
+,
+recompute = false
 )
 
 # ╔═╡ ffdcfb20-47df-4080-879a-9e41c9e482f4
@@ -383,9 +392,8 @@ mlcode("""
 DataFrame(schema(wage))
 """
 ,
-"""
-wage.dtypes
-""")
+nothing
+)
 
 # ╔═╡ 1bf42b12-5fd1-4b4c-94c6-14a52317b15f
 mlcode(
@@ -468,8 +476,7 @@ function spline_features(data, degree, knots)
 end
 """
 ,
-"""
-"""
+nothing
 ,
 showoutput = false,
 collapse = "Custom code to compute spline features"
@@ -555,11 +562,13 @@ xor_data = xor_generator()
 xor_data
 """
 ,
-cache = false
+cache = true
 )
 
 # ╔═╡ 8cd98650-7f52-40d9-b92d-ce564e57cfa7
 mlcode("""
+using Plots
+
 scatter(xor_data.X1, xor_data.X2, c = int.(xor_data.y) .+ 1,
 		label = nothing, xlabel = "X₁", ylabel = "X₂")
 hline!([0], label = nothing, c = :black)
@@ -727,6 +736,7 @@ loglinreg_pred = np.exp(loglinreg.predict(X))
 gamreg= linear_model.GammaRegressor()
 gamreg.fit(X, y)
 gamreg_pred = gamreg.predict(X)
+gamreg_pred
 """
 )
 
@@ -838,6 +848,8 @@ scatter(cldata.x1, cldata.x2,
 """
 ,
 """
+import matplotlib.pyplot as plt
+
 plt.scatter(cldata["x1"], cldata["x2"], c=cldata["y"].astype(int) + 1, label=None, cmap ='coolwarm')
 plt.xlabel('X₁')
 plt.ylabel('X₂')
