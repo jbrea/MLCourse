@@ -13,7 +13,7 @@ USER MLCourse
 RUN git init
 RUN git remote add origin https://github.com/jbrea/MLCourse
 RUN git fetch
-RUN git checkout -t origin/main
+RUN git checkout -t origin/release
 # copy the contents of the github repository into /home/MLCourse
 # COPY --chown=MLCourse . /home/MLCourse
 ENV html_export=true

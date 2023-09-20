@@ -149,8 +149,36 @@ md"""## PCA Finds the Directions of Largest Variance
 Let us start with dimensionality reduction from 2 to 1 dimension. Below we can try to find the direction of the first principal component (the first principal component loading vector ϕ₁) by moving the slider. By definition, it is one of the two vectors for which the average of squared scores zᵢ₁² is maximal.
 """
 
+# ╔═╡ dd4eeac4-1a71-4b4d-b687-441bc4b13a30
+begin
+	Random.seed!(1)
+	data1 = [.3 -.2
+	         -.2  .7] * randn(2, 100)
+end;
+
 # ╔═╡ 89f0af1e-bb2f-428e-b2c3-a6985fe3bc8e
 @bind ϕ Slider(0:.1:2π)
+
+# ╔═╡ c80fd0c3-4bbc-4ed3-90f2-984b391f76f5
+let loading = [cos(ϕ), sin(ϕ)]
+	scatter(data1[1, :], data1[2, :], aspect_ratio = 1, legend = false,
+		    xrange = (-3, 3), yrange = (-2, 2), c = :green)
+	plot!([0, loading[1]], [0, loading[2]], lw = 3, c = :red)
+	annotate!([(1.1, 0, text("ϕ₁ = (ϕ₁₁, ϕ₂₁) ≈ ($(round(loading[1], sigdigits = 2)), $(round(loading[2], sigdigits = 2)))", 9, :red, :left))])
+	annotate!([(1.1, .5, text("1/n∑ zᵢ₁² ≈ $(round(mean(abs2, data1'*loading), sigdigits = 3))", 9, :blue, :left))])
+	idx = argmax(data1[2, :])
+	annotate!((1.1*data1[:, idx]..., text("1", 9, :green, :right)))
+	plot!([-2sin(-ϕ), 2sin(-ϕ)], [-2cos(ϕ), 2cos(ϕ)], linestyle = :dash, c = :black)
+	for i in axes(data1, 2)
+		x0 = data1[:, i] 
+		x1 = x0 - (x0'*loading)*loading
+		plot!([x0[1], x1[1]], [x0[2], x1[2]], c = :blue)
+		if i == idx
+			annotate!([(1.1*x1..., text("z₁₁ ≈ $(round(x0'*loading, sigdigits = 2))", 9, :blue, :left))])
+		end
+	end
+	plot!()
+end
 
 # ╔═╡ 8c4dab97-52b5-46a2-8025-65c98cdc5b78
 md"""The second principal component points in the direction of maximal variance *under the constraint, that it is orthogonal to the first principal component vector*. In the figure below you see a visualization of the variance along the first, second or third principal component (loading vectors ``\phi_1, \phi_2, \phi_3``). The colored lines are parallel to the loading vector you pick in the dropdown menu. They go from each data point to the "center"-plane that goes through the origin ``(0, 0, 0)`` and stands perpendicular to the picked component (loading vector). **The length of the line that starts at data point ``i`` is given by the score ``z_{ij}`` for principal component ``j``**. The average squared length of these lines is the variance along the chosen principal component."""
@@ -320,14 +348,6 @@ X = pca_data .- mean(pca_data, dims = 1) # subtract the mean of each column
 """
 ,
 """
-import numpy as np
-from numpy.linalg import eigvals
-
-pca_data = np.random.randn(100, 5) @ np.random.randn(5, 5)   # generate some arbitrary data
-X = pca_data - np.mean(pca_data, axis=0) # subtract the mean of each column
-XtX = X.T @ X
-eigen_values = eigvals(XtX)
-("XtX",XtX,"eigen_values", eigen_values)
 """
 )
 
@@ -342,11 +362,6 @@ report(pca).principalvars * (size(pca_data, 1) - 1)
 """
 ,
 """
-from sklearn.decomposition import PCA
-
-pca = PCA()
-pca.fit(pca_data)
-(pca.singular_values_)
 """
 ,
 )
@@ -362,13 +377,6 @@ Z = MLJ.matrix(MLJ.transform(pca, pca_data))
 """
 ,
 """
-import numpy as np
-from sklearn.decomposition import PCA
-
-pca = PCA()
-Z = pca.fit_transform(pca_data)
-ZtZ = np.where(np.abs(Z.T @ Z) < 1e-10, 0, Z.T @ Z)
-ZtZ
 """
 )
 
@@ -378,7 +386,7 @@ md"# 2. Applications of PCA
 "
 
 # ╔═╡ 2b73abbb-8cef-4da0-b4cf-b640fe0ad102
-mlstring(md"The `PCA` function in `MLJ` has three important keyword arguments as explained in the doc string. If the keyword argument `variance_ratio = 1` all principal components are computed.", "The `PCA` function in `sklearn` has important keyword arguments as explained in the doc string. n_components is the number of components to keep. if n_components is not set all components are kept")
+mlstring(md"The `PCA` function in `MLJ` has three important keyword arguments as explained in the doc string. If the keyword argument `variance_ratio = 1` all principal components are computed.", "")
 
 # ╔═╡ 927627e0-9614-4234-823d-eb2e13229784
 mlcode(
@@ -392,16 +400,11 @@ fitted_params(pca) # shows the loadings as columns
 """
 ,
 """
-pca_data = np.random.randn(100, 5) @  np.random.randn(5, 5)  # generate some arbitrary data
-
-pca = PCA()
-pca.fit(pca_data)
-(pca.explained_variance_ratio_, pca.singular_values_)
 """
 )
 
 # ╔═╡ 45ee714c-9b73-492e-9422-69f27be79de2
-mlstring(md"The report of a `PCA` machine returns the number of dimensions `indim` of the data. the number of computed principal components `outdim`, the total variance `tvar` and the `mean` of the data set, together with the variances `principalvars` along the computed principal components. The sum of the variances `principalvars` is given in `tprincipalvar` and the rest in `tresidualvar = tvar - tprincipalvar`. If you change the `variance_ratio` to a lower value above you will see that not all principal components are computed.", "The `PCA` machine returns several informations. components_ : Principal axes in feature space, representing the directions of maximum variance in the data. explained_variance_ : The amount of variance explained by each of the selected components. explained_variance_ratio_ : Percentage of variance explained by each of the selected components. See https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html ")
+mlstring(md"The report of a `PCA` machine returns the number of dimensions `indim` of the data. the number of computed principal components `outdim`, the total variance `tvar` and the `mean` of the data set, together with the variances `principalvars` along the computed principal components. The sum of the variances `principalvars` is given in `tprincipalvar` and the rest in `tresidualvar = tvar - tprincipalvar`. If you change the `variance_ratio` to a lower value above you will see that not all principal components are computed.", "")
 
 # ╔═╡ b52d72e3-64a3-4b7e-901b-3512b97aec23
 mlcode(
@@ -410,7 +413,6 @@ report(pca)
 """
 ,
 """
-(pca.explained_variance_ratio_, pca.singular_values_)
 """
 ,
 )
@@ -472,33 +474,6 @@ end
 """
 ,
 """
-import matplotlib.pyplot as plt
-
-def biplot(PC1, PC2, scalePC1, scalePC2, features, ldngs) :
-  fig, ax = plt.subplots(figsize=(14, 9))
-  
-  for i, feature in enumerate(features):
-    print(i)
-    ax.arrow(0, 0, ldngs[0, i], 
-	             ldngs[1, i], 
-	             head_width=0.03, 
-	             head_length=0.03, 
-	             color="red")
-    ax.text(ldngs[0, i] * 1.15, 
-	            ldngs[1, i] * 1.15, 
-	            feature,color="red", fontsize=18)
-    ax.scatter(PC1 * scalePC1,
-	                    PC2 * scalePC2, s=5)
-	 
-  for i in range(0,len(PC1)):
-    ax.text(PC1[i] * scalePC1, 
-	            PC2[i] * scalePC2, str(i), 
-	            fontsize=10)
-	
-  ax.set_xlabel('PC1', fontsize=20)
-  ax.set_ylabel('PC2', fontsize=20)
-  ax.set_title('Biplot', fontsize=20)
-  plt.show()
 """
 ,
 collapse = "Custom biplot code"
@@ -517,26 +492,6 @@ biplot(mwine, X)
 """
 ,
 """
-import openml
-import matplotlib.pyplot as plt
-
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
-
-wine,_,_,_ = openml.datasets.get_dataset(187).get_data(dataset_format="dataframe")
-X = wine.drop(["class"], axis =1)
-
-mwine = make_pipeline(StandardScaler(), PCA())
-
-PC1 = mwine.fit_transform(X)[:,0]
-PC2 = mwine.fit_transform(X)[:,1]
-ldngs = mwine[1].components_
-scalePC1 = 1.0/(PC1.max() - PC1.min())
-scalePC2 = 1.0/(PC2.max() - PC2.min())
-features = X.columns
-
-biplot (PC1, PC2, scalePC1, scalePC2, features, ldngs)
-plt.show()
 """
 ,
 )
@@ -560,16 +515,6 @@ biplot(mwine2, X)
 """
 ,
 """
-mwine2 = PCA()
-PC1 = mwine2.fit_transform(X)[:,0]
-PC2 = mwine2.fit_transform(X)[:,1]
-ldngs = mwine2.components_
-scalePC1 = 1.0/(PC1.max() - PC1.min())
-scalePC2 = 1.0/(PC2.max() - PC2.min())
-features = X.columns
-
-biplot (PC1, PC2, scalePC1, scalePC2, features, ldngs)
-plt.show()
 """
 )
 
@@ -599,12 +544,6 @@ x = h * G                     # projected data
 """
 ,
 """
-import numpy as np
-
-np.random.seed(1)
-h = np.multiply([1.5, 0.5], np.random.randn(500, 2))
-G = np.array([[-0.3, 0.4, 0.866], [0.885, 0.46, 0.1]])
-x = np.dot(h, G) # projected data
 """
 ,
 showoutput = false,
@@ -641,8 +580,6 @@ h_reconstructed = MLJ.transform(m1, x)
 """
 ,
 """
-pca = PCA(n_components =2)
-m1 = pca.fit_transform(x)
 """
 ,
 showoutput = false,
@@ -658,8 +595,7 @@ let ĥ = M.h_reconstructed, h = M.h
 end
 
 # ╔═╡ 16843059-269e-4557-a4b9-5d7034f99ba8
-mlstring( md"We can see that the reconstructed hidden data almost perfectly matches the true hidden data. We can also see that the transposed of the reconstructed projection matrix `fitted_params(m1).projection` is close to the projection matrix `G` we used.",
-"We can see that the reconstructed hidden data almost perfectly matches the true hidden data. We can also see that the transposed of the reconstructed projection matrix is close to the projection matrix `G` we used.")
+md"We can see that the reconstructed hidden data almost perfectly matches the true hidden data. We can also see that the transposed of the reconstructed projection matrix `fitted_params(m1).projection` is close to the projection matrix `G` we used."
 
 # ╔═╡ 6e033717-5815-4ffe-b991-81b72b99df9f
 mlcode(
@@ -668,8 +604,6 @@ mlcode(
 """
 ,
 """
-P, _, _, _ = np.linalg.lstsq(pca.transform(x), x, rcond=None)
-(P,G)
 """
 )
 
@@ -778,13 +712,6 @@ end
 """
 ,
 """
-import random
-import pandas as pd
-import numpy as np
-
-t = np.arange(0, 8.1, 0.1)
-random.seed(1)
-data = pd.DataFrame(np.column_stack([np.random.choice([np.sin, np.cos])(t) + 0.2*np.random.randn(len(t)) for _ in range(2000)]).T)
 """
 ,
 showoutput = false,
@@ -810,12 +737,6 @@ reconstruction = MLJ.inverse_transform(mdenoise, MLJ.transform(mdenoise, data));
 """
 ,
 """
-mdenoise = PCA(n_components=2)
-
-mdenoise.fit(data)
-
-# transform the data using the fitted PCA object and then inverse transform it
-reconstruction = mdenoise.inverse_transform(mdenoise.transform(data))
 """
 ,
 showoutput = false,
@@ -842,13 +763,11 @@ md"## PCA for Compression"
 mlcode(
 """
 using OpenML, DataFrames
+
 faces = OpenML.load(41083) |> DataFrame
 """
 ,
 """
-import openml
-faces,_,_,_ = openml.datasets.get_dataset(41083).get_data(dataset_format="dataframe")
-faces
 """
 ,
 showoutput = false,
@@ -861,11 +780,6 @@ let faces = M.faces
     plot(Gray.(vcat([[hcat([[reshape(Array(faces[j*8 + i, 1:end-1]), 64, 64)' ones(64)] for i in 1:8]...); ones(8*65)'] for j in 0:5]...)), ticks = false)
 end
 
-# ╔═╡ a00d99c2-e580-47ee-acb6-23d097d47bff
-mlstring(nothing,
-md"
-A good visualization of the data and the components of pca can be found here : https://plotly.com/python/pca-visualization")
-
 # ╔═╡ 0cb282aa-81d4-408d-a919-0d28cdbb7bed
 mlcode(
 """
@@ -877,23 +791,6 @@ faces_pcs = fitted_params(pca_faces).projection
 """
 ,
 """
-scaler = StandardScaler()
-faces_scaled = scaler.fit_transform(faces)
-pca_faces = PCA(100)
-pca_faces.fit(faces_scaled[:,1:-1])
-
-def display_scree_plot(pca):
-    '''Display a scree plot for the pca'''
-
-    scree = pca.explained_variance_ratio_*100
-    plt.bar(np.arange(len(scree))+1, scree)
-    plt.plot(np.arange(len(scree))+1, scree.cumsum(), c="red",marker='o')
-    plt.xlabel("Number of principal components")
-    plt.ylabel("Percentage explained variance")
-    plt.title("Scree plot")
-
-display_scree_plot(pca_faces)
-plt.show()
 """
 ,
 showoutput = false,
@@ -975,11 +872,6 @@ plot(p1, p2, p3, p4, layout = (2, 2), size = (700, 800))
 """
 ,
 """
-weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
-# select columns of the data frame "weather" that do not contain the words "direction" or "time" in their column names
-weather = weather.loc[:, ~(weather.columns.str.contains('direction|time'))]
-
-mweather = make_pipeline(StandardScaler(), PCA()).fit(X)
 """
 ,
 )
@@ -1005,15 +897,6 @@ eight_clouds = MLJ.transform(fit!(machine(Standardizer(), eight_clouds),
 """
 ,
 """
-import numpy as np
-import pandas as pd
-from sklearn.preprocessing import StandardScaler
-
-np.random.seed(123)
-eight_clouds = pd.DataFrame(np.vstack([[0.5, 0.5, 20] * np.random.randn(50, 3) + [x, y, 0] for y in [-2, 2] for x in [-6, -2, 2, 6]]), columns=['x', 'y', 'z'])
-
-scaler = StandardScaler()
-eight_clouds = pd.DataFrame(scaler.fit_transform(eight_clouds), columns = eight_clouds.columns)
 """
 ,
 showoutput = false,
@@ -1043,8 +926,6 @@ tsne_proj = tsne(Array(eight_clouds), 2, 0, 2000, 50.0, progress = false);
 """
 ,
 """
-from sklearn.manifold import TSNE
-X_embedded = TSNE(n_components=2, n_iter =2000, learning_rate='auto', init='random', perplexity=50).fit_transform(eight_clouds)
 """
 ,
 showoutput = false,
@@ -1070,8 +951,6 @@ umap_proj = umap(Array(eight_clouds)', 2, min_dist = .5, n_neighbors = 10);
 """
 ,
 """
-import umap
-trans = umap.UMAP(n_components=2, n_neighbors=10, random_state=42, min_dist = 0.5).fit(np.array(eight_clouds))
 """
 ,
 showoutput = false,
@@ -1112,32 +991,8 @@ mnist_proj = MLJ.transform(mnist_pca)
 """
 ,
 """
-import seaborn as sns 
-
-mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
-mnist['class'] = mnist["class"].astype('category')
-
-# Convert the features to continuous
-mnist = mnist.astype(float)
-
-# Separate the features and the target variable
-mnist_x = mnist.drop('class', axis=1)
-mnist_y = mnist['class']
-
-# Perform PCA
-mnist_pca = PCA(n_components=2)
-pca_result = mnist_pca.fit_transform(mnist_x)
-
-df = pd.DataFrame()
-df['pca-one'] = pca_result[:,0]
-df['pca-two'] = pca_result[:,1]
-df["y"] =  mnist_y
-
-plt.figure(figsize=(16,10))
-sns.scatterplot(x="pca-one", y="pca-two", hue="y", palette=sns.color_palette("hls", 10), data=df, legend="full", alpha=0.3)
 """
 ,
-eval = false,
 showoutput = false,
 cache_jl_vars = [:mnist_proj, :mnist_y]
 )
@@ -1180,17 +1035,6 @@ scatter(tsne_proj_mnist[:, 1], tsne_proj_mnist[:, 2],
 """
 ,
 """
-from sklearn.manifold import TSNE
-import matplotlib.pyplot as plt
-
-# Perform t-SNE
-tsne_proj_mnist = TSNE(n_components=2, perplexity=50, n_iter=1000, learning_rate=20, verbose=0).fit_transform(mnist_x[:7000])
-
-# Plot the t-SNE projection
-plt.scatter(tsne_proj_mnist[:, 0], tsne_proj_mnist[:, 1], c=mnist_y[:7000].astype(int), cmap='jet')
-plt.xlabel('t-SNE 1')
-plt.ylabel('t-SNE 2')
-plt.show()
 """
 )
 
@@ -1221,14 +1065,6 @@ plot!(xlabel = "UMAP 1", ylabel = "UMAP 2", legend_position = -5)
 """
 ,
 """
-import umap
-
-reducer = umap.UMAP(n_components=2)
-scaled_mnist = StandardScaler().fit_transform(mnist_x)
-embedding = reducer.fit_transform(scaled_mnist)
-
-fig_2d = px.scatter(embedding, x=0, y=1, color=mnist_y)
-fig_2d.show()
 """
 )
 
@@ -1244,16 +1080,6 @@ md"# 4. Principal Component Regression
 
 As an alternative to regularization, PCA can be used as a preprocessing step in linear regression. This is called principal component regression. It is particularly useful in cases where linear regression could overfit the noise. Note, however, that ridge regression or the Lasso often leads to very similar results as principal component regression.
 "
-
-# ╔═╡ 187253a7-78af-4793-8017-48845803a3b8
-pcr_data_x, pcr_data_y = let p1 = 10, p2 = 50, n = 120
-	hidden = randn(n, p1)
-	β = randn(p1)
-	y = hidden * β .+ .1 * randn(n)
-	transformation = randn(p1, p2)
-	x = hidden * transformation .+ .1 * randn(n, p2)
-	DataFrame(x, :auto), y
-end
 
 # ╔═╡ 60c37ce2-50d7-426f-9dd8-597878425f9c
 mlcode(
@@ -1293,38 +1119,6 @@ rmse_pcr = rmse(predict(mach2, pcr_data_x[test_idx, :]), pcr_data_y[test_idx])
 """
 ,
 """
-import pandas as pd
-import numpy as np
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import train_test_split
-from sklearn.decomposition import PCA
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-
-# artificial data
-p1, p2, n = 10, 50, 120
-hidden = np.random.randn(n, p1)
-beta = np.random.randn(p1)
-y = hidden @ beta + 0.1 * np.random.randn(n)
-transformation = np.random.randn(p1, p2)
-x = hidden @ transformation + 0.1 * np.random.randn(n, p2)
-
-X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.5, random_state=42)
-
-m = LinearRegression()  # Create a linear regression model
-m.fit(X_train,y_train)
-y_pred = m.predict(X_test)
-mse_lr = mean_squared_error(y_test,y_pred)
-
-pca = PCA(20)
-logistic = LinearRegression()
-pipe = Pipeline(steps=[("pca", pca), ("logistic", logistic)])
-pipe.fit(X_train,y_train)
-y_pred_pca = pipe.predict(X_test)
-mse_pca_lr = mean_squared_error(y_test,y_pred_pca)
-
-(mse_lr, mse_pca_lr)
 """
 )
 
@@ -1396,9 +1190,6 @@ data3 = DataFrame(randn(50, 2) * randn(2, 10), :auto)
 """
 ,
 """
-data1 = pd.DataFrame(np.random.randn(50, 2) @ (np.random.randn(2, 3)), columns=['x1', 'x2',"x3"])
-data2 = pd.DataFrame(np.random.randn(50, 2) @ (np.random.randn(2, 3)) + 0.5*np.random.randn(50, 3), columns=['x1', 'x2',"x3"])
-data3 = pd.DataFrame(np.random.randn(50, 2) @ (np.random.randn(2, 10)))
 """
 ,
 showoutput = false
@@ -1431,7 +1222,6 @@ data = CSV.read(download(\"https://openmv.net/file/food-consumption.csv\"), Data
 """
 ,
 """
-data = pd.read_csv("https://openmv.net/file/food-consumption.csv")
 """
 ,
 showoutput = false
@@ -1465,16 +1255,6 @@ img = FileIO.load(download(\"http://kenia.pordescubrir.com/wp-content/uploads/20
 """
 ,
 """
-# importing modules
-import urllib.request
-from PIL import Image
-  
-urllib.request.urlretrieve(
-  'http://kenia.pordescubrir.com/wp-content/uploads/2008/08/windsurf.jpg',
-   "gfg.jpg")
-  
-img = Image.open("gfg.jpg")
-img.show()
 """
 ,
 showoutput = false
@@ -1518,7 +1298,9 @@ MLCourse.save_cache(@__FILE__)
 # ╟─a935143d-52f8-4a5e-bede-58467065caed
 # ╟─08401f05-7e4a-4d51-8f96-d2bee22db808
 # ╟─c1262304-6846-4811-ae82-397863255415
+# ╟─dd4eeac4-1a71-4b4d-b687-441bc4b13a30
 # ╟─89f0af1e-bb2f-428e-b2c3-a6985fe3bc8e
+# ╟─c80fd0c3-4bbc-4ed3-90f2-984b391f76f5
 # ╟─8c4dab97-52b5-46a2-8025-65c98cdc5b78
 # ╟─b2688c20-a578-445f-a5c4-335c85931862
 # ╟─f9a506bb-6bdf-48aa-8f81-8fb6de078533
@@ -1574,7 +1356,6 @@ MLCourse.save_cache(@__FILE__)
 # ╟─af03d989-b19f-44ac-a275-d8af57bbeaeb
 # ╟─026a362d-3234-409b-b9cb-e6a2a50c6a0d
 # ╟─e967a9cb-ad95-4bd2-8fbd-491dc6fe0475
-# ╟─a00d99c2-e580-47ee-acb6-23d097d47bff
 # ╟─0cb282aa-81d4-408d-a919-0d28cdbb7bed
 # ╟─c70b5212-a823-4ff8-937d-10919efc766c
 # ╟─0742ea40-1895-48f4-b149-d472397e83d0
@@ -1597,12 +1378,11 @@ MLCourse.save_cache(@__FILE__)
 # ╟─a6942d97-a091-4a18-bc3b-cd376da263e5
 # ╟─151cd6e7-8981-41b4-ac75-f13ce16940e4
 # ╟─fd8f7308-c38c-420c-a2a1-56ecbb208671
-# ╠═87805205-9bb8-40de-b37e-80442a8cd0e7
+# ╟─87805205-9bb8-40de-b37e-80442a8cd0e7
 # ╟─daa928e2-ce2a-4593-a4cd-8faf62c0028d
 # ╟─2eb56328-d39d-40c4-8b73-06e2a9a3e191
 # ╟─273de5a4-4400-48c9-8a0d-296e57cf26a4
 # ╟─3087540f-19e1-49cb-9b3b-c23207775ea7
-# ╟─187253a7-78af-4793-8017-48845803a3b8
 # ╟─60c37ce2-50d7-426f-9dd8-597878425f9c
 # ╟─eea3f7f8-83ab-4942-9017-504f340ad95b
 # ╟─a2cd5095-1c95-4107-93eb-d129baf65fd0
