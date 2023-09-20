@@ -81,15 +81,16 @@ def relu(x):
     return np.maximum(0, x)
 
 def f(x, w1, w2, w3, w4, beta):
-    return beta[0] * relu(x * w1) + beta[1] * relu(x * w2) + beta[2] * relu(x * w3) + 			beta[3] * relu(x * w4) + beta[4]
+    return beta[0] * relu(x * w1) + beta[1] * relu(x * w2) + beta[2] * relu(x * w3) + beta[3] * relu(x * w4) + beta[4]
 
-def f(x,theta) :
+def f(x, θ) :
 	return f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
 
 def logp(x):
     return np.where(x < -40, x, -np.log(1 + np.exp(-x)))
 
 def log_reg_loss_function(X, y, theta):
+    def loss_function(theta):
         tmp = f(X, theta)
         return -np.mean(y * logp(tmp) + (1 - y) * logp(-tmp))
     return loss_function
@@ -397,6 +398,23 @@ nn = Chain(Dense(3, 30, relu), # input to hidden layer (with relu non-linearity)
 """
 ,
 """
+import torch
+
+class NeuralNetExample1(torch.nn.Module):
+    def __init__(self):
+        super(NeuralNetExample1, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(3, 30),
+            torch.nn.ReLU(),
+            torch.nn.Linear(3, 2)
+        )
+
+    def forward(self, x):
+        return self.layers(x)
+
+nn = NeuralNetExample1()
+w1, b1 = map(lambda parameter: parameter.data.numpy(), list(nn.layers[0].parameters()))
+print(f'{w1=}\n{b1=}')
 """
 )
 
@@ -416,6 +434,8 @@ nn(x) # apply neural network to input x
 """
 ,
 """
+x = torch.rand(3)
+nn(x).data.numpy()
 """
 )
 
@@ -430,6 +450,8 @@ b² + w² * relu.(b¹ + w¹ * x)
 """
 ,
 """
+w1, b1, w2, b2 = map(lambda parameter: parameter.data.numpy(), list(nn.layers.parameters())) 
+b2 + np.dot(w2, relu(b1 + np.dot(w1, x)))
 """
 )
 
@@ -449,6 +471,24 @@ nn2(rand(Float32, 20))
 """
 ,
 """
+class NeuralNetExample2(torch.nn.Module):
+    def __init__(self):
+        super(NeuralNetExample2, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(20, 100),
+            torch.nn.ReLU(),
+            torch.nn.Linear(100, 50),
+            torch.nn.Tanh(),
+            torch.nn.Linear(50, 100),
+            torch.nn.Sigmoid(),
+            torch.nn.Linear(100, 10)
+        )
+
+    def forward(self, x):
+        return self.layers(x)
+
+nn2 = NeuralNetExample2()
+nn2(torch.rand(20)).data.numpy()
 """
 )
 
@@ -502,7 +542,7 @@ Some explanations for the code below:
 mlcode(
 """
 # preparing the data
-using CSV, DataFrames
+using CSV, DataFrames, MLJFlux
 
 weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
                    DataFrame)
@@ -537,25 +577,103 @@ fit!(mach, verbosity = 0)
 ,
 """
 import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.neural_network import MLPRegressor
+import sklearn
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+import torch
+import random
+import tqdm
+from sklearn.metrics import mean_squared_error
 
-# preparing the data
+# Reproducibility
+seed_num = 66
+torch.use_deterministic_algorithms(True)
+random.seed(seed_num)
+np.random.seed(seed_num)
+torch.manual_seed(seed_num)
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+g = torch.Generator()
+g.manual_seed(seed_num)
+
+# Load the data
 weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
 weather_test = pd.read_csv("https://go.epfl.ch/bio322-weather2019-2020.csv")
-weather_x = weather.drop(["LUZ_wind_peak","time"], axis=1).iloc[:-5, :]
-weather_y = weather["LUZ_wind_peak"].iloc[5:]
-weather_test_x = weather_test.drop(["LUZ_wind_peak","time"], axis=1).iloc[:-5, :]
-weather_test_y = weather_test["LUZ_wind_peak"].iloc[5:]
 
-#Feature Scaling
-from sklearn.preprocessing import StandardScaler
+# Standardisers
+weather_x_std = StandardScaler().fit(weather['LUZ_pressure'][:-5].values.reshape(-1, 1))
+weather_y_std = StandardScaler().fit(weather['LUZ_wind_peak'][5:].values.reshape(-1, 1))
 
-pipeline = Pipeline ([("scaler", StandardScaler()),("nn",MLPRegressor(hidden_layer_sizes=(128), activation='relu', solver='adam', max_iter=500))])
-pipeline.fit(weather_x,weather_y)
+# Standardise the data
+weather_x, weather_y, weather_test_x, weather_test_y = map(
+    lambda data, std_mach: std_mach.transform(data),
+    [
+        weather['LUZ_pressure'][:-5].values.reshape(-1, 1),
+        weather['LUZ_wind_peak'][5:].values.reshape(-1, 1),
+        weather_test['LUZ_pressure'][:-5].values.reshape(-1, 1),
+        weather_test['LUZ_wind_peak'][5:].values.reshape(-1, 1),
+    ],
+    [weather_x_std, weather_y_std, weather_x_std, weather_y_std],
+)
 
-from sklearn.metrics import mean_squared_error
-("training_error", mean_squared_error(pipeline.predict(weather_x), weather_y)**0.5, "test_error", mean_squared_error(pipeline.predict(weather_test_x), weather_test_y)**0.5)
+# Convert data to pytorch tensors
+weather_x, weather_y, weather_test_x, weather_test_y = map(
+    lambda array: torch.tensor(array, dtype=torch.float32),
+    [weather_x, weather_y, weather_test_x, weather_test_y]
+)
+
+# Pytorch training data loader, for using batches
+training_dataloader = torch.utils.data.DataLoader(
+    torch.utils.data.TensorDataset(weather_x, weather_y),
+    batch_size = 128,
+    shuffle = True,
+    worker_init_fn = seed_worker, # for reproducibility
+    generator = g # for reproducibility
+)
+
+# Setting up the model
+class NeuralNetExample3(torch.nn.Module):
+    def __init__(self):
+        super(NeuralNetExample3, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(1, 128),
+            torch.nn.Dropout(0.5),
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, 1),
+        )
+    def forward(self, x):
+        return self.layers(x)
+
+batch_size = 128
+epochs = 150
+
+model = NeuralNetExample3()
+loss_func = torch.nn.MSELoss()
+optimizer = torch.optim.AdamW(model.parameters())
+
+# Training
+model.train()
+for epoch in tqdm.tqdm(range(epochs)):
+    for data, target in training_dataloader:
+        optimizer.zero_grad()
+        pred = model(data)
+        loss = torch.sqrt(loss_func(pred, target))
+        loss.backward()
+        optimizer.step()
+
+# Evaluation
+with torch.no_grad():
+    model.eval()
+    train_preds = weather_y_std.inverse_transform(model(weather_x).detach().numpy())
+    train_gt = weather_y_std.inverse_transform(weather_y.detach().numpy())
+    train_loss = np.sqrt(mean_squared_error(train_preds, train_gt))
+
+    test_preds = weather_y_std.inverse_transform(model(weather_test_x).detach().numpy())
+    test_gt = weather_y_std.inverse_transform(weather_test_y.detach().numpy())
+    test_loss = np.sqrt(mean_squared_error(test_preds, test_gt))
+    print(f'{train_loss=}, {test_loss=}')
 """
 ,
 cache = true
@@ -598,6 +716,8 @@ plt.ylabel("data")
 plt.plot([min(weather_test_y), max(weather_test_y)], [min(weather_test_y), max(weather_test_y)], linestyle='--', color='red')
 plt.show()
 """
+,
+showoutput = true,
 )
 
 
@@ -947,6 +1067,62 @@ plot!(grid, predict(mach, x_test),
 """
 ,
 """
+import matplotlib.pyplot as plt
+
+# dataset
+x = np.random.randn(10**5, 1000)
+y = (x[:, 6] ** 2 - 1).reshape(-1, 1)
+
+x, y = map(lambda x_y: torch.tensor(x_y, dtype=torch.float32), [x, y])
+
+batch_size = 128
+epochs = 10**2
+
+train_dataloader = torch.utils.data.DataLoader(
+    torch.utils.data.TensorDataset(x, y),
+    batch_size = 128,
+    shuffle = True,
+    worker_init_fn = seed_worker, # for reproducibility
+    generator = g # for reproducibility
+)
+
+# fitting
+class NeuralNetExample4(torch.nn.Module):
+    def __init__(self):
+        super(NeuralNetExample4, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(1000, 50),
+            torch.nn.ReLU(),
+            torch.nn.Linear(50, 1),
+        )
+    def forward(self, x):
+        return self.layers(x)
+
+
+model = NeuralNetExample4()
+loss_func = torch.nn.MSELoss()
+optimizer = torch.optim.AdamW(model.parameters())
+
+model.train()
+for epoch in tqdm.tqdm(range(epochs)):
+    for data, target in train_dataloader:
+        optimizer.zero_grad()
+        pred = model(data)
+        loss = loss_func(pred, target)
+        loss.backward()
+        optimizer.step()
+
+grid = np.arange(-3.0, 3.0, 0.1)
+x_test = np.random.randn(grid.shape[0], 1000)
+x_test[:, 6] = grid
+x_test = torch.tensor(x_test, dtype=torch.float32)
+
+plt.plot(grid, (grid ** 2 - 1).reshape(-1, 1), label="ground truth")
+plt.plot(grid, model(x_test).detach().numpy(), label="model prediction")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.legend()
+plt.show()
 """
 )
 
@@ -996,9 +1172,71 @@ model = NeuralNetworkClassifier(
 mnist_mach = machine(model, mnist_x[1:60000, :], mnist_y[1:60000])
 fit!(mnist_mach, verbosity = 0)
 mean(predict_mode(mnist_mach, mnist_x[60001:70000, :]) .!= mnist_y[60001:70000])
-```
+"""
+,
+"""
 import openml
+from sklearn.preprocessing import OneHotEncoder
+
+# data loading
 mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
+
+# pre-processing
+x = (mnist.iloc[:, :-1].values.astype(float)/255) # normalising
+y = mnist.iloc[:, -1].values.astype(int)
+
+one_hot_enc = OneHotEncoder()
+y_ohe = one_hot_enc.fit_transform(y.reshape(-1, 1)) # one hot encoding
+y_ohe = np.array(y_ohe.todense()) # fit_transform outputs a sparse matrix but it is easier to work wiith an array
+
+x_train, y_train, x_test, y_test = x[:60000], y_ohe[:60000], x[60000:], y_ohe[60000:] # train-test split
+
+# converting to pytorch tensors
+x_train, y_train, x_test, y_test = map(
+    lambda data: torch.tensor(data, dtype=torch.float32), 
+    [x_train, y_train, x_test, y_test],
+)
+
+# Pytorch data loader, for using batches
+train_dataloader = torch.utils.data.DataLoader(
+    torch.utils.data.TensorDataset(x_train, y_train),
+    batch_size = batch_size,
+    shuffle = True,
+)
+
+class MNISTLinearNN(torch.nn.Module):
+    def __init__(self):
+        super(MNISTLinearNN, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(784, 100),
+            torch.nn.ReLU(),
+            torch.nn.Linear(100, 10),
+        )
+    def forward(self, x):
+        return self.layers(x)
+
+batch_size = 32
+epochs = 20
+model = MNISTLinearNN()
+loss_func = torch.nn.CrossEntropyLoss() # used for classification
+optimizer = torch.optim.AdamW(model.parameters())
+
+model.train()
+for epoch in tqdm.tqdm(range(epochs)):
+    for data, target in train_dataloader:
+        optimizer.zero_grad()
+        pred = model(data)
+        loss = loss_func(pred, target)
+        loss.backward()
+        optimizer.step()
+
+with torch.no_grad():
+    model.eval()
+    test_preds = one_hot_enc.inverse_transform(model(x_test).detach().numpy())
+    test_gt = y[60000:].reshape(-1, 1)
+    print(f'\nMissclassifictation rate: {np.mean((test_preds != test_gt))}')
+"""
+)
 
 
 The result is a misclassification rate of approximately 2.2%, which is better
@@ -1147,9 +1385,16 @@ MLCourse.save_cache(@__FILE__)
 # ╟─66bc40f3-7710-4892-ae9f-79b9c850b0ea
 # ╟─15cd82d3-c255-4eb5-9f0d-1e662c488027
 # ╟─9e6ad99f-8cd4-4372-a4a2-f280e49e21a3
-# ╟─c3fe95e4-d7f4-4258-94fd-fa5c994e6627
-# ╟─85bebc26-e2d4-4e5e-bd2b-9fe10a4b791a
-# ╟─a5568dfb-4467-4dca-b1c7-714bbfcbd6e6
+# ╟─9d3e7643-34fd-40ee-b442-9d2a434f30e0
+# ╠═4bbae793-059d-4741-a761-c38be74b274c
+# ╟─114201bf-d841-496f-8ca5-2fbd43726995
+# ╠═6944c24e-67e7-47ba-aea6-5f75f58dae5a
+# ╠═03b2c815-65ef-4c74-a673-21830dbcb40e
+# ╟─631d3ab5-817a-4ccf-88fb-950f85fc6be3
+# ╟─bf6bf8f3-dbc9-496a-ac5b-1aaf6e7824e1
+# ╟─a869d11a-2124-4d2b-8517-5cca4382309e
+# ╟─6393aae7-a8ac-4dff-b188-5e682f6ab1f9
+# ╠═a5568dfb-4467-4dca-b1c7-714bbfcbd6e6
 # ╟─47024142-aabb-40d8-8336-5f8aeb2aa623
 # ╟─0a48241c-2be0-46cf-80ae-dc86abefad6f
 # ╟─b6d8dbcf-d1d8-4e7a-9e2d-e490f74fa7c9

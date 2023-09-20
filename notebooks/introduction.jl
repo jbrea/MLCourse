@@ -147,12 +147,14 @@ md"we recommend to install the following packages in a clean environment."
 # ╔═╡ 8ea85113-8872-4f9f-87d0-63cf8c8293ba
 mlstring(
 md"""
+If you use VS Code we recommend installing the ["julia extension"](https://code.visualstudio.com/docs/languages/julia).
+
 In a terminal, for example in the VS Code terminal, navigate to the folder where you want to store the exercise solution files and open julia there.
 In the julia REPL press `]` to enter the package manager.
 Create a new environment with
 
 ```julia
-(@v1.9) pkg> activate MLCourseSolutions
+(@v1.9) pkg> activate MLCourseSolutions # creates a new environment
 (MLCourseSolutions) pkg> add DataFrames, Distributions, Plots, CSV, OpenML
 ```
 Leave package mode with the `backspace` key and load the packages you want with
@@ -218,12 +220,13 @@ A common "trick" to generate 100 samples of a binary variable with probability `
 # ╔═╡ 36e33686-4220-42dd-83a3-cdaeedd30d5b
 mlcode(
 """
-rand(100) .> 0.7
+rand(100) .≤ 0.7
 """
 ,
 """
-import random
-np.random.rand(100) <= 0.7
+import numpy as np
+
+[np.random.rand() <= 0.7 for _ in range(100)]
 """
 )
 
@@ -248,7 +251,9 @@ md"""
 #### Exercise 4
 $(MLCourse.language_selector())` `
 
-1. Write a function that returns the smallest entry of a vector (without using the built-in functions $(mlstring(md"`minimum`, `argmin` or `findmin`", ""))).
+This is just a tiny exercise to train how to write functions.
+
+1. Write a function that returns the smallest entry of a vector (without using any built-in functions like `minimum` or `min`).
 2. Test your function on a vector of 10 randomly sampled integers in the range 1 to 100.
 """
 
@@ -259,10 +264,11 @@ $(MLCourse.language_selector())` `
 
 In this exercise, we load some data, write it to a CSV file and visualize it.
 
-1. Look at the description of the openml dataset 61. *Hint:* $(mlstring(md"use the function `OpenML.describe_dataset`.", ""))
-2. Load dataset 61 from openml. *Hint:* $(mlstring(md"use the function `OpenML.load` and convert the loaded table into a `DataFrame`.", ""))
-3. Write the data to a CSV-file on your harddisk. *Hint:* $(mlstring(md"use the function `CSV.write`", "")).
-4. Load the data in the CSV file as a dataframe.  *Hint:* $(mlstring(md"use the function `CSV.read(filename, DataFrame)`", "")).
+
+1. Look at the description of the openml dataset 61. *Hint:* use the [openml documentation](https://www.openml.org/apis).
+2. Load dataset 61 from openml into a data frame.
+3. Write the data to a CSV-file on your harddisk. *Hint:* $(mlstring(md"use the function `CSV.write`", md"use the function `to_csv`")).
+4. Load the data in the CSV file as a dataframe.  *Hint:* $(mlstring(md"use the function `CSV.read(filename, DataFrame)`", md"use the `pandas`-function `pd.read_csv`")). (It is of course a silly thing here to save the iris dataset to disk and load it again from disk, but it is useful to know how to do this.)
 3. Produce a scatter plot that shows the `sepallength` versus the `sepalwidth`. Make sure both axes have the correct label.
 4. Add to the same plot the "identiy"-line ``y = x`` in red.
 """
@@ -308,3 +314,5 @@ MLCourse.save_cache(@__FILE__)
 # ╟─065a1e67-6b63-43df-9d6d-303af08d8434
 # ╟─2b67233e-76ba-40be-81e2-787fbe5d3641
 # ╟─9d250061-e570-4537-b1aa-f6a9019f343d
+# ╠═fac88373-4f6d-4661-9a1c-be173a725d4b
+# ╟─87aa211a-c383-4da2-b18a-f06567a4d3bf
