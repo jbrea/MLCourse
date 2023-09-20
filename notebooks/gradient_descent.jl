@@ -491,6 +491,10 @@ end
 """
 ,
 """
+from sklearn.neural_network import MLPClassifier
+
+# Note that ADAM is already implemented in other widely used python ML libraries such as Pytorch and Tensorflow.
+nn_adam= MLPClassifier(solver='adam')
 """
 ,
 showoutput = false,
@@ -676,7 +680,7 @@ mlcode("rand(100)", nothing)
 # ╟─75528011-05d9-47dc-a37b-e6bb6be52c25
 # ╟─7541c203-f0dc-4445-9d2a-4cf16b7e912a
 # ╟─913cf5ee-ca1e-4063-bd34-6cccd0cc548b
-# ╠═2739fb52-fb1b-46d6-9708-e24bfdc459e2
+# ╟─2739fb52-fb1b-46d6-9708-e24bfdc459e2
 # ╟─7b57c3f0-ef5a-4dd7-946f-72c8dde2ae8f
 # ╟─166472c5-c0f4-4261-a476-4c9b0f82abd6
 # ╟─eb289254-7167-4183-a4d0-52f68be66b04

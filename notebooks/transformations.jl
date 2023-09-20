@@ -20,7 +20,7 @@ using Pkg
 stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
-Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, CSV
 import Distributions: Beta, Normal, Gamma
 import Distributions, GLM

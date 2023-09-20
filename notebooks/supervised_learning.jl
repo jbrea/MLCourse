@@ -20,7 +20,7 @@ using Pkg
 stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
-Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal
 import PlutoPlotly as PP
@@ -219,8 +219,6 @@ weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
 """
 ,
 """
-import pandas as pd
-
 weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
 weather
 """
@@ -291,9 +289,9 @@ mlcode(
 using StatsPlots
 """
 ,
-nothing
-,
-showinput = false
+"""
+import seaborn as sns
+"""
 )
 
 # ╔═╡ f63c054c-eefe-11eb-13db-171084b417a9
@@ -306,15 +304,10 @@ using StatsPlots
 """
 ,
 """
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-plt.figure()
 g = sns.PairGrid(weather[['BAS_pressure', 'LUG_pressure', 'LUZ_pressure', 'LUZ_wind_peak']])
 g.map_lower(sns.regplot, line_kws={'color': 'black'})
 g.map_diag(sns.histplot, color = 'darkorange' )
 g.map_upper(sns.kdeplot, fill=True,cmap="Reds")
-plt.show()
 """
 ,
 recompute = false
@@ -580,14 +573,33 @@ model = LinearRegression()  # Create a linear regression model
 X_train = np.array(training_data['x']).reshape(-1, 1)
 y_train = np.array(training_data['y']).reshape(-1, 1)
 model.fit(X_train,y_train) # Fit the model to the data, with the Input features and the Output variables
-{"intercept": model.intercept_, "coefs": model.coef_}
 """
 )
 
 
 # ╔═╡ 813238b8-3ce3-4ce8-98f6-cbdcbd1746d6
-mlstring(md"Here, the `intercept` corresponds to $\theta_0$ in the slides and `coefs[1].second` to $\theta_1$. Why do we need to write `coefs[1].second`? The coefficients returned by the `fitted_params` function are, in general, a vector of pairs (`:x => 2.25` is a pair, with first element the name of the data column this coefficient multiplies and the second element the value of the coefficient.).",
-""
+md"Here, the `intercept` corresponds to $\theta_0$ in the slides and `coefs[1].second` to $\theta_1$. Why do we need to write `coefs[1].second`? The coefficients returned by the `fitted_params` function are, in general, a vector of pairs (`:x => 2.25` is a pair, with first element the name of the data column this coefficient multiplies and the second element the value of the coefficient.). We can also extract these numbers, e.g."
+
+# ╔═╡ 92bf4b9c-4bda-4430-bd0f-d85e09dd5d54
+mlcode(
+"""
+fitted_params(mach).intercept
+"""
+,
+"""
+model.intercept_
+"""
+)
+
+# ╔═╡ 5911642f-151b-4d28-8109-6feb4d418ddf
+mlcode(
+"""
+fitted_params(mach).coefs[1].second # or fitted_params(mach).coefs[1][2]
+"""
+,
+"""
+model.coef_
+"""
 )
 
 # ╔═╡ 25eb24a4-5414-481b-88d5-5ad50d75f8c9
@@ -823,7 +835,6 @@ m1 = LinearRegression()  # Create a linear regression model
 X_train = training_set1['LUZ_pressure'].values.reshape(-1, 1)
 y_train = training_set1['wind_peak_in5h'].values.reshape(-1, 1)
 m1.fit(X_train,y_train) # Fit the model to the data, with the Input features and the Output variables
-{"intercept": m1.intercept_, "coefs": m1.coef_}
 """
 ,
 )
@@ -864,7 +875,6 @@ plot!(X, predict(m1), linewidth = 3)
 """
 ,
 """
-plt.figure()
 # Create the 2D histogram plot
 plt.hist2d(X, y, bins=(50, 50), cmap=plt.cm.jet, norm=LogNorm())
 
@@ -929,6 +939,8 @@ With `DataFrame(schema(weather))` we get additionally information about the type
 ",
 md"Our weather data set contains multiple measurements.
 With `weather.columns` we see all the names of the columns of the the weather data frame.
+Try it in a new cell!
+
 With `weather.dtypes, weather.head(), weather.info()` we get additionally information about the type of data.
 "
 )
@@ -940,7 +952,7 @@ DataFrame(schema(weather))
 """
 ,
 """
-weather.columns.to_frame()
+weather.dtypes
 """
 )
 
@@ -1221,7 +1233,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─8fe94709-3673-44cc-8702-83bd7e2cad51
 # ╟─27f44b28-f6d6-4e1f-8dbe-6fe7789b9a18
 # ╟─43b28121-5d07-4400-8710-287de7b978a4
-# ╟─f63c05d8-eefe-11eb-2a11-fd8f954bf059
+# ╠═f63c05d8-eefe-11eb-2a11-fd8f954bf059
 # ╟─f63c05d8-eefe-11eb-0a2e-970192b02d61
 # ╟─f63c05e4-eefe-11eb-012a-9bae1d87f2b5
 # ╟─f63c0592-eefe-11eb-2a76-15de55eff3ad
@@ -1243,11 +1255,11 @@ MLCourse.save_cache(@__FILE__)
 # ╟─7923a0a8-3033-4dde-91e8-22bf540c9866
 # ╟─57f352dc-55ee-4e14-b68d-698938a97d92
 # ╟─b0de002f-3f39-4378-8d68-5c4606e488b7
-# ╟─da6462d8-3343-41d8-82dd-48770176d4ba
+# ╠═da6462d8-3343-41d8-82dd-48770176d4ba
 # ╟─6eca3452-d47d-4d70-82d1-bedbe91e9820
 # ╟─25e1f89f-a5b2-4d5c-a6e8-a990b3bebddb
 # ╟─8307e205-3bcd-4e68-914e-621fd8d29e43
-# ╟─753ec309-1363-485d-a2bd-b9fa100d9058
+# ╠═753ec309-1363-485d-a2bd-b9fa100d9058
 # ╟─fac51c63-f227-49ac-89f9-205bf03e7c08
 # ╟─618ef3c7-0fda-4970-88e8-1dac195545de
 # ╟─2d25fbb6-dc9b-40ad-bdce-4c952cdad077
