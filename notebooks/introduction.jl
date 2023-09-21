@@ -252,7 +252,58 @@ Other useful commands: https://noteable.io/blog/jupyter-notebook-shortcuts-boos
 """
 
 # ╔═╡ 4a03cfae-9876-4cf0-a498-d750853191cb
-md"""# 3. Exercises
+md"""# Exercises
+
+## Conceptual
+#### Exercise 1
+   Explain whether each scenario is a classification or regression problem, and
+   indicate whether we are most interested in interpretation or accurate prediction.
+   Finally, provide ``n``, the number of samples, and ``p``, the number of dimensions of the input.
+   - We collect a set of data on the top 500 firms in the US. For each firm we
+     record profit, number of employees, industry and the CEO salary. We are
+     interested in understanding which factors affect CEO salary.
+   - We are considering launching a new product and wish to know
+     whether it will be a success or a failure. We collect data on 20
+     similar products that were previously launched. For each product
+     we have recorded whether it was a success or failure, price
+     charged for the product, marketing budget, competition price,
+     and ten other variables.
+   - We are interested in predicting the % change in the USD/Euro
+     exchange rate in relation to the weekly changes in the world
+     stock markets. Hence we collect weekly data for all of 2012. For
+     each week we record the % change in the USD/Euro, the %
+     change in the US market, the % change in the British market,
+     and the % change in the German market.
+
+#### Exercise 2
+A common "trick" to generate 100 samples of a binary variable with probability ``p = 0.7`` for `true` (and probability ``1-p = 0.3`` for `false`) is to run the code
+
+"""
+
+# ╔═╡ 36e33686-4220-42dd-83a3-cdaeedd30d5b
+mlcode(
+"""
+rand(100) .≤ 0.7
+"""
+,
+"""
+import numpy as np
+
+np.random.rand(100) <= 0.7
+"""
+,
+recompute = true,
+)
+
+# ╔═╡ 4ffa4078-67f7-4e0c-a196-80d94ff49196
+md"""
+Explain why this trick produces the desired result.
+"""
+
+# ╔═╡ 084e3bce-4948-477f-81cf-62c6989106d4
+md"""
+## Applied
+
 We will work a lot with real and artificial datasets.
 To prepare for this work, we will familiarize ourselves in these exercises with the creation and manipulation of dataframes, loading and saving of data and plotting.
 
@@ -280,64 +331,25 @@ md"""
 
 # ╔═╡ 20f339a8-4f56-45c8-9ea3-d2da256565af
 md"""
-#### Exercise 1
+#### Exercise 3
 $(MLCourse.language_selector())` `
 
 
 Create an artificial data set with 3 columns named A, B and C.
-   1. Column A contains 10 random numbers sampled from a Bernoulli distribution with rate 0.3, column B contains 10 random numbers from the uniform distribution over the interval [0, 1), and column C contains 10 samples from the set `("hip", "hop")`, where `"hip"` and `"hop"` have equal probability. *Hint:* $(mlstring(md"You can use the function `Bernoulli` from the `Distributions` package and the built-in function `rand`.", ""))
+   1. Column A contains 10 random numbers sampled from a Bernoulli distribution with rate 0.3, column B contains 10 random numbers from the uniform distribution over the interval [0, 1), and column C contains 10 samples from the set `("hip", "hop")`, where `"hip"` and `"hop"` have equal probability. *Hint:* $(mlstring(md"You can use the function `Bernoulli` from the `Distributions` package and the built-in function `rand` with the trick in exercise 2.", md"You can the function `np.random.binomial` or the trick in exercise 2."))
    2. Create a vector whose i'th element contains the sum of the i'th entries of columns A and B of the data frame created in 1.
    3. Select all rows with `"hop"` in column C and display the resulting data frame.
 """
 
-# ╔═╡ 146b4094-f790-478d-b9f7-c0a9a2a3e5a2
-md"""
-#### Exercise 2
-A common "trick" to generate 100 samples of a binary variable with probability ``p = 0.7`` for `true` (and probability ``1-p = 0.3`` for `false`) is to run the code
-
-"""
-
-
-# ╔═╡ 36e33686-4220-42dd-83a3-cdaeedd30d5b
-mlcode(
-"""
-rand(100) .≤ 0.7
-"""
-,
-"""
-import numpy as np
-
-np.random.rand(100) <= 0.7
-"""
-,
-recompute = true,
-)
-
-# ╔═╡ 4ffa4078-67f7-4e0c-a196-80d94ff49196
-md"""
-Explain why this trick produces the desired result.
-"""
-
 # ╔═╡ dbe2c72c-bbc6-4912-af98-e8f473b7ac27
 md"""
-#### Exercise 3
+#### Exercise 4
 $(MLCourse.language_selector())` `
 
 Comprehension is a useful tool to generate artificial data.
 
 1. Use comprehension (see $(mlstring(md"[here](https://docs.julialang.org/en/v1/manual/arrays/#man-comprehensions)", md"[here](https://docs.python.org/3/tutorial/datastructures.html#list-comprehensions)"))) to create a vector with all numbers of the form ``x^y`` with ``x=1, \ldots, 10``, ``y = 2, \ldots, 7`` and ``y > x``.
    2. Compute the sum of the square root of these numbers.
-"""
-
-# ╔═╡ 2c527d8d-5e11-4089-ad32-355fc7ac5e10
-md"""
-#### Exercise 4
-$(MLCourse.language_selector())` `
-
-This is just a tiny exercise to train how to write functions.
-
-1. Write a function that returns the smallest entry of a vector (without using any built-in functions like `minimum` or `min`).
-2. Test your function on a vector of 10 randomly sampled integers in the range 1 to 100.
 """
 
 # ╔═╡ af94fccd-bb3e-498a-8d2a-f8e75740cd29
@@ -354,6 +366,17 @@ In this exercise, we load some data, write it to a CSV file and visualize it.
 4. Load the data in the CSV file as a dataframe.  *Hint:* $(mlstring(md"use the function `CSV.read(filename, DataFrame)`", md"use the `pandas`-function `pd.read_csv`")). (It is of course a silly thing here to save the iris dataset to disk and load it again from disk, but it is useful to know how to do this.)
 3. Produce a scatter plot that shows the `sepallength` versus the `sepalwidth`. Make sure both axes have the correct label.
 4. Add to the same plot the "identiy"-line ``y = x`` in red.
+"""
+
+# ╔═╡ 2c527d8d-5e11-4089-ad32-355fc7ac5e10
+md"""
+#### Exercise 6 (optional)
+$(MLCourse.language_selector())` `
+
+This is just a tiny exercise to train how to write functions.
+
+1. Write a function that returns the smallest entry of a vector (without using any built-in functions like `minimum` or `min`).
+2. Test your function on a vector of 10 randomly sampled integers in the range 1 to 100.
 """
 
 # ╔═╡ d6e5fe02-21a5-486c-a237-878be1d95439
@@ -384,14 +407,14 @@ MLCourse.save_cache(@__FILE__)
 # ╟─8ea85113-8872-4f9f-87d0-63cf8c8293ba
 # ╟─79d6ef3e-bd23-4d91-afc2-d1d9c12ff619
 # ╟─4a03cfae-9876-4cf0-a498-d750853191cb
-# ╟─4e55d688-15c4-49bd-be7c-5ea49add645d
-# ╟─20f339a8-4f56-45c8-9ea3-d2da256565af
-# ╟─146b4094-f790-478d-b9f7-c0a9a2a3e5a2
 # ╟─36e33686-4220-42dd-83a3-cdaeedd30d5b
 # ╟─4ffa4078-67f7-4e0c-a196-80d94ff49196
+# ╟─084e3bce-4948-477f-81cf-62c6989106d4
+# ╟─4e55d688-15c4-49bd-be7c-5ea49add645d
+# ╟─20f339a8-4f56-45c8-9ea3-d2da256565af
 # ╟─dbe2c72c-bbc6-4912-af98-e8f473b7ac27
-# ╟─2c527d8d-5e11-4089-ad32-355fc7ac5e10
 # ╟─af94fccd-bb3e-498a-8d2a-f8e75740cd29
+# ╟─2c527d8d-5e11-4089-ad32-355fc7ac5e10
 # ╟─d6e5fe02-21a5-486c-a237-878be1d95439
 # ╟─8933325c-3be3-4a7e-bf71-df694f6c8776
 # ╟─0314376e-ff8c-4ad0-8a4b-f94f04f31f2c

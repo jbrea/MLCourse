@@ -1081,27 +1081,8 @@ We have some training data ``((x_1 = 0, y_1 = -1), (x_2 = 2, y_2 = 4),
      for this data and model.
    - Find the parameters ``\hat\theta_0`` and ``\hat\theta_1`` that maximize the log-likelihood function. *Hint*: You do not need to solve for the optimal parameters analytically; compare the loss function you derived in the previous step to the one we obtained in the lecture in the first blackboard example and use the fact that we know the optimum for the blackboard example.
    - Show for general training data ``((x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n))`` that the log-likelihood function is maximized by the same ``\hat\theta`` that minimizes the loss function of linear regression.
-#### Exercise 2
-   Explain whether each scenario is a classification or regression problem, and
-   indicate whether we are most interested in inference/interpretation or prediction.
-   Finally, provide ``n`` and ``p``.
-   - We collect a set of data on the top 500 firms in the US. For each firm we
-     record profit, number of employees, industry and the CEO salary. We are
-     interested in understanding which factors affect CEO salary.
-   - We are considering launching a new product and wish to know
-     whether it will be a success or a failure. We collect data on 20
-     similar products that were previously launched. For each product
-     we have recorded whether it was a success or failure, price
-     charged for the product, marketing budget, competition price,
-     and ten other variables.
-   - We are interested in predicting the % change in the USD/Euro
-     exchange rate in relation to the weekly changes in the world
-     stock markets. Hence we collect weekly data for all of 2012. For
-     each week we record the % change in the USD/Euro, the %
-     change in the US market, the % change in the British market,
-     and the % change in the German market.
 
-#### Exercise 3
+#### Exercise 2
 Suppose we generated data with ``y = 3x + 1 + \epsilon`` with ``\mathrm{E}[\epsilon] = 0`` and ``\mathrm{Var}[\epsilon] = \sigma^2``.
 We have training data ``\mathcal D = ((0, 1), (2, 9))`` and test data ``\mathcal D_\mathrm{test} = ((0, 0), (3, 20))``.
 We define a function family ``f(x) = \theta_0 + \theta_1 x^2`` and loss function ``L(y, \hat y) = |y - \hat y|``.
@@ -1111,7 +1092,7 @@ Which of the following statements is correct?
 3. The test loss of ``f(x) = 1 + 2x^2`` for the test set is 1.
 
 
-#### Exercise 4
+#### Exercise 3
 Take one of the examples of supervised machine learning applications
    discussed in the introductory lecture of this course. Discuss with a colleague
    - the data generating process for X
@@ -1131,7 +1112,7 @@ $(MLCourse.language_selector())` `
 
 # ╔═╡ 1feab086-9464-4fb7-9673-bc0ff30bab81
 md"""
-#### Exercise 5
+#### Exercise 4
 In this exercise we construct an example, where the response looks noisy, if we consider only some predictors, although the response would be deterministic if we consider all predictors. For this example we assume that the time it takes for a feather to reach the ground when dropping it from one meter is completely determined by the following factors: fluffiness of the feather (``f \in [1, 4]``), shape of the feather (``s = \{\mbox{s, e}\}``, for spherical or elongated), air density (``ρ ∈ [1.1, 1.4]`` kg/m³), wind speed (``w ∈ [0, 5]`` m/s). We assume that time it takes to reach the ground is deterministically given by the function
 ```math
 g(f, s, ρ, w) = ρ + 0.1f^2 + 0.3w + 2I(s = \mbox{s}) + 0.5I(s = \mbox{e})
@@ -1144,7 +1125,7 @@ where we use the indicator function ``I(\mbox{true}) = 1`` and ``I(\mbox{false})
 
 # ╔═╡ 19114da7-441a-4ada-b350-37c65a6211ee
 md"""
-#### Exercise 6
+#### Exercise 5
 Change the noise level ``\sigma``, the size of the training data ``n`` and the seed with the sliders of the section "Linear Regression" and observe the training and the test losses. Write down your observations when
 - ``n`` is small.
 - ``n`` is large.
@@ -1157,7 +1138,7 @@ Change the noise level ``\sigma``, the size of the training data ``n`` and the s
 begin
 hint1 = mlstring(md"Remember that `data[:, [\"A\", \"B\"]]` returns a sub-dataframe with columns \"A\" and \"B\". To get a list of all pairs of predictors you can use something like `predictors = setdiff(names(train), [\"time\", \"LUZ_wind_peak\"]); predictor_pairs = [[p1, p2] for p1 in predictors, p2 in predictors if p1 != p2 && p1 > p2]`", "")
 md"""
-#### Exercise 7 (optional)
+#### Exercise 6 (optional)
 
 
 In the multiple linear regression of the weather data set above we used all available predictors. We do not know if all of them are relevant. In this exercise our aim is to find models with fewer predictors and quantify the loss in prediction accuracy.
