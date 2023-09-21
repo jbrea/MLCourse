@@ -21,7 +21,7 @@ stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
 Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-using MLCourse, Plots, Random, Statistics, DataFrames, MLJ, MLJLinearModels
+using MLCourse, Plots, Random, Statistics, DataFrames, MLJ, MLJLinearModels, LinearAlgebra
 import PlutoPlotly as PP
 redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
 MLCourse.load_cache(@__FILE__)
