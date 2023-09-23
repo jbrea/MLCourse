@@ -694,6 +694,13 @@ plot!(identity, legend = false)
 """
 ,
 """
+import matplotlib.pyplot as plt
+
+plt.plot(test_preds, test_gt, 'o', markersize=1)
+plt.xlabel("predicted")
+plt.ylabel("data")
+plt.axline((0, 0), slope=1, color='red') # draw the identity line
+plt.show()
 """
 ,
 showoutput = true,
@@ -725,6 +732,20 @@ end
 """
 ,
 """
+class CustomLoss(torch.nn.Module):
+    # The following class is an example to show you how you could implement a custom loss
+    # function. In pytorch, usually the predictions are calculated withing the training loop,
+    # and the loss function should only take into arguments the predictions and the ground truth.
+
+    def __init__(self):
+        super().__init__()
+        self.softplus = torch.nn.Softplus()
+
+    def forward(self, predictions: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        m = predictions[0, :]
+        s = self.softplus(predictions[1, :])
+        return torch.mean((m - y)**2 / (2 * s) + 1/2 * torch.log(s))
+
 """
 )
 
