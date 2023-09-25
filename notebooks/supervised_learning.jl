@@ -1113,12 +1113,12 @@ $(MLCourse.language_selector())` `
 # ╔═╡ 1feab086-9464-4fb7-9673-bc0ff30bab81
 md"""
 #### Exercise 4
-In this exercise we construct an example, where the response looks noisy, if we consider only some predictors, although the response would be deterministic if we consider all predictors. For this example we assume that the time it takes for a feather to reach the ground when dropping it from one meter is completely determined by the following factors: fluffiness of the feather (``f \in [1, 4]``), shape of the feather (``s = \{\mbox{s, e}\}``, for spherical or elongated), air density (``ρ ∈ [1.1, 1.4]`` kg/m³), wind speed (``w ∈ [0, 5]`` m/s). We assume that time it takes to reach the ground is deterministically given by the function
+In this exercise we construct an example, where the response looks noisy, if we consider only some predictors, although the response would be deterministic if we consider all predictors. For this example we assume that the time it takes for a feather to reach the ground when dropping it from one meter is completely determined by the following factors: fluffiness of the feather (``f \in [1, 4)``), shape of the feather (``s = \{\mbox{s, e}\}``, for spherical or elongated), air density (``ρ ∈ [1.1, 1.4)`` kg/m³), wind speed (``w ∈ [0, 5)`` m/s). We assume that time it takes to reach the ground is deterministically given by the function
 ```math
 g(f, s, ρ, w) = ρ + 0.1f^2 + 0.3w + 2I(s = \mbox{s}) + 0.5I(s = \mbox{e})
 ```
 where we use the indicator function ``I(\mbox{true}) = 1`` and ``I(\mbox{false}) = 0``.
-1. Generate an artificial dataset that corresponds to 500 experiments of dropping different feathers under different conditions. *Hints:* $(mlstring(md"you can sample from a uniform distribution over the interval ``[a, b]`` using either `rand(500)*(b-a) .+ a` or `rand(Uniform(a, b), 500)` and you can sample categorical values in the same way as we did it in the first week when sampling column C in exercise 1. To implement the indicator function you can use for example the syntax `(s == :s)` and `(s == :e)`.", ""))
+1. Generate an artificial dataset that corresponds to 500 experiments of dropping different feathers under different conditions. *Hints:* $(mlstring(md"you can sample from a uniform distribution over the interval ``[a, b)`` using either `rand(500)*(b-a) .+ a` or `rand(Uniform(a, b), 500)` and you can sample categorical values in the same way as we did it in the first week when sampling column C in exercise 1. To implement the indicator function you can use for example the syntax `(s == :s)` and `(s == :e)`.", md"you can sample from a uniform distribution over the interval ``[a, b)`` using `np.random.rand(500)*(b-a) + a`."))
 2. Create a scatter plot with fluffiness of the feather on the horizontal axis and time to reach the ground on the vertical axis.
 3. Argue, why it looks like the time to reach the ground depended probabilistically on the fluffiness, although we used a deterministic function to compute the time to reach the ground. *Optional*: If you feel courageous, use a mathematical argument (marginalization) that uses the fact that $P(t|f, s, \rho, w) = \delta(t - g(f, s, \rho, w))$ is deterministic and shows that $P(t|f)$ is a non-degenerate conditional distribution.
 """
@@ -1126,7 +1126,7 @@ where we use the indicator function ``I(\mbox{true}) = 1`` and ``I(\mbox{false})
 # ╔═╡ 19114da7-441a-4ada-b350-37c65a6211ee
 md"""
 #### Exercise 5
-Change the noise level ``\sigma``, the size of the training data ``n`` and the seed with the sliders of the section "Linear Regression" and observe the training and the test losses. Write down your observations when
+Change the noise level ``\sigma``, the size of the training data ``n`` and the seed with the sliders of the section "Training and test loss as a function of ``n`` and ``\sigma``" and observe the training and the test losses. Write down your observations when
 - ``n`` is small.
 - ``n`` is large.
 - Compare training loss and test loss when ``n`` is large for different seed values.
@@ -1134,11 +1134,17 @@ Change the noise level ``\sigma``, the size of the training data ``n`` and the s
 """
 
 
+# ╔═╡ 509a2b50-031e-4820-95b5-f2c7c34ce093
+md"""
+#### Exercise 6
+Run a multiple linear regression on the wind speed data with two predictors: the pressure in Luzern `LUZ_pressure` and the sunshine duration in Luzern `LUZ_sunshine_duration`. Is the prediction on the test set with these two predictors better than with `LUZ_pressure` as the only predictor (c.f. section "Wind speed prediction with one predictor" above)?
+"""
+
 # ╔═╡ 45859648-ef10-4380-8bf8-bca281b958cb
 begin
 hint1 = mlstring(md"Remember that `data[:, [\"A\", \"B\"]]` returns a sub-dataframe with columns \"A\" and \"B\". To get a list of all pairs of predictors you can use something like `predictors = setdiff(names(train), [\"time\", \"LUZ_wind_peak\"]); predictor_pairs = [[p1, p2] for p1 in predictors, p2 in predictors if p1 != p2 && p1 > p2]`", "")
 md"""
-#### Exercise 6 (optional)
+#### Exercise 7 (optional)
 
 
 In the multiple linear regression of the weather data set above we used all available predictors. We do not know if all of them are relevant. In this exercise our aim is to find models with fewer predictors and quantify the loss in prediction accuracy.
@@ -1250,6 +1256,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─61c67500-c2b5-4610-a916-3b316ba01cce
 # ╟─1feab086-9464-4fb7-9673-bc0ff30bab81
 # ╟─19114da7-441a-4ada-b350-37c65a6211ee
+# ╟─509a2b50-031e-4820-95b5-f2c7c34ce093
 # ╟─45859648-ef10-4380-8bf8-bca281b958cb
 # ╟─0cfbd543-8b9b-406e-b3b4-c6cafbbec212
 # ╟─11e350b2-70bd-437b-acef-af5103a6eb96
