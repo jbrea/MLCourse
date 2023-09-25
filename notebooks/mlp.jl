@@ -671,7 +671,6 @@ with torch.no_grad():
 f'{train_loss=}, {test_loss=}'
 """
 ,
-cache = true
 )
 
 
@@ -732,6 +731,8 @@ end
 """
 ,
 """
+import torch
+
 class CustomLoss(torch.nn.Module):
     # The following class is an example to show you how you could implement a custom loss
     # function. In pytorch, usually the predictions are calculated withing the training loop,
@@ -806,19 +807,19 @@ histogram2d(u_x.(weather_input), u_y.(weather_output), bins = (250, 200),
 plot!(u_x.(grid), u_y.(m), c = :red, w = 3, label = "mean")
 plot!(u_x.(grid), u_y.(m .+ s), c = :red, linestyle = :dash, w = 3,
       label = "± standard deviation")
-plot!(u_x.(grid), u_y.(m .- s), c = :red, linestyle = :dash, w = 3,
-      label = nothing)
+fig = plot!(u_x.(grid), u_y.(m .- s), c = :red, linestyle = :dash, w = 3,
+            label = nothing)
 """
 ,
-"""
-"""
+nothing
 ,
 collapse = "Code for training and plotting",
-showoutput = false
+showoutput = false,
+cache_jl_vars = [:fig]
 )
 
 # ╔═╡ 23051a87-a4b2-49c2-984b-305f3d16a9f7
-mlcode("plot!()", "", showinput = false)
+MLCourse.JlMod.fig
 
 # ╔═╡ 6bf6598b-590e-4794-b8de-b48cc3fd2c84
 md"
