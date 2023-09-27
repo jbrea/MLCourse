@@ -729,7 +729,7 @@ lasso_cv.fit (weather_input, weather_output)
 variance_explained = 1 - (lasso_cv.mse_path_.mean(axis=1) / np.var(weather_output))
 
 fig, (ax1, ax2) = plt.subplots(2, sharex = True)
-ax1.plot(np.log(alphas), var)
+ax1.plot(np.log(alphas_lasso), variance_explained)
 ax1.set_ylabel("variance explained")
 ax2.plot(np.log(alphas_lasso), np.count_nonzero(coefs_lasso.T, axis =1))
 ax2.set_ylabel("non zeros parameters")
