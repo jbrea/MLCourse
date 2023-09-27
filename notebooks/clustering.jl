@@ -173,6 +173,8 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import matplotlib.pyplot as plt
 
+nb_plot = 5
+
 mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
 mnist["class"] = mnist["class"].astype("category")
 
@@ -181,11 +183,11 @@ kmeans = make_pipeline(StandardScaler(), KMeans(n_clusters=10, random_state=0,
 
 prediction = kmeans.predict(mnist.drop(["class"], axis =1))
 
-idxs = [list(np.where(prediction == k)[0][1:10]) for k in range(0, 10)]
+idxs = [list(np.where(prediction == k)[0][0:nb_plot]) for k in range(0, 10)]
 
-fig, ax = plt.subplots(10,5)
+fig, ax = plt.subplots(10,nb_plot)
 for i in range(10):
-  for j in range(5) :
+  for j in range(nb_plot) :
     ax[i][j].imshow(mnist.iloc[idxs[i][j], :-1].values.reshape(28, 28).astype(float)/255,
            cmap='gray')
 
@@ -528,7 +530,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─d1c88a44-be52-4b0e-bc23-cca00d10ffb6
 # ╟─0e7f34b9-e24f-447b-840b-e2750d2e778b
 # ╟─70b3f1bb-7c47-4bb0-aa17-cda6fdbe0469
-# ╠═260a1fb7-58b8-4d83-b8d7-a0bd8e6836ac
+# ╟─260a1fb7-58b8-4d83-b8d7-a0bd8e6836ac
 # ╟─b5165fda-1bdd-4837-9eed-42ce9db40529
 # ╟─fdf190cc-0426-4327-a710-80fe2ead632c
 # ╟─ab161204-bbcd-4608-ae67-fcde39b2539b
@@ -537,7 +539,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─2f4e3d67-d88e-4f9b-9572-6be1bc30106b
 # ╟─6a603cb6-7a1b-4a1d-9358-c4c811efa2bb
 # ╟─e266ada3-ba4d-4177-8129-f1220f293c72
-# ╠═c4bde04d-23e8-4fb0-9e66-88b443a12926
+# ╟─c4bde04d-23e8-4fb0-9e66-88b443a12926
 # ╟─675e3a37-8044-4e8a-9821-cf2e71cf38f2
 # ╟─6d845685-ac31-4df7-9d18-f1fab6c08e3d
 # ╟─9ca4cac1-f378-42cd-ba60-d174a47e23a8
