@@ -93,7 +93,9 @@ using StatsPlots
 """
 ,
 """
+import matplotlib.pyplot as plt
 import seaborn as sns
+
 g = sns.PairGrid(iris.drop(["class"], axis =1))
 g.map_lower(sns.regplot, line_kws={'color': 'black'})
 g.map_diag(sns.histplot, color = 'darkorange' )
@@ -179,9 +181,14 @@ kmeans = make_pipeline(StandardScaler(), KMeans(n_clusters=10, random_state=0,
 
 prediction = kmeans.predict(mnist.drop(["class"], axis =1))
 
-idxs = [list(np.where(prediction == k)[0][1:10]) for k in range(1, 11)]
+idxs = [list(np.where(prediction == k)[0][1:10]) for k in range(0, 10)]
 
-fig, ax = plt.subplots(9,5)
+fig, ax = plt.subplots(10,5)
+for i in range(10):
+  for j in range(5) :
+    ax[i][j].imshow(mnist.iloc[idxs[i][j], :-1].values.reshape(28, 28).astype(float)/255,
+           cmap='gray')
+
 plt.show()
 """
 )
@@ -225,15 +232,15 @@ mlcode(
 """
 using MLJClusteringInterface, Distances
 
-using Distributions, Distances
-hc = machine(HierarchicalClustering(k = 3, linkage = :complete, metric = Euclidean()))
+hc = machine(HierarchicalClustering(k = 3,
+                                    linkage = :complete,
+                                    metric = Euclidean()))
 predict(hc, select(iris, Not(:class)))
 """
 ,
 """
 from sklearn.cluster import AgglomerativeClustering
 hc = make_pipeline(StandardScaler(), AgglomerativeClustering(distance_threshold=0, n_clusters = None, metric = "euclidean", linkage = "complete")).fit(iris.drop(["class"], axis =1))
-hc
 hc
 """
 ,
@@ -300,9 +307,7 @@ plt.title("Hierarchical Clustering Dendrogram")
 plot_dendrogram(hc[-1], truncate_mode="level", p=3)
 plt.xlabel("Number of points in node (or index of point if no parenthesis).")
 plt.show()
-"""
-,
-showoutput = false,
+""",
 collapse = "How to show and cut a dendrogram"
 )
 
@@ -323,16 +328,21 @@ md"""Seed of random number generator $(@bind seed Slider(collect(1:50), show_val
 
 Cluster assignment with $(@bind method Select(["DBSCAN", "k-means", "hierarchical clustering"]))"""
 
+# ╔═╡ 52f99e00-7493-4d56-8557-511e897223bb
+md"Here is an example of how DBSCAN can be used."
+
 # ╔═╡ 3c6c668f-d5a0-48f8-8f87-e448e71f4554
 mlcode("""
-nothing""",
+X = DataFrame(X1 = [1., 2, 2, 8, 8, 25], X2 = [2., 2, 3, 7, 8, 80])
+predict(machine(DBSCAN()), X)
+""",
 """
-# here is the python code to run DBSCAN
 from sklearn.cluster import DBSCAN
 import numpy as np
 X = np.array([[1, 2], [2, 2], [2, 3],
                [8, 7], [8, 8], [25, 80]])
 clustering = DBSCAN(eps=3, min_samples=2).fit(X)
+clustering.labels_
 """
 )
 
@@ -444,8 +454,13 @@ def data_generator(d, n=20):
 """
 )
 
+
 # ╔═╡ add72e27-5e6e-4112-b1bf-9f579a845384
 md"""
+(b) PCA is an unsupervised machine learning method (you will learn more about it next week) that allows to visualize high-dimensional data in lower dimensions. You can use the command
+$(mlstring(md"`MLJ.transform(fit!(machine(PCA(maxoutdim = 2), data)), data)`", ""))
+to fit an unsupervised machine (with at most 2 output dimensions) to the data and transform the data according to this machine to 2 dimensions. Plot the result. Use a different color to indicate the observations in each of the three classes.
+
 (c) Perform K-means clustering of the observations with ``K = 3``. Repeat K-means clustering for multiple random initializations and keep the best result. *Hint:* for reproducibility you can use `Random.seed!(SEED)`, where SEED is positive integer. How well do the clusters that you obtained in K-means clustering compare to the true class labels? *Hint:* a `confusion_matrix` may be helpful to comare the result to the true labels.
 
 
@@ -478,7 +493,7 @@ CSV.read(download(\"https://www.statlearning.com/s/Ch12Ex13.csv\"),
 """
 ,
 """
-pd.read_csv(\"https://www.statlearning.com/s/Ch12Ex13.csv\")
+pd.read_csv("https://www.statlearning.com/s/Ch12Ex13.csv")
 """
 ,
 eval = false
@@ -503,48 +518,6 @@ MLCourse.FOOTER
 # ╔═╡ b24d7fbf-bd2b-4bd7-90ef-c77ec9099bc8
 MLCourse.save_cache(@__FILE__)
 
-# ╔═╡ 67b8f27f-b5b5-4dc0-ab51-83ac3dcaa2f7
-mlcode("""
-iris.class
-""",
-"""
-iris["class"]
-""")
-
-# ╔═╡ 88cd7a57-5d9d-45ae-968e-b3b5a8d3a824
-mlcode("""
-nothing""",
-"""
-# here is the python code to run DBSCAN
-from sklearn.cluster import DBSCAN
-import numpy as np
-X = np.array([[1, 2], [2, 2], [2, 3],
-               [8, 7], [8, 8], [25, 80]])
-clustering = DBSCAN(eps=3, min_samples=2).fit(X)
-"""
-)
-
-# ╔═╡ bfb97a80-4bb8-423f-b936-ecc3456a4327
-mlcode("""
-using MultivariateStats
-MLJ.transform(fit!(machine(PCA(maxoutdim = 2), data)), data)
-""",
-"""
-from sklearn.decomposition import PCA
-pca = PCA(n_components=2)
-pca.fit(data)
-""";
-eval = false
-)
-
-# ╔═╡ 7a29009c-3020-44aa-89e1-a8712c75d567
-md"(b) PCA is an unsupervised machine learning method (you will learn more about it next week) that allows to visualize high-dimensional data in lower dimensions. You can use the command"
-
-# ╔═╡ 884e4f0e-e53f-4f26-b285-6d30d1d68fc3
-md"to fit an unsupervised machine called `PCA` (with at most 2 output dimensions) to the data and transform the data according to this machine to 2 dimensions. Plot the result. Use a different color to indicate the observations in each of the three classes."
-
-
-
 # ╔═╡ Cell order:
 # ╟─eb6a77fa-fc7e-4546-8748-2438e9a519b8
 # ╟─da8f8ce7-c3ad-4e1a-bb9e-c7be15646d72
@@ -568,8 +541,9 @@ md"to fit an unsupervised machine called `PCA` (with at most 2 output dimensions
 # ╟─675e3a37-8044-4e8a-9821-cf2e71cf38f2
 # ╟─6d845685-ac31-4df7-9d18-f1fab6c08e3d
 # ╟─9ca4cac1-f378-42cd-ba60-d174a47e23a8
+# ╟─52f99e00-7493-4d56-8557-511e897223bb
+# ╟─3c6c668f-d5a0-48f8-8f87-e448e71f4554
 # ╟─8ea10eb7-8b37-4026-a7ec-e44bba7532ea
-# ╠═3c6c668f-d5a0-48f8-8f87-e448e71f4554
 # ╟─9d54fbb8-44f8-46c8-90ef-de85746c410b
 # ╟─85d574c2-b823-4dcf-b711-efc755e724b7
 # ╟─1ed55c9f-1301-4553-84ee-26ada25f9b76
@@ -583,8 +557,3 @@ md"to fit an unsupervised machine called `PCA` (with at most 2 output dimensions
 # ╟─35ac2056-ab72-44b0-9972-723a0887a622
 # ╟─48d87103-4c23-4144-a121-1e33d2bb87f3
 # ╟─b24d7fbf-bd2b-4bd7-90ef-c77ec9099bc8
-# ╠═67b8f27f-b5b5-4dc0-ab51-83ac3dcaa2f7
-# ╠═88cd7a57-5d9d-45ae-968e-b3b5a8d3a824
-# ╠═bfb97a80-4bb8-423f-b936-ecc3456a4327
-# ╠═7a29009c-3020-44aa-89e1-a8712c75d567
-# ╠═884e4f0e-e53f-4f26-b285-6d30d1d68fc3

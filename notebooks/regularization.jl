@@ -635,7 +635,7 @@ weather_fits = glmnet(Array(weather_input), weather_output)
 ,
 """
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import explained_variance_score
+from sklearn.linear_model import lasso_path
 
 weather_input = weather.drop("LUZ_wind_peak", axis=1).iloc[:-5, :]
 weather_output = weather["LUZ_wind_peak"].iloc[5:]
@@ -643,18 +643,9 @@ weather_output = weather["LUZ_wind_peak"].iloc[5:]
 scaler = StandardScaler().fit(weather_input)
 weather_input = scaler.transform(weather_input)
 
-# Create Lasso regression model
-alphas = np.logspace(-6,1,10)
-lasso = Lasso(max_iter=10000)
-coefs = []
-var = []
-
-for a in alphas :
-	lasso.set_params(alpha=a)
-	lasso.fit(weather_input, weather_output)
-	coefs.append(lasso.coef_)
-	var.append(explained_variance_score(weather_output, lasso.predict(weather_input)))
-	explained_variance_score(weather_output, lasso.predict(weather_input))
+alphas =np.logspace(-6,1,10)
+alphas_lasso, coefs_lasso, _ = lasso_path(weather_input, weather_output, alphas=alphas)
+alphas_lasso
 """
 ,
 cache = false
@@ -683,9 +674,9 @@ mlcode(
 """
 """,
 """
-df = pd.DataFrame ({"parameters":np.tile(weather.drop("LUZ_wind_peak", axis=1).columns, len(alphas)),
-                    "log_alpha": np.log(np.repeat(alphas,len(coefs[0]))),
-                    "coefs": np.array(coefs).reshape(-1)})
+df = pd.DataFrame ({"parameters":np.tile(weather.drop("LUZ_wind_peak", axis=1).columns, len(alphas_lasso)),
+                    "log_alpha": np.log(np.repeat(alphas_lasso,len(coefs_lasso))),
+                    "coefs": np.array(coefs_lasso).T.flatten()})
 
 import plotly.express as px
 fig = px.line(df,x="log_alpha", y="coefs", color="parameters")
@@ -726,10 +717,21 @@ p2 = plot(lambda, reshape(sum(weather_fits.betas .!= 0, dims = 1), :),
 plot(p1, p2, layout = (2, 1), legend = false)
 """,
 """
+from sklearn.linear_model import LassoCV
+
+# Initialize the LassoCV model with cross-validation
+lasso_cv = LassoCV(alphas=alphas, cv=5)
+
+# Fit the LassoCV model to the data
+lasso_cv.fit (weather_input, weather_output)
+
+# Get the variance explained by each alpha
+variance_explained = 1 - (lasso_cv.mse_path_.mean(axis=1) / np.var(weather_output))
+
 fig, (ax1, ax2) = plt.subplots(2, sharex = True)
 ax1.plot(np.log(alphas), var)
 ax1.set_ylabel("variance explained")
-ax2.plot(np.log(alphas), np.count_nonzero(coefs, axis =1))
+ax2.plot(np.log(alphas_lasso), np.count_nonzero(coefs_lasso.T, axis =1))
 ax2.set_ylabel("non zeros parameters")
 ax2.set_xlabel("log(alpha)")
 plt.show()
@@ -894,7 +896,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─83fe757f-a9aa-4a60-8a49-dce5e9fcf56c
 # ╟─35913b1d-86d0-4338-9f7c-41a89651b2dc
 # ╟─6f5b0cd1-ba68-46a5-a348-fed201da4a15
-# ╟─c9ed011c-8d36-4926-9ec4-84be3b4878d7
+# ╠═c9ed011c-8d36-4926-9ec4-84be3b4878d7
 # ╟─45df70c6-4c5a-419b-af9d-05d276b3759a
 # ╟─40bb385f-1cbd-4555-a8ab-544a67f33595
 # ╟─8262b948-6d54-4348-87d1-4c762c74db30
