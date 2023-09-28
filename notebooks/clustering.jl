@@ -309,6 +309,7 @@ def plot_dendrogram(model, **kwargs):
     # Plot the corresponding dendrogram
     dendrogram(linkage_matrix, **kwargs)
 
+plt.figure()
 plt.title("Hierarchical Clustering Dendrogram")
 # plot the top three levels of the dendrogram
 plot_dendrogram(hc[-1], truncate_mode="level", p=3)
@@ -548,8 +549,6 @@ MLCourse.save_cache(@__FILE__)
 # ╟─675e3a37-8044-4e8a-9821-cf2e71cf38f2
 # ╟─6d845685-ac31-4df7-9d18-f1fab6c08e3d
 # ╟─9ca4cac1-f378-42cd-ba60-d174a47e23a8
-# ╟─52f99e00-7493-4d56-8557-511e897223bb
-# ╟─3c6c668f-d5a0-48f8-8f87-e448e71f4554
 # ╟─8ea10eb7-8b37-4026-a7ec-e44bba7532ea
 # ╟─52f99e00-7493-4d56-8557-511e897223bb
 # ╟─3c6c668f-d5a0-48f8-8f87-e448e71f4554

@@ -498,10 +498,10 @@ def biplot(PC1, PC2, scalePC1, scalePC2, features, ldngs) :
   ax.set_xlabel('PC1', fontsize=20)
   ax.set_ylabel('PC2', fontsize=20)
   ax.set_title('Biplot', fontsize=20)
-  plt.show()
+  return fig
 """
 ,
-collapse = "Custom biplot code"
+collapse = "Custom biplot code",
 )
 
 # ╔═╡ 265594dd-ba59-408a-925a-c2a173343df7
@@ -539,6 +539,7 @@ biplot (PC1, PC2, scalePC1, scalePC2, features, ldngs)
 plt.show()
 """
 ,
+recompute = true
 )
 
 # ╔═╡ ecc77003-c138-4ea9-93a7-27df46aa1e89
@@ -863,8 +864,7 @@ end
 
 # ╔═╡ a00d99c2-e580-47ee-acb6-23d097d47bff
 mlstring(nothing,
-md"
-A good visualization of the data and the components of pca can be found here : https://plotly.com/python/pca-visualization")
+md"Helpful documentation for plotting pca can be found [here](https://plotly.com/python/pca-visualization).")
 
 # ╔═╡ 0cb282aa-81d4-408d-a919-0d28cdbb7bed
 mlcode(
@@ -874,6 +874,15 @@ fit!(pca_faces, verbosity = 0)
 
 faces_vars = report(pca_faces).principalvars ./ report(pca_faces).tvar
 faces_pcs = fitted_params(pca_faces).projection
+
+let vars = faces_vars
+    p1 = plot(vars, label = nothing, yscale = :log10,
+              xlabel = "component", ylabel = "proportion of variance explained")
+    p2 = plot(cumsum(vars),
+              label = nothing, xlabel = "component",
+              ylabel = "cumulative prop. of variance explained")
+    plot(p1, p2, layout = (1, 2), size = (700, 400))
+end
 """
 ,
 """
@@ -885,30 +894,23 @@ pca_faces.fit(faces_scaled[:,1:-1])
 def display_scree_plot(pca):
     '''Display a scree plot for the pca'''
 
+    fig, ax = plt.subplots(figsize=(14, 9))
     scree = pca.explained_variance_ratio_*100
-    plt.bar(np.arange(len(scree))+1, scree)
-    plt.plot(np.arange(len(scree))+1, scree.cumsum(), c="red",marker='o')
-    plt.xlabel("Number of principal components")
-    plt.ylabel("Percentage explained variance")
-    plt.title("Scree plot")
+    ax.bar(np.arange(len(scree))+1, scree)
+    ax.plot(np.arange(len(scree))+1, scree.cumsum(), c="red",marker='o')
+    ax.set_xlabel("Number of principal components")
+    ax.set_ylabel("Percentage explained variance")
+    ax.set_title("Scree plot")
+    return fig
 
 display_scree_plot(pca_faces)
 plt.show()
 """
 ,
-showoutput = false,
-cache_jl_vars = [:faces_vars, :faces_pcs]
+showoutput = true,
+cache_jl_vars = [:faces_vars, :faces_pcs],
 )
 
-# ╔═╡ c70b5212-a823-4ff8-937d-10919efc766c
-let vars = M.faces_vars
-    p1 = plot(vars, label = nothing, yscale = :log10,
-              xlabel = "component", ylabel = "proportion of variance explained")
-    p2 = plot(cumsum(vars),
-              label = nothing, xlabel = "component",
-              ylabel = "cumulative prop. of variance explained")
-    plot(p1, p2, layout = (1, 2), size = (700, 400))
-end
 
 # ╔═╡ 0742ea40-1895-48f4-b149-d472397e83d0
 let pcs = M.faces_pcs
@@ -1109,6 +1111,15 @@ end
 mnist_pca = machine(PCA(maxoutdim = 2), mnist_x)
 fit!(mnist_pca, verbosity = 0)
 mnist_proj = MLJ.transform(mnist_pca)
+
+plot()
+for i in 0:9
+    idxs = findall(x -> x == string(i), mnist_y)
+    scatter!(mnist_proj.x1[idxs], mnist_proj.x2[idxs],
+             markersize = 1, markerstrokewidth = 0,
+             label = string(i))
+end
+plot!(xlabel = "PC 1", ylabel = "PC 2", legend_position = (0.1, .95))
 """
 ,
 """
@@ -1134,28 +1145,15 @@ df['pca-two'] = mnist_proj[:,1]
 df["y"] =  mnist_y
 
 plt.figure(figsize=(16,10))
-sns.scatterplot(x="pca-one", y="pca-two", hue="y", palette=sns.color_palette("hls", 10), data=df, legend="full", alpha=0.3)
+sns.scatterplot(x="pca-one", y="pca-two", hue="y",
+                palette=sns.color_palette("hls", 10), data=df,
+                legend="full", alpha=0.3)
 plt.show()
 """
 ,
-showoutput = false,
-cache_jl_vars = [:mnist_proj, :mnist_y]
+showoutput = true,
+cache_jl_vars = [:mnist_proj, :mnist_y],
 )
-
-
-
-# ╔═╡ 151cd6e7-8981-41b4-ac75-f13ce16940e4
-let mnist_proj = M.mnist_proj, mnist_y = M.mnist_y
-	plot()
-	for i in 0:9
-		idxs = findall(x -> x == string(i), mnist_y)
-		scatter!(mnist_proj.x1[idxs], mnist_proj.x2[idxs],
-			     markersize = 1, markerstrokewidth = 0,
-			     label = "$i")
-	end
-	plot!(xlabel = "PC 1", ylabel = "PC 2", legend_position = (0.1, .95))
-end
-
 
 # ╔═╡ fd8f7308-c38c-420c-a2a1-56ecbb208671
 md"""
@@ -1482,7 +1480,7 @@ urllib.request.urlretrieve(
    "gfg.jpg")
   
 img = Image.open("gfg.jpg")
-img.show()
+
 """
 )
 
@@ -1582,7 +1580,6 @@ MLCourse.save_cache(@__FILE__)
 # ╟─e967a9cb-ad95-4bd2-8fbd-491dc6fe0475
 # ╟─a00d99c2-e580-47ee-acb6-23d097d47bff
 # ╟─0cb282aa-81d4-408d-a919-0d28cdbb7bed
-# ╟─c70b5212-a823-4ff8-937d-10919efc766c
 # ╟─0742ea40-1895-48f4-b149-d472397e83d0
 # ╟─7c020b97-384d-43fc-af1c-a4bf75a6f06c
 # ╟─cddfed10-7c9c-47b0-83fc-b3322da522ed
@@ -1596,16 +1593,15 @@ MLCourse.save_cache(@__FILE__)
 # ╟─e4302d86-5e4f-4c56-bdca-8b4eed2af47c
 # ╟─6b319dbe-c626-4294-92b6-cab574aabfb0
 # ╟─c079cac4-8789-416d-bc4f-a84a3120ab65
-# ╠═ea1caedc-932a-4d13-bcb7-4c661641596d
+# ╟─ea1caedc-932a-4d13-bcb7-4c661641596d
 # ╟─82e4dc4d-3e75-43e0-aa33-b48a76d09404
 # ╟─a30af1e5-eb42-4e23-bdb0-386bf76a43a4
 # ╟─716da1a0-266f-41ec-8ef3-a2593ac7b74b
 # ╟─a6942d97-a091-4a18-bc3b-cd376da263e5
-# ╟─151cd6e7-8981-41b4-ac75-f13ce16940e4
 # ╟─fd8f7308-c38c-420c-a2a1-56ecbb208671
 # ╟─87805205-9bb8-40de-b37e-80442a8cd0e7
 # ╟─daa928e2-ce2a-4593-a4cd-8faf62c0028d
-# ╠═2eb56328-d39d-40c4-8b73-06e2a9a3e191
+# ╟─2eb56328-d39d-40c4-8b73-06e2a9a3e191
 # ╟─273de5a4-4400-48c9-8a0d-296e57cf26a4
 # ╟─3087540f-19e1-49cb-9b3b-c23207775ea7
 # ╟─187253a7-78af-4793-8017-48845803a3b8
