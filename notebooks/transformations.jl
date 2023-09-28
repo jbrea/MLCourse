@@ -850,7 +850,10 @@ scatter(cldata.x1, cldata.x2,
 """
 import matplotlib.pyplot as plt
 
-plt.scatter(cldata["x1"], cldata["x2"], c=cldata["y"].astype(int) + 1, label=None, cmap ='coolwarm')
+plt.figure()
+plt.scatter(cldata["x1"], cldata["x2"],
+            c=cldata["y"].astype(int) + 1,
+            label=None, cmap ='coolwarm')
 plt.xlabel('X₁')
 plt.ylabel('X₂')
 plt.show()

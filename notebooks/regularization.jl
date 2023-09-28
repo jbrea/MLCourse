@@ -303,7 +303,19 @@ md"λ = $(lambda == -14 ? 0 : 10.0^lambda)"
 # ╔═╡ 566be5a7-3eae-4c26-ab6d-605dcf08a57d
 md"## Tuning Two Hyperparameters: Lambda and Degree
 
-In the cell below we use a `TunedModel` to find with cross validation the best polynomial degree and the best regularization constant for ridge regression. Nore how we can just replace the `LinearRegressor()` by a `RidgeRegressor()` in the usual model for polynomial regression (previously we used `Polynomial() |> LinearRegressor()`)."
+In this section we tune two hyper-parameters simultaneously.
+"
+
+# ╔═╡ 2a32d5ac-f761-41f0-8082-32ca5d0b96b2
+mlstring(
+md"""
+In the cell below we use a `TunedModel` to find with cross validation the best polynomial degree and the best regularization constant for ridge regression. Note how we can just replace the `LinearRegressor()` by a `RidgeRegressor()` in the usual model for polynomial regression (previously we used `Polynomial() |> LinearRegressor()`).
+"""
+,
+md"""
+In the cell below we perform cross validation on a grid of hyper-parameters using `GridSearchCV`.
+"""
+)
 
 # ╔═╡ fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
 mlcode(
@@ -347,32 +359,49 @@ pipeline = Pipeline ([("polynomial",PolynomialFeatures()),("model",Ridge())])
 
 param_grid = [
     {'polynomial__degree': np.arange(1,20,1),
-	'model__alpha' : np.arange(10**-12,10**-3,10)}]
+	'model__alpha' : np.logspace(-12,-3,10)}]
 
 grid_search = GridSearchCV(pipeline, param_grid, cv=5,
                            scoring='neg_mean_squared_error')
 
 grid_search.fit(df["x"].values.reshape(-1,1), df["y"].values.reshape(-1,1))
-("best_accuracy",grid_search.best_score_, "best_parameters", grid_search.best_params_)
+("best_accuracy:", grid_search.best_score_, "best_parameters:", grid_search.best_params_)
 """
 ,
-cache = false
+)
+
+# ╔═╡ 6b15db59-079c-48c6-97a0-7035e0c6b133
+mlcode(
+"""
+best_deg = report(self_tuning_mach).best_model.polynomial.degree
+best_lambda = report(self_tuning_mach).best_model.ridge_regressor.lambda
+"""
+,
+"""
+best_deg = grid_search.best_params_['polynomial__degree']
+best_lambda = grid_search.best_params_['model__alpha']
+"""
+,
+showinput = false,
+showoutput = false,
+cache_jl_vars = [:best_deg, :best_lambda],
+cache_py_vars = [:best_deg, :best_lambda],
 )
 
 # ╔═╡ 7b4daae4-20d3-4992-94e9-46882e47b840
-mlstring(md"With the report function we can have a look at the best hyper-parameter values (`polynomial.degree`= $(report(M.self_tuning_mach).best_model.polynomial.degree) and
- `ridge_regressor.lambda` = $(report(M.self_tuning_mach).best_model.ridge_regressor.lambda)) found by the self-tuning machine.
+mlstring(md"With the report function we can have a look at the best hyper-parameter values (`polynomial.degree`= $(M.best_deg) and
+ `ridge_regressor.lambda` = $(round(M.best_lambda, sigdigits = 2)) found by the self-tuning machine.
 
 The result of the self-tuning machine can be visualized with the `plot` function.",
-"
-The best hyper-parameter values (`polynomial__degree`= 6 and
- `model__alpha` = 1.0e-12 found by the self-tuning machine.
-gg
-NB : we could have also use the sklearn function `RidgeCV` : a Ridge regression with built-in cross-validation.
+md"""
+The best hyper-parameter values (`polynomial__degree`= $(MLCourse.PyMod._OUTPUT_CACHE[:best_deg]) and
+ `model__alpha` = $(round(MLCourse.PyMod._OUTPUT_CACHE[:best_lambda], sigdigits = 2)) found by the self-tuning machine.
+
+Note, we could have also use the sklearn function `RidgeCV` : a Ridge regression with built-in cross-validation.
 Use `grid_search.cv_results_` to see all results.
 
 The result of the self-tuning machine can be visualized with the `plot` function.
-")
+""")
 
 # ╔═╡ f5057d4a-1103-4728-becc-287d93d682ba
 mlcode(
@@ -405,7 +434,8 @@ results = pd.DataFrame(grid_search.cv_results_)
 results = results[['param_model__alpha', 'param_polynomial__degree', 'mean_test_score']]
 results.columns = ['model__alpha', 'polynomial__degree', 'test_score']
 plot_hyperparameters(results)
-"""
+plt.show()
+""",
 )
 
 # ╔═╡ adfe4bb8-f3db-4557-b5d8-6efc33f5e321
@@ -415,7 +445,7 @@ In the plot **at the right** we see the root mean squared error as for different
 
 Let us have a look how well the model with the best hyper-parameters fits the data."
 ,
-"
+md"
 In the plot **at the bottom right**, we see the root mean square error estimated with cross-validation for different values of the polynomial degree. We see, for example, that for low polynomial degrees (below degree 4) the self-tuning machine did not find any low errors. For every degree we see multiple points, because the self-tuning machine tried for every degree multiple values for the regularization constant.
 In the plot **at the bottom left** we see the root mean squared error as for different values of the regularization constant `lambda`. We see, for example, that for high regression values (above ``10^{-6}``) the self-tuning machine did not find any low errors. Again, we see multiple points for every value of the regularization constant, because multiple polynomial degrees were tested (the line of blue values at the top of the figure is probably produced by low polynomial degrees). In the plot **at the middle** we see with a color code the loss for different values of polynomial degree and regularization constant lambda. Thedarker the circle, the lower the error.
 
@@ -437,7 +467,7 @@ mlcode(
 """
 ,
 """
-import matplotlib.pyplot as plt
+plt.figure()
 p1 = plt.scatter(df["x"], df["y"], label="training data")
 
 x= np.linspace(0, 1, 100)
@@ -456,13 +486,15 @@ pred = test_pipeline.predict(grid.reshape(-1,1))
 plt.plot(grid, pred, label="fit", linewidth=3, color="red")
 
 # Add annotation
-reducible_error_str = str(round(np.mean((pred - f(grid))**2), 3))
+reducible_error_str = str(round(np.mean((pred.flatten() - f(grid))**2), 3))
+print((pred - f(grid))**2)
 plt.annotate("reducible error ≈ " + reducible_error_str, xy=(0.28, 0.6))
 
 # Add legend and show plot
 plt.legend(loc="upper left")
 plt.show()
 """
+,
 )
 
 
@@ -634,8 +666,7 @@ weather_fits = glmnet(Array(weather_input), weather_output)
 ,
 """
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import explained_variance_score
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import lasso_path
 
 weather_input = weather.drop("LUZ_wind_peak", axis=1).iloc[:-5, :]
 weather_output = weather["LUZ_wind_peak"].iloc[5:]
@@ -643,18 +674,9 @@ weather_output = weather["LUZ_wind_peak"].iloc[5:]
 scaler = StandardScaler().fit(weather_input)
 weather_input = scaler.transform(weather_input)
 
-# Create Lasso regression model
-alphas = np.logspace(-6,1,10)
-lasso = Lasso(max_iter=10000)
-coefs = []
-var = []
-
-for a in alphas :
-	lasso.set_params(alpha=a)
-	lasso.fit(weather_input, weather_output)
-	coefs.append(lasso.coef_)
-	var.append(explained_variance_score(weather_output, lasso.predict(weather_input)))
-	explained_variance_score(weather_output, lasso.predict(weather_input))
+alphas =np.logspace(-6,1,10)
+alphas_lasso, coefs_lasso, _ = lasso_path(weather_input, weather_output, alphas=alphas)
+alphas_lasso
 """
 ,
 cache_jl_vars = [:weather_fits, :weather_input]
@@ -683,9 +705,9 @@ mlcode(
 """
 """,
 """
-df = pd.DataFrame ({"parameters":np.tile(weather.drop("LUZ_wind_peak", axis=1).columns, len(alphas)),
-                    "log_alpha": np.log(np.repeat(alphas,len(coefs[0]))),
-                    "coefs": np.array(coefs).reshape(-1)})
+df = pd.DataFrame ({"parameters":np.tile(weather.drop("LUZ_wind_peak", axis=1).columns, len(alphas_lasso)),
+                    "log_alpha": np.log(np.repeat(alphas_lasso,len(coefs_lasso))),
+                    "coefs": np.array(coefs_lasso).T.flatten()})
 
 import plotly.express as px
 fig = px.line(df,x="log_alpha", y="coefs", color="parameters")
@@ -732,10 +754,21 @@ p2 = plot(lambda, reshape(sum(weather_fits.betas .!= 0, dims = 1), :),
 plot(p1, p2, layout = (2, 1), legend = false)
 """,
 """
+from sklearn.linear_model import LassoCV
+
+# Initialize the LassoCV model with cross-validation
+lasso_cv = LassoCV(alphas=alphas, cv=5)
+
+# Fit the LassoCV model to the data
+lasso_cv.fit (weather_input, weather_output)
+
+# Get the variance explained by each alpha
+variance_explained = 1 - (lasso_cv.mse_path_.mean(axis=1) / np.var(weather_output))
+
 fig, (ax1, ax2) = plt.subplots(2, sharex = True)
-ax1.plot(np.log(alphas), var)
+ax1.plot(np.log(alphas_lasso), variance_explained)
 ax1.set_ylabel("variance explained")
-ax2.plot(np.log(alphas), np.count_nonzero(coefs, axis =1))
+ax2.plot(np.log(alphas_lasso), np.count_nonzero(coefs_lasso.T, axis =1))
 ax2.set_ylabel("non zeros parameters")
 ax2.set_xlabel("log(alpha)")
 plt.show()
@@ -879,7 +912,9 @@ MLCourse.save_cache(@__FILE__)
 # ╟─a54e3439-69b8-41c8-bfe0-4575795fb9b8
 # ╟─bdbf0dfd-8da5-4e54-89c4-ef4d6b3796ce
 # ╟─566be5a7-3eae-4c26-ab6d-605dcf08a57d
+# ╟─2a32d5ac-f761-41f0-8082-32ca5d0b96b2
 # ╟─fe2fe54f-0163-4f5d-9fd1-3d1aa3580875
+# ╟─6b15db59-079c-48c6-97a0-7035e0c6b133
 # ╟─7b4daae4-20d3-4992-94e9-46882e47b840
 # ╟─f5057d4a-1103-4728-becc-287d93d682ba
 # ╟─adfe4bb8-f3db-4557-b5d8-6efc33f5e321
