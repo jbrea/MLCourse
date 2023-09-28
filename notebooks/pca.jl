@@ -1070,8 +1070,8 @@ umap_proj = umap(Array(eight_clouds)', 2, min_dist = .5, n_neighbors = 10);
 """
 ,
 """
-import umap
-trans = umap.UMAP(n_components=2, n_neighbors=10, random_state=42, min_dist = 0.5).fit(np.array(eight_clouds))
+from umap import UMAP
+umap_proj = UMAP(n_components=2, n_neighbors=10, random_state=42, min_dist = 0.5).fit(np.array(eight_clouds))
 """
 ,
 showoutput = false,
@@ -1126,18 +1126,18 @@ mnist_y = mnist['class']
 
 # Perform PCA
 mnist_pca = PCA(n_components=2)
-pca_result = mnist_pca.fit_transform(mnist_x)
+mnist_proj = mnist_pca.fit_transform(mnist_x)
 
 df = pd.DataFrame()
-df['pca-one'] = pca_result[:,0]
-df['pca-two'] = pca_result[:,1]
+df['pca-one'] = mnist_proj[:,0]
+df['pca-two'] = mnist_proj[:,1]
 df["y"] =  mnist_y
 
 plt.figure(figsize=(16,10))
 sns.scatterplot(x="pca-one", y="pca-two", hue="y", palette=sns.color_palette("hls", 10), data=df, legend="full", alpha=0.3)
+plt.show()
 """
 ,
-eval = false,
 showoutput = false,
 cache_jl_vars = [:mnist_proj, :mnist_y]
 )
@@ -1183,13 +1183,12 @@ scatter(tsne_proj_mnist[:, 1], tsne_proj_mnist[:, 2],
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 
-# Perform t-SNE
-tsne_proj_mnist = TSNE(n_components=2, perplexity=50, n_iter=1000, learning_rate=20, verbose=0).fit_transform(mnist_x[:7000])
+tsne = TSNE(random_state = 42, n_components=2,verbose=0, perplexity=40, n_iter=300).fit_transform(mnist_x[:7000])
 
-# Plot the t-SNE projection
-plt.scatter(tsne_proj_mnist[:, 0], tsne_proj_mnist[:, 1], c=mnist_y[:7000].astype(int), cmap='jet')
-plt.xlabel('t-SNE 1')
-plt.ylabel('t-SNE 2')
+plt.scatter(tsne[:, 0], tsne[:, 1], s= 5, c=mnist_y[:7000].astype(int), cmap='Spectral')
+plt.gca().set_aspect('equal', 'datalim')
+plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(10))
+plt.title('Visualizing MNIST through t-SNE', fontsize=24)
 plt.show()
 """
 )
@@ -1222,13 +1221,22 @@ plot!(xlabel = "UMAP 1", ylabel = "UMAP 2", legend_position = -5)
 ,
 """
 import umap
+from sklearn.datasets import fetch_openml
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-reducer = umap.UMAP(n_components=2)
-scaled_mnist = StandardScaler().fit_transform(mnist_x)
-embedding = reducer.fit_transform(scaled_mnist)
+sns.set(context="paper", style="white")
 
-fig_2d = px.scatter(embedding, x=0, y=1, color=mnist_y)
-fig_2d.show()
+reducer = umap.UMAP(random_state=42)
+embedding = reducer.fit_transform(mnist_x)
+
+fig, ax = plt.subplots(figsize=(12, 10))
+color = mnist_y.astype(int)
+plt.scatter(embedding[:, 0], embedding[:, 1], c=color, cmap="Spectral", s=0.1)
+plt.setp(ax, xticks=[], yticks=[])
+plt.title("MNIST data embedded into two dimensions by UMAP", fontsize=18)
+
+plt.show()
 """
 )
 
@@ -1315,16 +1323,16 @@ X_train, X_test, y_train, y_test = train_test_split( x, y, test_size=0.5, random
 m = LinearRegression()  # Create a linear regression model
 m.fit(X_train,y_train)
 y_pred = m.predict(X_test)
-mse_lr = mean_squared_error(y_test,y_pred)
+rmse_lr = mean_squared_error(y_test,y_pred)**0.5
 
 pca = PCA(20)
 logistic = LinearRegression()
 pipe = Pipeline(steps=[("pca", pca), ("logistic", logistic)])
 pipe.fit(X_train,y_train)
 y_pred_pca = pipe.predict(X_test)
-mse_pca_lr = mean_squared_error(y_test,y_pred_pca)
+rmse_pca_lr = mean_squared_error(y_test,y_pred_pca)**0.5
 
-(mse_lr, mse_pca_lr)
+(rmse_lr, rmse_pca_lr)
 """
 )
 
@@ -1476,8 +1484,6 @@ urllib.request.urlretrieve(
 img = Image.open("gfg.jpg")
 img.show()
 """
-,
-showoutput = false
 )
 
 # ╔═╡ cc2136d5-7d79-47ea-8b8c-6ce7f7a98ac0
@@ -1590,16 +1596,16 @@ MLCourse.save_cache(@__FILE__)
 # ╟─e4302d86-5e4f-4c56-bdca-8b4eed2af47c
 # ╟─6b319dbe-c626-4294-92b6-cab574aabfb0
 # ╟─c079cac4-8789-416d-bc4f-a84a3120ab65
-# ╟─ea1caedc-932a-4d13-bcb7-4c661641596d
+# ╠═ea1caedc-932a-4d13-bcb7-4c661641596d
 # ╟─82e4dc4d-3e75-43e0-aa33-b48a76d09404
 # ╟─a30af1e5-eb42-4e23-bdb0-386bf76a43a4
 # ╟─716da1a0-266f-41ec-8ef3-a2593ac7b74b
 # ╟─a6942d97-a091-4a18-bc3b-cd376da263e5
 # ╟─151cd6e7-8981-41b4-ac75-f13ce16940e4
 # ╟─fd8f7308-c38c-420c-a2a1-56ecbb208671
-# ╠═87805205-9bb8-40de-b37e-80442a8cd0e7
+# ╟─87805205-9bb8-40de-b37e-80442a8cd0e7
 # ╟─daa928e2-ce2a-4593-a4cd-8faf62c0028d
-# ╟─2eb56328-d39d-40c4-8b73-06e2a9a3e191
+# ╠═2eb56328-d39d-40c4-8b73-06e2a9a3e191
 # ╟─273de5a4-4400-48c9-8a0d-296e57cf26a4
 # ╟─3087540f-19e1-49cb-9b3b-c23207775ea7
 # ╟─187253a7-78af-4793-8017-48845803a3b8
