@@ -651,8 +651,6 @@ test_predictions = knn.predict(X_test)
 mnist_errorrate = np.mean(test_predictions != y_test)
 mnist_errorrate
 """
-;
-eval = false
 )
 
 # ╔═╡ 1c7ad8e3-dae7-4217-b528-bb0d3d1d5331

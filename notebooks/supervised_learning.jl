@@ -20,11 +20,10 @@ using Pkg
 stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
 import Distributions: Normal
 import PlutoPlotly as PP
-# Base.download(s::AbstractString) = joinpath(@__DIR__, "..", "data", replace(s, "https://go.epfl.ch/bio322-" => ""))
 redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
 MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
@@ -190,6 +189,7 @@ spam[spam.label .== "ham", :] # only show non-spam email
 """
 spam[spam['label'] == 'ham'] # only show non-spam email
 """
+,
 )
 
 # ╔═╡ f63c0524-eefe-11eb-3abd-63d677b12db9
@@ -200,6 +200,7 @@ spam[spam.label .== "spam", :] # only show spam examples
 """
 spam[spam['label'] == 'spam']
 """
+,
 )
 
 # ╔═╡ f63c0524-eefe-11eb-3732-258d6989e217
@@ -219,6 +220,8 @@ weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
 """
 ,
 """
+import pandas as pd
+
 weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
 weather
 """
@@ -289,9 +292,9 @@ mlcode(
 using StatsPlots
 """
 ,
-"""
-import seaborn as sns
-"""
+nothing
+,
+showinput = false
 )
 
 # ╔═╡ f63c054c-eefe-11eb-13db-171084b417a9
@@ -304,10 +307,15 @@ using StatsPlots
 """
 ,
 """
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure()
 g = sns.PairGrid(weather[['BAS_pressure', 'LUG_pressure', 'LUZ_pressure', 'LUZ_wind_peak']])
 g.map_lower(sns.regplot, line_kws={'color': 'black'})
 g.map_diag(sns.histplot, color = 'darkorange' )
 g.map_upper(sns.kdeplot, fill=True,cmap="Reds")
+plt.show()
 """
 ,
 recompute = false
@@ -573,33 +581,15 @@ model = LinearRegression()  # Create a linear regression model
 X_train = np.array(training_data['x']).reshape(-1, 1)
 y_train = np.array(training_data['y']).reshape(-1, 1)
 model.fit(X_train,y_train) # Fit the model to the data, with the Input features and the Output variables
+{"intercept": model.intercept_, "coefs": model.coef_}
 """
+,
 )
 
 
 # ╔═╡ 813238b8-3ce3-4ce8-98f6-cbdcbd1746d6
-md"Here, the `intercept` corresponds to $\theta_0$ in the slides and `coefs[1].second` to $\theta_1$. Why do we need to write `coefs[1].second`? The coefficients returned by the `fitted_params` function are, in general, a vector of pairs (`:x => 2.25` is a pair, with first element the name of the data column this coefficient multiplies and the second element the value of the coefficient.). We can also extract these numbers, e.g."
-
-# ╔═╡ 92bf4b9c-4bda-4430-bd0f-d85e09dd5d54
-mlcode(
-"""
-fitted_params(mach).intercept
-"""
-,
-"""
-model.intercept_
-"""
-)
-
-# ╔═╡ 5911642f-151b-4d28-8109-6feb4d418ddf
-mlcode(
-"""
-fitted_params(mach).coefs[1].second # or fitted_params(mach).coefs[1][2]
-"""
-,
-"""
-model.coef_
-"""
+mlstring(md"Here, the `intercept` corresponds to $\theta_0$ in the slides and `coefs[1].second` to $\theta_1$. Why do we need to write `coefs[1].second`? The coefficients returned by the `fitted_params` function are, in general, a vector of pairs (`:x => 2.25` is a pair, with first element the name of the data column this coefficient multiplies and the second element the value of the coefficient.).",
+""
 )
 
 # ╔═╡ 25eb24a4-5414-481b-88d5-5ad50d75f8c9
@@ -629,6 +619,7 @@ predict(mach, DataFrame(x = [0.5, 1.5])) # the second argument is the test input
 """
 model.predict(np.array([0.5, 1.5]).reshape(-1, 1))
 """
+,
 )
 
 # ╔═╡ 7336e7b4-a7c2-4409-8d9d-00285cf633fb
@@ -696,7 +687,6 @@ def fitted_linear_func(mach):
         return theta_hat_0 + theta_hat_1 * x
     
     return linear_func
-fitted_func = fitted_linear_func(model)
 """
 )
 
@@ -712,6 +702,7 @@ plot!(fitted_linear_func(mach), color = :green, label = "fit")
 """
 import numpy as np
 
+plt.figure()
 plt.scatter(training_data['x'], training_data['y'], label="training data") 
 
 x_range = np.linspace(-1, 3, 100)
@@ -729,6 +720,7 @@ plt.legend(loc="upper left")
 # Show the plot
 plt.show()
 """
+,
 )
 
 # ╔═╡ f63c05e4-eefe-11eb-012a-9bae1d87f2b5
@@ -749,8 +741,6 @@ def data_generator(x, sigma):
     y = 2 * x - 1 + sigma * np.random.randn(len(x))
     df = pd.DataFrame({'x': x, 'y': y})
     return df
-
-data_generator(np.full((10**4,), 1.5), 0.5)
 """
 )
 
@@ -764,8 +754,10 @@ my_mse(mach, data_generator(fill(1.5, 10^4), .5)) # test loss at 1.5 for σ = 0.
 """
 ,
 """
-my_mse(model, data_generator(np.full((10**4,), 1.5), .5)) # test loss at 1.5 for σ = 0.5
+# test loss at 1.5 for σ = 0.5
+my_mse(model, data_generator(np.full((10**4,), 1.5), .5))
 """
+,
 )
 
 # ╔═╡ 93f529ab-a386-4746-94de-63a536b5e2aa
@@ -777,6 +769,7 @@ my_mse(mach, data_generator(randn(10^4), .5)) # test loss of the joint generator
 """
 my_mse(model, data_generator(np.random.randn(10**4), .5)) # test loss of the joint generator
 """
+,
 )
 
 # ╔═╡ 673a773c-2f6b-4676-8631-49ba08ec28a7
@@ -835,6 +828,7 @@ m1 = LinearRegression()  # Create a linear regression model
 X_train = training_set1['LUZ_pressure'].values.reshape(-1, 1)
 y_train = training_set1['wind_peak_in5h'].values.reshape(-1, 1)
 m1.fit(X_train,y_train) # Fit the model to the data, with the Input features and the Output variables
+{"intercept": m1.intercept_, "coefs": m1.coef_}
 """
 ,
 )
@@ -858,6 +852,7 @@ predict(m1, (LUZ_pressure = [930., 960., 990.],))
 """
 m1.predict(np.array([930., 960., 990.]).reshape(-1, 1))
 """
+,
 )
 
 # ╔═╡ 0087f48b-7b50-4796-9371-fc87cf33c55d
@@ -875,6 +870,7 @@ plot!(X, predict(m1), linewidth = 3)
 """
 ,
 """
+plt.figure()
 # Create the 2D histogram plot
 plt.hist2d(X, y, bins=(50, 50), cmap=plt.cm.jet, norm=LogNorm())
 
@@ -904,6 +900,7 @@ rmse(predict(m1), training_set1.wind_peak_in5h)
 """
 mean_squared_error(m1.predict(X_train), training_set1["wind_peak_in5h"]) ** 0.5
 """
+,
 )
 
 # ╔═╡ b0de002f-3f39-4378-8d68-5c4606e488b7
@@ -924,6 +921,7 @@ test_set1 = pd.DataFrame({
 })
 mean_squared_error(m1.predict(test_set1["LUZ_pressure"].values.reshape(-1, 1)), test_set1["wind_peak_in5h"]) ** 0.5
 """
+,
 )
 
 # ╔═╡ da6462d8-3343-41d8-82dd-48770176d4ba
@@ -939,8 +937,6 @@ With `DataFrame(schema(weather))` we get additionally information about the type
 ",
 md"Our weather data set contains multiple measurements.
 With `weather.columns` we see all the names of the columns of the the weather data frame.
-Try it in a new cell!
-
 With `weather.dtypes, weather.head(), weather.info()` we get additionally information about the type of data.
 "
 )
@@ -952,7 +948,7 @@ DataFrame(schema(weather))
 """
 ,
 """
-weather.dtypes
+weather.columns.to_frame()
 """
 )
 
@@ -1015,6 +1011,7 @@ rmse(predict(m2, select(weather[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
 """
 np.sqrt(mean_squared_error(m2.predict(weather.iloc[:-5, :].drop(['LUZ_wind_peak', 'time'], axis=1)), weather['LUZ_wind_peak'][5:]))
 """
+,
 )
 
 # ╔═╡ c9f10ace-3299-45fb-b98d-023a35dd405a
@@ -1027,6 +1024,7 @@ rmse(predict(m2, select(weather_test[1:end-5,:], Not([:LUZ_wind_peak, :time]))),
 """
 np.sqrt(mean_squared_error(m2.predict(weather_test.iloc[:-5, :].drop(['LUZ_wind_peak', 'time'], axis=1)), weather_test['LUZ_wind_peak'][5:]))
 """
+,
 )
 
 # ╔═╡ 2724c9b7-8caa-4ba7-be5c-2a9095281cfd
@@ -1083,27 +1081,8 @@ We have some training data ``((x_1 = 0, y_1 = -1), (x_2 = 2, y_2 = 4),
      for this data and model.
    - Find the parameters ``\hat\theta_0`` and ``\hat\theta_1`` that maximize the log-likelihood function. *Hint*: You do not need to solve for the optimal parameters analytically; compare the loss function you derived in the previous step to the one we obtained in the lecture in the first blackboard example and use the fact that we know the optimum for the blackboard example.
    - Show for general training data ``((x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n))`` that the log-likelihood function is maximized by the same ``\hat\theta`` that minimizes the loss function of linear regression.
-#### Exercise 2
-   Explain whether each scenario is a classification or regression problem, and
-   indicate whether we are most interested in inference/interpretation or prediction.
-   Finally, provide ``n`` and ``p``.
-   - We collect a set of data on the top 500 firms in the US. For each firm we
-     record profit, number of employees, industry and the CEO salary. We are
-     interested in understanding which factors affect CEO salary.
-   - We are considering launching a new product and wish to know
-     whether it will be a success or a failure. We collect data on 20
-     similar products that were previously launched. For each product
-     we have recorded whether it was a success or failure, price
-     charged for the product, marketing budget, competition price,
-     and ten other variables.
-   - We are interested in predicting the % change in the USD/Euro
-     exchange rate in relation to the weekly changes in the world
-     stock markets. Hence we collect weekly data for all of 2012. For
-     each week we record the % change in the USD/Euro, the %
-     change in the US market, the % change in the British market,
-     and the % change in the German market.
 
-#### Exercise 3
+#### Exercise 2
 Suppose we generated data with ``y = 3x + 1 + \epsilon`` with ``\mathrm{E}[\epsilon] = 0`` and ``\mathrm{Var}[\epsilon] = \sigma^2``.
 We have training data ``\mathcal D = ((0, 1), (2, 9))`` and test data ``\mathcal D_\mathrm{test} = ((0, 0), (3, 20))``.
 We define a function family ``f(x) = \theta_0 + \theta_1 x^2`` and loss function ``L(y, \hat y) = |y - \hat y|``.
@@ -1113,7 +1092,7 @@ Which of the following statements is correct?
 3. The test loss of ``f(x) = 1 + 2x^2`` for the test set is 1.
 
 
-#### Exercise 4
+#### Exercise 3
 Take one of the examples of supervised machine learning applications
    discussed in the introductory lecture of this course. Discuss with a colleague
    - the data generating process for X
@@ -1133,21 +1112,21 @@ $(MLCourse.language_selector())` `
 
 # ╔═╡ 1feab086-9464-4fb7-9673-bc0ff30bab81
 md"""
-#### Exercise 5
-In this exercise we construct an example, where the response looks noisy, if we consider only some predictors, although the response would be deterministic if we consider all predictors. For this example we assume that the time it takes for a feather to reach the ground when dropping it from one meter is completely determined by the following factors: fluffiness of the feather (``f \in [1, 4]``), shape of the feather (``s = \{\mbox{s, e}\}``, for spherical or elongated), air density (``ρ ∈ [1.1, 1.4]`` kg/m³), wind speed (``w ∈ [0, 5]`` m/s). We assume that time it takes to reach the ground is deterministically given by the function
+#### Exercise 4
+In this exercise we construct an example, where the response looks noisy, if we consider only some predictors, although the response would be deterministic if we consider all predictors. For this example we assume that the time it takes for a feather to reach the ground when dropping it from one meter is completely determined by the following factors: fluffiness of the feather (``f \in [1, 4)``), shape of the feather (``s = \{\mbox{s, e}\}``, for spherical or elongated), air density (``ρ ∈ [1.1, 1.4)`` kg/m³), wind speed (``w ∈ [0, 5)`` m/s). We assume that time it takes to reach the ground is deterministically given by the function
 ```math
 g(f, s, ρ, w) = ρ + 0.1f^2 + 0.3w + 2I(s = \mbox{s}) + 0.5I(s = \mbox{e})
 ```
 where we use the indicator function ``I(\mbox{true}) = 1`` and ``I(\mbox{false}) = 0``.
-1. Generate an artificial dataset that corresponds to 500 experiments of dropping different feathers under different conditions. *Hints:* $(mlstring(md"you can sample from a uniform distribution over the interval ``[a, b]`` using either `rand(500)*(b-a) .+ a` or `rand(Uniform(a, b), 500)` and you can sample categorical values in the same way as we did it in the first week when sampling column C in exercise 1. To implement the indicator function you can use for example the syntax `(s == :s)` and `(s == :e)`.", ""))
+1. Generate an artificial dataset that corresponds to 500 experiments of dropping different feathers under different conditions. *Hints:* $(mlstring(md"you can sample from a uniform distribution over the interval ``[a, b)`` using either `rand(500)*(b-a) .+ a` or `rand(Uniform(a, b), 500)` and you can sample categorical values in the same way as we did it in the first week when sampling column C in exercise 1. To implement the indicator function you can use for example the syntax `(s == :s)` and `(s == :e)`.", md"you can sample from a uniform distribution over the interval ``[a, b)`` using `np.random.rand(500)*(b-a) + a`."))
 2. Create a scatter plot with fluffiness of the feather on the horizontal axis and time to reach the ground on the vertical axis.
 3. Argue, why it looks like the time to reach the ground depended probabilistically on the fluffiness, although we used a deterministic function to compute the time to reach the ground. *Optional*: If you feel courageous, use a mathematical argument (marginalization) that uses the fact that $P(t|f, s, \rho, w) = \delta(t - g(f, s, \rho, w))$ is deterministic and shows that $P(t|f)$ is a non-degenerate conditional distribution.
 """
 
 # ╔═╡ 19114da7-441a-4ada-b350-37c65a6211ee
 md"""
-#### Exercise 6
-Change the noise level ``\sigma``, the size of the training data ``n`` and the seed with the sliders of the section "Linear Regression" and observe the training and the test losses. Write down your observations when
+#### Exercise 5
+Change the noise level ``\sigma``, the size of the training data ``n`` and the seed with the sliders of the section "Training and test loss as a function of ``n`` and ``\sigma``" and observe the training and the test losses. Write down your observations when
 - ``n`` is small.
 - ``n`` is large.
 - Compare training loss and test loss when ``n`` is large for different seed values.
@@ -1155,18 +1134,24 @@ Change the noise level ``\sigma``, the size of the training data ``n`` and the s
 """
 
 
+# ╔═╡ 509a2b50-031e-4820-95b5-f2c7c34ce093
+md"""
+#### Exercise 6
+Run a multiple linear regression on the wind speed data with two predictors: the pressure in Luzern `LUZ_pressure` and the sunshine duration in Luzern `LUZ_sunshine_duration`. Is the prediction on the test set with these two predictors better than with `LUZ_pressure` as the only predictor (c.f. section "Wind speed prediction with one predictor" above)?
+"""
+
 # ╔═╡ 45859648-ef10-4380-8bf8-bca281b958cb
 begin
-hint1 = mlstring(md"write a function `train_and_evaluate` that takes the training and the test data as input as well as an array of two predictors; remember that `data[:, [\"A\", \"B\"]]` returns a sub-dataframe with columns \"A\" and \"B\". This function should fit a `LinearRegressor` on the training set with those two predictors and return the test rmse for the two predictors. To get a list of all pairs of predictors you can use something like `predictors = setdiff(names(train), [\"time\", \"LUZ_wind_peak\"]); predictor_pairs = [[p1, p2] for p1 in predictors, p2 in predictors if p1 != p2 && p1 > p2]`", "")
+hint1 = mlstring(md"Remember that `data[:, [\"A\", \"B\"]]` returns a sub-dataframe with columns \"A\" and \"B\". To get a list of all pairs of predictors you can use something like `predictors = setdiff(names(train), [\"time\", \"LUZ_wind_peak\"]); predictor_pairs = [[p1, p2] for p1 in predictors, p2 in predictors if p1 != p2 && p1 > p2]`", "")
 md"""
-#### Exercise 7
+#### Exercise 7 (optional)
 
 
 In the multiple linear regression of the weather data set above we used all available predictors. We do not know if all of them are relevant. In this exercise our aim is to find models with fewer predictors and quantify the loss in prediction accuracy.
-- Systematically search for the model with at most 2 predictors that has the lowest test rmse. *Hint* $hint1
+- Systematically search for the model with at most 2 predictors that has the lowest test rmse. *Hint:* Write a function `train_and_evaluate` that takes the training and the test data as input as well as an array of two predictors. This function should fit a linear regression on the training set with those two predictors and return the test rmse for the two predictors. $hint1
 - How much higher is the test error compared to the fit with all available predictors?
 - How many models did you have to fit to find your result above?
-- How many models would you have to fit to find the best model with at most 5 predictors? *Hint* the function $(mlstring(md"`binomial`", md"")) may be useful.
+- How many models would you have to fit to find the best model with at most 5 predictors? *Hint* the function $(mlstring(md"`binomial`", md"`math.comb`")) may be useful.
 """
 end
 
@@ -1233,7 +1218,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─8fe94709-3673-44cc-8702-83bd7e2cad51
 # ╟─27f44b28-f6d6-4e1f-8dbe-6fe7789b9a18
 # ╟─43b28121-5d07-4400-8710-287de7b978a4
-# ╠═f63c05d8-eefe-11eb-2a11-fd8f954bf059
+# ╟─f63c05d8-eefe-11eb-2a11-fd8f954bf059
 # ╟─f63c05d8-eefe-11eb-0a2e-970192b02d61
 # ╟─f63c05e4-eefe-11eb-012a-9bae1d87f2b5
 # ╟─f63c0592-eefe-11eb-2a76-15de55eff3ad
@@ -1255,11 +1240,11 @@ MLCourse.save_cache(@__FILE__)
 # ╟─7923a0a8-3033-4dde-91e8-22bf540c9866
 # ╟─57f352dc-55ee-4e14-b68d-698938a97d92
 # ╟─b0de002f-3f39-4378-8d68-5c4606e488b7
-# ╠═da6462d8-3343-41d8-82dd-48770176d4ba
+# ╟─da6462d8-3343-41d8-82dd-48770176d4ba
 # ╟─6eca3452-d47d-4d70-82d1-bedbe91e9820
 # ╟─25e1f89f-a5b2-4d5c-a6e8-a990b3bebddb
 # ╟─8307e205-3bcd-4e68-914e-621fd8d29e43
-# ╠═753ec309-1363-485d-a2bd-b9fa100d9058
+# ╟─753ec309-1363-485d-a2bd-b9fa100d9058
 # ╟─fac51c63-f227-49ac-89f9-205bf03e7c08
 # ╟─618ef3c7-0fda-4970-88e8-1dac195545de
 # ╟─2d25fbb6-dc9b-40ad-bdce-4c952cdad077
@@ -1271,6 +1256,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─61c67500-c2b5-4610-a916-3b316ba01cce
 # ╟─1feab086-9464-4fb7-9673-bc0ff30bab81
 # ╟─19114da7-441a-4ada-b350-37c65a6211ee
+# ╟─509a2b50-031e-4820-95b5-f2c7c34ce093
 # ╟─45859648-ef10-4380-8bf8-bca281b958cb
 # ╟─0cfbd543-8b9b-406e-b3b4-c6cafbbec212
 # ╟─11e350b2-70bd-437b-acef-af5103a6eb96

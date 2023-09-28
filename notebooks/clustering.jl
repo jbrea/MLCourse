@@ -242,10 +242,15 @@ predict(hc, select(iris, Not(:class)))
 ,
 """
 from sklearn.cluster import AgglomerativeClustering
-hc = make_pipeline(StandardScaler(), AgglomerativeClustering(distance_threshold=0, n_clusters = None, metric = "euclidean", linkage = "complete")).fit(iris.drop(["class"], axis =1))
-hc
+hc = make_pipeline(StandardScaler(),
+                   AgglomerativeClustering(distance_threshold=0,
+                                           n_clusters = None,
+                                           metric = "euclidean",
+                                           linkage = "complete"))
+hc.fit(iris.drop(["class"], axis = 1))
 """
 ,
+py_showoutput = false,
 cache_jl_vars = [:hc]
 )
 
@@ -546,6 +551,8 @@ MLCourse.save_cache(@__FILE__)
 # ╟─52f99e00-7493-4d56-8557-511e897223bb
 # ╟─3c6c668f-d5a0-48f8-8f87-e448e71f4554
 # ╟─8ea10eb7-8b37-4026-a7ec-e44bba7532ea
+# ╟─52f99e00-7493-4d56-8557-511e897223bb
+# ╟─3c6c668f-d5a0-48f8-8f87-e448e71f4554
 # ╟─9d54fbb8-44f8-46c8-90ef-de85746c410b
 # ╟─85d574c2-b823-4dcf-b711-efc755e724b7
 # ╟─1ed55c9f-1301-4553-84ee-26ada25f9b76

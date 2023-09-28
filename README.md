@@ -1,7 +1,9 @@
 # MLCourse
 
 This repository contains teaching material for an introductory machine learning course.
-You can find an interactive preview of the Pluto notebooks of this course [here](https://bio322.epfl.ch) and you can run some notebooks on [mybinder](https://mybinder.org/v2/gh/jbrea/MLCourse/binder?urlpath=pluto/open?path%3D/home/jovyan/MLCourse/index.jl) (some notebooks will crash on mybinder when they hit the memory limit).
+
+**Students of my course do not need to pull this repository or follow the instructions
+below. This repository is mostly used to create the interactive websites on [https://bio322.epfl.ch](https://bio322.epfl.ch).**
 
 ## Installation
 

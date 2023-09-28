@@ -21,14 +21,11 @@ stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
 Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames
-import MLCourse: poly, Polynomial
+using MLCourse, Plots, Random, Statistics, DataFrames, MLJ, MLJLinearModels, LinearAlgebra
 import PlutoPlotly as PP
 redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
 MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
-import MLCourse: poly, Polynomial
-import PlutoPlotly as PP
 end
 
 # ╔═╡ 2e9ce2a9-217e-4910-b6ce-d174f2f2668e
@@ -344,6 +341,7 @@ df = pd.DataFrame({'x': x, 'y': f(x) + 0.1*np.random.randn(50)})
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import Ridge
 
 pipeline = Pipeline ([("polynomial",PolynomialFeatures()),("model",Ridge())])
 
@@ -369,7 +367,7 @@ The result of the self-tuning machine can be visualized with the `plot` function
 "
 The best hyper-parameter values (`polynomial__degree`= 6 and
  `model__alpha` = 1.0e-12 found by the self-tuning machine.
-
+gg
 NB : we could have also use the sklearn function `RidgeCV` : a Ridge regression with built-in cross-validation.
 Use `grid_search.cv_results_` to see all results.
 
@@ -617,11 +615,12 @@ weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
 """
 ,
 """
+import pandas as pd
+
 weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
 weather
 """
 ,
-cache = false
 )
 
 # ╔═╡ ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
@@ -648,7 +647,7 @@ alphas_lasso, coefs_lasso, _ = lasso_path(weather_input, weather_output, alphas=
 alphas_lasso
 """
 ,
-cache = false
+cache_jl_vars = [:weather_fits, :weather_input]
 )
 
 # ╔═╡ f6158ed5-bd0d-4781-b9cd-22b271e86ef8
@@ -667,7 +666,7 @@ let fits = M.weather_fits,
 end
 
 # ╔═╡ 83fe757f-a9aa-4a60-8a49-dce5e9fcf56c
-mlstring("",md"Python version :")
+# mlstring("",md"Python version :")
 
 # ╔═╡ 35913b1d-86d0-4338-9f7c-41a89651b2dc
 mlcode(
@@ -680,8 +679,13 @@ df = pd.DataFrame ({"parameters":np.tile(weather.drop("LUZ_wind_peak", axis=1).c
 
 import plotly.express as px
 fig = px.line(df,x="log_alpha", y="coefs", color="parameters")
-fig.show()
-""")
+# fig.show()
+"""
+,
+showinput = false,
+eval = false,
+showoutput = false
+)
 
 # ╔═╡ 6f5b0cd1-ba68-46a5-a348-fed201da4a15
 md"Indeed, if we were allowed to use only one predictor, the wind peak in Bern is most informative about the wind peak in Luzern five hours later. The correlation is positive, but there is a lot of noise."
@@ -696,6 +700,7 @@ scatter(weather_input.BER_wind_peak, weather_output,
 """
 ,
 """
+plt.figure()
 plt.scatter(weather["BER_wind_peak"].iloc[:-5], weather_output.values)
 plt.xlabel("wind peak in Bern [km/h]")
 plt.ylabel("wind peak in Luzern 5 hours later [km/h]")

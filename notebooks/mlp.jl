@@ -20,7 +20,7 @@ using Pkg
 stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
-	Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
+Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, LinearAlgebra, Flux
 import PlutoPlotly as PP
 import MLCourse: heaviside
@@ -81,15 +81,16 @@ def relu(x):
     return np.maximum(0, x)
 
 def f(x, w1, w2, w3, w4, beta):
-    return beta[0] * relu(x * w1) + beta[1] * relu(x * w2) + beta[2] * relu(x * w3) + 			beta[3] * relu(x * w4) + beta[4]
+    return beta[0] * relu(x * w1) + beta[1] * relu(x * w2) + beta[2] * relu(x * w3) + beta[3] * relu(x * w4) + beta[4]
 
-def f(x,theta) :
+def f(x, θ) :
 	return f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
 
 def logp(x):
     return np.where(x < -40, x, -np.log(1 + np.exp(-x)))
 
 def log_reg_loss_function(X, y, theta):
+    def loss_function(theta):
         tmp = f(X, theta)
         return -np.mean(y * logp(tmp) + (1 - y) * logp(-tmp))
     return loss_function
@@ -197,9 +198,9 @@ end
 
 # 2. neuron version
 neuron(x, b, w, g) = g.(b .+ w' * x)
-function neural_net_neurons(x, w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, 
-							g¹, w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
-
+function neural_net_neurons(x,
+                            w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, g¹,
+                            w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
     second_layer_input = [neuron(x, w₁₀¹, w₁₁¹, g¹),
                           neuron(x, w₂₀¹, w₂₁¹, g¹),
                           neuron(x, w₃₀¹, w₃₁¹, g¹),
@@ -211,8 +212,9 @@ end
 function neural_net_matrix(x, b¹, w¹, g¹, b², w², g²)
     g².(b² .+ w² * g¹.(b¹ .+ w¹ * x))
 end
-function neural_net_matrix(x, w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, 
-							g¹, w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
+function neural_net_matrix(x,
+                           w₁₀¹, w₁₁¹, w₂₀¹, w₂₁¹, w₃₀¹, w₃₁¹, w₄₀¹, w₄₁¹, g¹,
+                           w₁₀², w₁₁², w₁₂², w₁₃², w₁₄², g²)
     b¹ = [w₁₀¹, w₂₀¹, w₃₀¹, w₄₀¹]
     w¹ = [w₁₁¹
           w₂₁¹
@@ -375,7 +377,7 @@ let x = -5:.1:5, neuron = M.neuron
                  xlabel = "x₁", ylabel = "x₂", legend = false, aspect_ratio = 1)
 end
 
-# ╔═╡ c3fe95e4-d7f4-4258-94fd-fa5c994e6627
+# ╔═╡ 9d3e7643-34fd-40ee-b442-9d2a434f30e0
 md"""# 3. Regression with MLPs
 
 ## Constructing Multilayer Neural Networks
@@ -397,6 +399,24 @@ nn = Chain(Dense(3, 30, relu), # input to hidden layer (with relu non-linearity)
 """
 ,
 """
+import torch
+
+class NeuralNetExample1(torch.nn.Module):
+    def __init__(self):
+        super(NeuralNetExample1, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(3, 30),
+            torch.nn.ReLU(),
+            torch.nn.Linear(3, 2)
+        )
+
+    def forward(self, x):
+        return self.layers(x)
+
+nn = NeuralNetExample1()
+w1, b1 = map(lambda parameter: parameter.data.numpy(),           
+             list(nn.layers[0].parameters()))
+(w1,b1)
 """
 )
 
@@ -416,6 +436,8 @@ nn(x) # apply neural network to input x
 """
 ,
 """
+x = torch.rand(3)
+nn(x).data.numpy()
 """
 )
 
@@ -430,6 +452,8 @@ b² + w² * relu.(b¹ + w¹ * x)
 """
 ,
 """
+w1, b1, w2, b2 = map(lambda parameter: parameter.data.numpy(), list(nn.layers.parameters())) 
+b2 + np.dot(w2, relu(b1 + np.dot(w1, x)))
 """
 )
 
@@ -449,6 +473,24 @@ nn2(rand(Float32, 20))
 """
 ,
 """
+class NeuralNetExample2(torch.nn.Module):
+    def __init__(self):
+        super(NeuralNetExample2, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(20, 100),
+            torch.nn.ReLU(),
+            torch.nn.Linear(100, 50),
+            torch.nn.Tanh(),
+            torch.nn.Linear(50, 100),
+            torch.nn.Sigmoid(),
+            torch.nn.Linear(100, 10)
+        )
+
+    def forward(self, x):
+        return self.layers(x)
+
+nn2 = NeuralNetExample2()
+nn2(torch.rand(20)).data.numpy()
 """
 )
 
@@ -458,10 +500,7 @@ md"""
 
 Let us find out if with an MLP we can get better predictions than with multiple
 linear regression on the weather data set.
-"""
 
-# ╔═╡ 85bebc26-e2d4-4e5e-bd2b-9fe10a4b791a
-mlstring(md"""
 !!! note
 
     We standardize the input and the output to mean zero and standard deviation one.
@@ -476,14 +515,7 @@ mlstring(md"""
     In the construction we specify that we would like to train with 50% dropout
     to reduce the risk of overfitting.
 
-""",
 """
-We use here a `Pipeline` that standardizes with a `StandardScaler`
-    the input first to mean zero and standard deviation one.
-    We do this, because the usual initializations
-    of neural networks work best with standardized input.    
-Our builder constructs a neural network with one hidden layer of 128 relu neurons.
-""")
 
 # ╔═╡ 6393aae7-a8ac-4dff-b188-5e682f6ab1f9
 mlstring(
@@ -502,7 +534,7 @@ Some explanations for the code below:
 mlcode(
 """
 # preparing the data
-using CSV, DataFrames
+using CSV, DataFrames, MLJFlux
 
 weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
                    DataFrame)
@@ -518,7 +550,7 @@ weather_test_y = weather_test.LUZ_wind_peak[6:end]
 # setting up the model
 using Random, MLJ, MLJFlux, Flux
 
-Random.seed!(31)
+Random.seed!(66)
 nn = NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
                                                     dropout = .5,
                                                     σ = relu),
@@ -537,47 +569,118 @@ fit!(mach, verbosity = 0)
 ,
 """
 import pandas as pd
-from sklearn.pipeline import Pipeline
-from sklearn.neural_network import MLPRegressor
+import sklearn
+from sklearn.preprocessing import StandardScaler
+import numpy as np
+import torch
+import random
+import tqdm
+from sklearn.metrics import mean_squared_error
 
-# preparing the data
+# Reproducibility
+seed_num = 31
+torch.use_deterministic_algorithms(True)
+random.seed(seed_num)
+np.random.seed(seed_num)
+torch.manual_seed(seed_num)
+def seed_worker(worker_id):
+    worker_seed = torch.initial_seed() % 2**32
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+g = torch.Generator()
+g.manual_seed(seed_num)
+
+# Load the data
 weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
 weather_test = pd.read_csv("https://go.epfl.ch/bio322-weather2019-2020.csv")
-weather_x = weather.drop(["LUZ_wind_peak","time"], axis=1).iloc[:-5, :]
-weather_y = weather["LUZ_wind_peak"].iloc[5:]
-weather_test_x = weather_test.drop(["LUZ_wind_peak","time"], axis=1).iloc[:-5, :]
-weather_test_y = weather_test["LUZ_wind_peak"].iloc[5:]
+X = weather.drop(['time', 'LUZ_wind_peak'], axis = 1)
+X_test = weather_test.drop(['time', 'LUZ_wind_peak'], axis = 1)
 
-#Feature Scaling
-from sklearn.preprocessing import StandardScaler
+# Standardisers
+weather_x_std = StandardScaler().fit(X[:-5].values)
+weather_y_std = StandardScaler().fit(weather['LUZ_wind_peak'][5:].values.reshape(-1, 1))
 
-pipeline = Pipeline ([("scaler", StandardScaler()),("nn",MLPRegressor(hidden_layer_sizes=(128), activation='relu', solver='adam', max_iter=500))])
-pipeline.fit(weather_x,weather_y)
+# Standardise the data
+weather_x, weather_y, weather_test_x, weather_test_y = map(
+    lambda data, std_mach: std_mach.transform(data),
+    [
+        X[:-5].values,
+        weather['LUZ_wind_peak'][5:].values.reshape(-1, 1),
+        X_test[:-5].values,
+        weather_test['LUZ_wind_peak'][5:].values.reshape(-1, 1),
+    ],
+    [weather_x_std, weather_y_std, weather_x_std, weather_y_std],
+)
 
-from sklearn.metrics import mean_squared_error
-("training_error", mean_squared_error(pipeline.predict(weather_x), weather_y)**0.5, "test_error", mean_squared_error(pipeline.predict(weather_test_x), weather_test_y)**0.5)
+# Convert data to pytorch tensors
+weather_x, weather_y, weather_test_x, weather_test_y = map(
+    lambda array: torch.tensor(array, dtype=torch.float32),
+    [weather_x, weather_y, weather_test_x, weather_test_y]
+)
+
+# Pytorch training data loader, for using batches
+training_dataloader = torch.utils.data.DataLoader(
+    torch.utils.data.TensorDataset(weather_x, weather_y),
+    batch_size = 128,
+    shuffle = True,
+    worker_init_fn = seed_worker, # for reproducibility
+    generator = g # for reproducibility
+)
+
+# Setting up the model
+class NeuralNetExample3(torch.nn.Module):
+    def __init__(self):
+        super(NeuralNetExample3, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(55, 128),
+            torch.nn.Dropout(0.5),
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, 1),
+        )
+    def forward(self, x):
+        return self.layers(x)
+
+batch_size = 128
+epochs = 150
+
+model = NeuralNetExample3()
+loss_func = torch.nn.MSELoss()
+optimizer = torch.optim.AdamW(model.parameters())
+
+# Training
+model.train()
+for epoch in tqdm.tqdm(range(epochs)):
+    for data, target in training_dataloader:
+        optimizer.zero_grad()
+        pred = model(data)
+        loss = torch.sqrt(loss_func(pred, target))
+        loss.backward()
+        optimizer.step()
+
+# Evaluation
+with torch.no_grad():
+    model.eval()
+    train_preds = weather_y_std.inverse_transform(model(weather_x).detach().numpy())
+    train_gt = weather_y_std.inverse_transform(weather_y.detach().numpy())
+    train_loss = np.sqrt(mean_squared_error(train_preds, train_gt))
+
+    test_preds = weather_y_std.inverse_transform(model(weather_test_x).detach().numpy())
+    test_gt = weather_y_std.inverse_transform(weather_test_y.detach().numpy())
+    test_loss = np.sqrt(mean_squared_error(test_preds, test_gt))
+
+f'{train_loss=}, {test_loss=}'
 """
 ,
-cache = true
 )
 
 
 # ╔═╡ 47024142-aabb-40d8-8336-5f8aeb2aa623
-mlstring(md"""
+md"""
 Both errors are lower than what we found with multiple linear regression
 (training error ≈ 8.09, test_error ≈ 8.91). However, comparing the predictions
 to the ground truth we see that a lot of the variability is still uncaptured
 by the model. If the model would prefectly predict the test data, all points in the figure below would lie on the red diagonal. This is not the case and means most likely that the irreducible error is pretty high in this dataset.
-""",
 """
-Both errors are lower than what we found with multiple linear regression
-(training error ≈ 6, test_error ≈ 9.3). We can observe that the test error in higher than the training error : our network is overfitting.
-To mitigate overfitting, we plan to employ dropout, which is not defined in sklearn. Therefore, we will incorporate another library in our subsequent neural network.
-Moreover, comparing the predictions to the ground truth we see that a lot of the variability is still uncaptured
-by the model. If the model would prefectly predict the test data, all points in the figure below would lie on the red diagonal. This is not the case and means most likely that the irreducible error is pretty high in this dataset.
-In the construction we specify that we would like to train with 50% dropout
-to reduce the risk of overfitting.
-""")
 
 # ╔═╡ 0a48241c-2be0-46cf-80ae-dc86abefad6f
 mlcode(
@@ -592,218 +695,16 @@ plot!(identity, legend = false)
 """
 import matplotlib.pyplot as plt
 
-plt.scatter(pipeline.predict(weather_test_x), weather_test_y)
+plt.plot(test_preds, test_gt, 'o', markersize=1)
 plt.xlabel("predicted")
 plt.ylabel("data")
-plt.plot([min(weather_test_y), max(weather_test_y)], [min(weather_test_y), max(weather_test_y)], linestyle='--', color='red')
+plt.axline((0, 0), slope=1, color='red') # draw the identity line
 plt.show()
 """
+,
+showoutput = true,
 )
 
-
-# ╔═╡ b6d8dbcf-d1d8-4e7a-9e2d-e490f74fa7c9
-Markdown.parse("""## Parametrizing Variances of Log-Normal Distributions with MLPs
-
-For this example we do not use the abstractions provided by MLJ. Instead we use
-directly Flux. You only need to do this if you want to implement some non-standard neural network.
-
-Let us load the data.""")
-
-# ╔═╡ 7ded5b20-4ec2-4e20-a011-b6f011c8f3fc
-mlcode("""
-using CSV, DataFrames, MLJ
-weather = CSV.read(joinpath(@__DIR__, "..", "data", "weather2015-2018.csv"),
-                   DataFrame)
-input_standardizer = fit!(machine(Standardizer(), weather.LUZ_pressure[1:end-5]))
-weather_input = MLJ.transform(input_standardizer, weather.LUZ_pressure[1:end-5])
-output_standardizer = fit!(machine(Standardizer(),
-                                   log.(weather.LUZ_wind_peak[6:end])))
-weather_output = MLJ.transform(output_standardizer,
-                               log.(weather.LUZ_wind_peak[6:end]))
-""",
-"""
-weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
-
-weather_input = StandardScaler().fit_transform(weather['LUZ_pressure'][:-5].values.reshape(-1, 1))
-
-weather_output = StandardScaler().fit_transform(np.log(weather['LUZ_wind_peak'][5:].values.reshape(-1, 1)))
-
-# Split the data set into training and testing
-X_train, X_test, y_train, y_test = train_test_split(
-    (weather_input), weather_output, test_size=0.2, random_state=2)
-"""
-;
-eval = false
-)
-
-# ╔═╡ 18f70ead-3d87-4474-9e68-f927a92bf77a
-Markdown.parse("""We define a simple neural network with one hidden layer of 50 tanh neurons.""")
-
-# ╔═╡ a1ba91d4-e2d7-4029-a5c9-1d6ecd09e603
-mlcode("""nn = Chain(Dense(1, 50, tanh), Dense(50, 2))""",
-"""
-import torch
-import torch.nn as nn
-
-class SimpleNN(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(SimpleNN, self).__init__()
-        self.hidden = nn.Linear(input_size, hidden_size)
-        self.tanh = nn.Tanh()
-        self.output = nn.Linear(hidden_size, output_size)
-
-    def forward(self, x):
-        x = self.hidden(x)
-        x = self.tanh(x)
-        x = self.output(x)
-        return x
-
-hidden_size = 50
-output_size =  1
-
-# Instantiate the neural network
-model = SimpleNN(len(X_train[1]), hidden_size, output_size)
-"""
-;
-eval = false)
-
-# ╔═╡ fa1d61b9-213c-4358-8f34-9d9bb710e946
-Markdown.parse("""Let us now define the negative log-likelihood loss function.""")
-
-# ╔═╡ a921204e-5aff-4e62-a4d6-aa16118175d4
-mlcode("""
-function loss(x, y)
-	output = nn(x)
-	m = output[1, :]
-	s = softplus.(output[2, :])
-	mean((m .- y) .^ 2 ./ (2 * s) .+ 1/2 * log.(s))
-end
-""",
-"""
-# Training parameters
-learning_rate = 0.01
-n_epochs = 100
-
-loss_fun = nn.NLLLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
-"""
-;
-eval = false)
-
-# ╔═╡ e831d9fd-fe39-41f6-bd2b-9a5c2c868bf1
-Markdown.parse("""This function computes the two output dimensions of the neural network.
-The first output dimension is our mean. The second output dimension is transformed
-to positive values with the `softplus` function ``x \\mapsto \\log(\\exp(x) + 1)``
-to enode the variance of the normal distribution. In the log-likelihood loss we
-drop the constant term ``\\frac12\\log2\\pi``.
-
-Now we train the neural network for 50 epochs.""")
-
-# ╔═╡ 40c1a0d5-90e6-4a03-9a4c-da7020170134
-mlcode("""
-opt = ADAMW()
-p = Flux.params(nn) # these are the parameters to be adapted.
-data = Flux.DataLoader((weather_input', weather_output), batchsize = 32)
-for _ in 1:50
-    Flux.Optimise.train!(loss, p, data, opt)
-end
-""",
-"""
-loss_list = np.zeros((n_epochs,))
-accuracy_list= np.zeros((n_epochs,))
-
-# Iterate over the number of training epochs
-for epoch in range(n_epochs):
-    # Forward pass
-    pred = model(X_train)
-    
-    # Calculate the loss
-    loss = loss_fun(torch.flatten(pred), torch.flatten(y_train))
-    loss_list[epoch] = loss.item()
-    
-    # Backpropagation
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-    with torch.no_grad():
-        y_pred = model(X_test)
-        correct = (torch.argmax(y_pred, dim=1) == y_test).type(torch.FloatTensor)
-        accuracy_list[epoch] = correct.mean()
-
-"""
-;
-eval = false)
-
-# ╔═╡ 975aa09d-9d7a-406a-a8a5-f11e396a0503
-Markdown.parse("""Let us now plot the result.""")
-
-# ╔═╡ 9c6fbbb3-5c84-4742-b175-eea95e93276e
-mlcode("""
-grid = collect(-5:.1:3.5)
-pred = nn(grid')
-m = pred[1, :]
-s = sqrt.(softplus.(pred[2, :]))
-u_x(x) = inverse_transform(input_standardizer, x) # function to "un-standardize"
-u_y(y) = exp.(inverse_transform(output_standardizer, y))
-histogram2d(u_x.(weather_input), u_y.(weather_output), bins = (250, 200),
-            markersize = 3, xlabel = "LUZ_pressure [hPa]",
-            ylabel = "LUZ_wind_peak [km/h]", label = nothing, cbar = false)
-plot!(u_x.(grid), u_y.(m), c = :red, w = 3, label = "mean")
-plot!(u_x.(grid), u_y.(m .+ s), c = :red, linestyle = :dash, w = 3,
-      label = "± standard deviation")
-plot!(u_x.(grid), u_y.(m .- s), c = :red, linestyle = :dash, w = 3, label = nothing)
-""",
-"""
-"""
-;
-eval = false)
-
-# ╔═╡ 4636ce57-395c-4ddb-ad23-1433db570d08
-
-
-# ╔═╡ e1599fda-8a6a-4d84-a135-6ec4d454b664
-
-
-# ╔═╡ 4bd63efb-0aef-41cd-a9b7-9fa78db107a0
-Markdown.parse("
-## Fitting a Polynomial in 1000 Input Dimensions
-The following artificial data set has ``n=10^5`` points of ``p = 1000`` dimensions.
-The response ``y = x_7^2 - 1`` depends only on the seventh input dimension.
-Although neural networks are not specifically designed to fit polynomials,
-this example demonstrates that with only 50 hidden relu-neurons an accurate fit
-can be found.
-
-WARNING: it takes more than 10 minutes to run this code.
-")
-
-# ╔═╡ ba4b183f-65d1-41a3-a613-b787b04afc17
-mlcode("""
-let
-    x = DataFrame(randn(10^5, 1000), :auto)
-    y = x.x7 .^2 .- 1
-    mach = fit!(machine(NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 50,
-                                                                       dropout = 0,
-                                                                       σ = relu),
-                                               batch_size = 128,
-                                               epochs = 10^2),
-                        x, y), verbosity = 2)
-    grid = -3:.1:3
-    x_test = DataFrame(randn(length(grid), 1000), :auto)
-    x_test.x7 = grid
-    plot(grid, grid.^2 .- 1, label = \"ground truth\", w = 3, legend = :bottomright)
-    plot!(grid, predict(mach, x_test),
-          label = \"fit\", xlabel = \"x₇\", ylabel = \"y\", w = 3)
-""",
-"""
-import numpy as np
-import pandas as pd
-
-x = np.random.randn(10**5, 1000)
-y = x[7]**2 - 1
-"""
-;
-eval = false)
 
 # ╔═╡ 0ba71a2a-f2f9-4fc7-aa81-416799e79e57
 md"""## Parametrizing Variances of Log-Normal Distributions with MLPs
@@ -830,6 +731,22 @@ end
 """
 ,
 """
+import torch
+
+class CustomLoss(torch.nn.Module):
+    # The following class is an example to show you how you could implement a custom loss
+    # function. In pytorch, usually the predictions are calculated withing the training loop,
+    # and the loss function should only take into arguments the predictions and the ground truth.
+
+    def __init__(self):
+        super().__init__()
+        self.softplus = torch.nn.Softplus()
+
+    def forward(self, predictions: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
+        m = predictions[0, :]
+        s = self.softplus(predictions[1, :])
+        return torch.mean((m - y)**2 / (2 * s) + 1/2 * torch.log(s))
+
 """
 )
 
@@ -890,19 +807,19 @@ histogram2d(u_x.(weather_input), u_y.(weather_output), bins = (250, 200),
 plot!(u_x.(grid), u_y.(m), c = :red, w = 3, label = "mean")
 plot!(u_x.(grid), u_y.(m .+ s), c = :red, linestyle = :dash, w = 3,
       label = "± standard deviation")
-plot!(u_x.(grid), u_y.(m .- s), c = :red, linestyle = :dash, w = 3,
-      label = nothing)
+fig = plot!(u_x.(grid), u_y.(m .- s), c = :red, linestyle = :dash, w = 3,
+            label = nothing)
 """
 ,
-"""
-"""
+nothing
 ,
 collapse = "Code for training and plotting",
-showoutput = false
+showoutput = false,
+cache_jl_vars = [:fig]
 )
 
 # ╔═╡ 23051a87-a4b2-49c2-984b-305f3d16a9f7
-mlcode("plot!()", "", showinput = false)
+MLCourse.JlMod.fig
 
 # ╔═╡ 6bf6598b-590e-4794-b8de-b48cc3fd2c84
 md"
@@ -947,6 +864,62 @@ plot!(grid, predict(mach, x_test),
 """
 ,
 """
+import matplotlib.pyplot as plt
+
+# dataset
+x = np.random.randn(10**5, 1000)
+y = (x[:, 6] ** 2 - 1).reshape(-1, 1)
+
+x, y = map(lambda x_y: torch.tensor(x_y, dtype=torch.float32), [x, y])
+
+batch_size = 128
+epochs = 10**2
+
+train_dataloader = torch.utils.data.DataLoader(
+    torch.utils.data.TensorDataset(x, y),
+    batch_size = 128,
+    shuffle = True,
+    worker_init_fn = seed_worker, # for reproducibility
+    generator = g # for reproducibility
+)
+
+# fitting
+class NeuralNetExample4(torch.nn.Module):
+    def __init__(self):
+        super(NeuralNetExample4, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(1000, 50),
+            torch.nn.ReLU(),
+            torch.nn.Linear(50, 1),
+        )
+    def forward(self, x):
+        return self.layers(x)
+
+
+model = NeuralNetExample4()
+loss_func = torch.nn.MSELoss()
+optimizer = torch.optim.AdamW(model.parameters())
+
+model.train()
+for epoch in tqdm.tqdm(range(epochs)):
+    for data, target in train_dataloader:
+        optimizer.zero_grad()
+        pred = model(data)
+        loss = loss_func(pred, target)
+        loss.backward()
+        optimizer.step()
+
+grid = np.arange(-3.0, 3.0, 0.1)
+x_test = np.random.randn(grid.shape[0], 1000)
+x_test[:, 6] = grid
+x_test = torch.tensor(x_test, dtype=torch.float32)
+
+plt.plot(grid, (grid ** 2 - 1).reshape(-1, 1), label="ground truth")
+plt.plot(grid, model(x_test).detach().numpy(), label="model prediction")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.legend()
+plt.show()
 """
 )
 
@@ -996,12 +969,76 @@ model = NeuralNetworkClassifier(
 mnist_mach = machine(model, mnist_x[1:60000, :], mnist_y[1:60000])
 fit!(mnist_mach, verbosity = 0)
 mean(predict_mode(mnist_mach, mnist_x[60001:70000, :]) .!= mnist_y[60001:70000])
-```
+"""
+,
+"""
 import openml
+from sklearn.preprocessing import OneHotEncoder
+
+# data loading
 mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
 
+# pre-processing
+x = (mnist.iloc[:, :-1].values.astype(float)/255) # normalising
+y = mnist.iloc[:, -1].values.astype(int)
 
-The result is a misclassification rate of approximately 2.2%, which is better
+one_hot_enc = OneHotEncoder()
+y_ohe = one_hot_enc.fit_transform(y.reshape(-1, 1)) # one hot encoding
+y_ohe = np.array(y_ohe.todense()) # fit_transform outputs a sparse matrix but it is easier to work wiith an array
+
+x_train, y_train, x_test, y_test = x[:60000], y_ohe[:60000], x[60000:], y_ohe[60000:] # train-test split
+
+# converting to pytorch tensors
+x_train, y_train, x_test, y_test = map(
+    lambda data: torch.tensor(data, dtype=torch.float32), 
+    [x_train, y_train, x_test, y_test],
+)
+
+# Pytorch data loader, for using batches
+train_dataloader = torch.utils.data.DataLoader(
+    torch.utils.data.TensorDataset(x_train, y_train),
+    batch_size = batch_size,
+    shuffle = True,
+)
+
+class MNISTLinearNN(torch.nn.Module):
+    def __init__(self):
+        super(MNISTLinearNN, self).__init__()
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(784, 100),
+            torch.nn.ReLU(),
+            torch.nn.Linear(100, 10),
+        )
+    def forward(self, x):
+        return self.layers(x)
+
+batch_size = 32
+epochs = 20
+model = MNISTLinearNN()
+loss_func = torch.nn.CrossEntropyLoss() # used for classification
+optimizer = torch.optim.AdamW(model.parameters())
+
+model.train()
+for epoch in tqdm.tqdm(range(epochs)):
+    for data, target in train_dataloader:
+        optimizer.zero_grad()
+        pred = model(data)
+        loss = loss_func(pred, target)
+        loss.backward()
+        optimizer.step()
+
+with torch.no_grad():
+    model.eval()
+    test_preds = one_hot_enc.inverse_transform(model(x_test).detach().numpy())
+    test_gt = y[60000:].reshape(-1, 1)
+    
+f'Missclassifictation rate: {np.mean((test_preds != test_gt))}'
+"""
+)
+
+# ╔═╡ 4266ce96-d65a-42f9-bd44-ab6cbf7e92ea
+md"
+The result is a misclassification rate between 2% and 3%, which is better
 than our first nearest-neigbor result. Additionally, prediction of the class
 for new images is much faster than with nearest neighbor approaches, because the
 information about the training data is stored in the weights of the neural network
@@ -1107,19 +1144,6 @@ network does not get stuck in suboptimal solutions.
 $(MLCourse.embed_figure("overparametrized.png"))
 ")
 
-# ╔═╡ 3c83b057-a9ed-455b-b3db-16332e494cd3
-Markdown.parse("""
-$(MLCourse.embed_figure("weather_mlp_normal.png"))
-
-We see that the neural network found a slightly non-linear relationship between
-input and average output and the variance of the noise is smaller for high
-pressure values than for low pressure values. Note that the dashed lines are not symmetric around the mean, because we fitted a log-normal distribution; the dashed lines would be symmetric around the mean if we plotted the logarithm of the wind peak on the y-axis."""
-)
-
-# ╔═╡ b7041be4-0c9c-48ae-a078-03e077467a42
-Markdown.parse("$(MLCourse.embed_figure("poly.png"))
-")
-
 # ╔═╡ 8c72c4b5-452d-4ba3-903b-866cac1c799d
 MLCourse.FOOTER
 
@@ -1147,27 +1171,27 @@ MLCourse.save_cache(@__FILE__)
 # ╟─66bc40f3-7710-4892-ae9f-79b9c850b0ea
 # ╟─15cd82d3-c255-4eb5-9f0d-1e662c488027
 # ╟─9e6ad99f-8cd4-4372-a4a2-f280e49e21a3
-# ╟─c3fe95e4-d7f4-4258-94fd-fa5c994e6627
-# ╟─85bebc26-e2d4-4e5e-bd2b-9fe10a4b791a
+# ╟─9d3e7643-34fd-40ee-b442-9d2a434f30e0
+# ╟─4bbae793-059d-4741-a761-c38be74b274c
+# ╟─114201bf-d841-496f-8ca5-2fbd43726995
+# ╟─6944c24e-67e7-47ba-aea6-5f75f58dae5a
+# ╟─03b2c815-65ef-4c74-a673-21830dbcb40e
+# ╟─631d3ab5-817a-4ccf-88fb-950f85fc6be3
+# ╟─bf6bf8f3-dbc9-496a-ac5b-1aaf6e7824e1
+# ╟─a869d11a-2124-4d2b-8517-5cca4382309e
+# ╟─6393aae7-a8ac-4dff-b188-5e682f6ab1f9
 # ╟─a5568dfb-4467-4dca-b1c7-714bbfcbd6e6
 # ╟─47024142-aabb-40d8-8336-5f8aeb2aa623
 # ╟─0a48241c-2be0-46cf-80ae-dc86abefad6f
-# ╟─b6d8dbcf-d1d8-4e7a-9e2d-e490f74fa7c9
-# ╟─7ded5b20-4ec2-4e20-a011-b6f011c8f3fc
-# ╟─18f70ead-3d87-4474-9e68-f927a92bf77a
-# ╟─a1ba91d4-e2d7-4029-a5c9-1d6ecd09e603
-# ╟─fa1d61b9-213c-4358-8f34-9d9bb710e946
-# ╟─a921204e-5aff-4e62-a4d6-aa16118175d4
-# ╟─e831d9fd-fe39-41f6-bd2b-9a5c2c868bf1
-# ╟─40c1a0d5-90e6-4a03-9a4c-da7020170134
-# ╟─975aa09d-9d7a-406a-a8a5-f11e396a0503
-# ╠═9c6fbbb3-5c84-4742-b175-eea95e93276e
-# ╟─3c83b057-a9ed-455b-b3db-16332e494cd3
-# ╠═4636ce57-395c-4ddb-ad23-1433db570d08
-# ╠═e1599fda-8a6a-4d84-a135-6ec4d454b664
+# ╟─0ba71a2a-f2f9-4fc7-aa81-416799e79e57
+# ╟─3d6ae9f2-105a-4c7f-bf2f-c42afe2683cf
+# ╟─67d386dc-18c8-4dbe-8e13-cfc8541e8b6c
+# ╟─6701f32c-015e-45f5-a59b-4d5bf9412f99
+# ╟─23051a87-a4b2-49c2-984b-305f3d16a9f7
+# ╟─6bf6598b-590e-4794-b8de-b48cc3fd2c84
 # ╟─4bd63efb-0aef-41cd-a9b7-9fa78db107a0
-# ╟─ba4b183f-65d1-41a3-a613-b787b04afc17
-# ╠═b7041be4-0c9c-48ae-a078-03e077467a42
+# ╟─ec0e41bb-0b13-4cb7-abfe-d52bc9e2389d
+# ╟─a7657bf1-7036-4093-a6b8-0b3f8fb30d29
 # ╟─14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
 # ╟─429b5335-c468-4f95-8351-f3652926d023
 # ╟─5f8a6035-059d-4288-8007-e9176ed5c297
