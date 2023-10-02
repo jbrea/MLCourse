@@ -59,6 +59,17 @@ plot(images[1])
 """
 ,
 """
+import openml
+import matplotlib.pyplot as plt
+
+# data loading
+mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
+
+mnist_x = (mnist.iloc[:, :-1].values.astype(float)/255)
+mnist_x = mnist_x.reshape(-1, 1, 28, 28) # reshape by (num_samples, num_channels, width, height)
+mnist_y = mnist.iloc[:, -1].values.astype(int)
+
+plt.imshow(mnist_x[0, 0, :], cmap='gray')
 """
 )
 
@@ -91,6 +102,78 @@ mean(predict_mode(m, images[60001:70000]) .!= mnist_y[60001:70000])
 """
 ,
 """
+import torch
+from sklearn.preprocessing import OneHotEncoder
+import numpy as np
+import tqdm
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+one_hot_enc = OneHotEncoder()
+mnist_y_ohe = one_hot_enc.fit_transform(mnist_y.reshape(-1, 1))
+mnist_y_ohe = np.array(mnist_y_ohe.todense())
+
+x_train, y_train, x_test, y_test = mnist_x[:60000], mnist_y_ohe[:60000], mnist_x[60000:], mnist_y_ohe[60000:]
+x_train, y_train, x_test, y_test = map(
+    lambda data: torch.tensor(data, dtype=torch.float32, device=device),
+    [x_train, y_train, x_test, y_test],
+)
+
+train_dataloader = torch.utils.data.DataLoader(
+    torch.utils.data.TensorDataset(x_train, y_train),
+    batch_size = 32,
+    shuffle = True,
+)
+
+# Define the neural network model
+class MNISTConvNN(torch.nn.Module):
+    def __init__(self, n_channels, n_out):
+        super(MNISTConvNN, self).__init__()
+        self.front = torch.nn.Sequential(
+            torch.nn.Conv2d(n_channels, 16, kernel_size=8),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(16, 32, kernel_size=4),
+            torch.nn.ReLU(),
+            torch.nn.Flatten()
+        )
+        d = self._get_flat_features((n_channels, 28, 28))  # Calculate the size of the flattened layer
+        self.fc = torch.nn.Linear(d, n_out)
+
+    def forward(self, x):
+        x = self.front(x)
+        x = self.fc(x)
+        return x
+
+    def _get_flat_features(self, shape):
+        x = torch.randn(1, *shape)
+        x = self.front(x)
+        return x.size(1)
+
+# Initialize the model
+n_channels = 1  # Number of input channels for MNIST (grayscale)
+n_out = 10  # Number of output classes
+m = MNISTConvNN(n_channels, n_out)
+m.to(device)
+
+# Define loss function and optimizer
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(m.parameters())
+
+# Training loop
+epochs = 5
+m.train()
+for epoch in tqdm.tqdm(range(epochs)):
+    for inputs, labels in train_dataloader:
+        optimizer.zero_grad()
+        outputs = m(inputs)
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+m.eval()
+with torch.no_grad():
+    test_preds = one_hot_enc.inverse_transform(m(x_test).cpu().numpy())
+test_gt = mnist_y[60000:].reshape(-1, 1)
+np.mean((test_preds != test_gt))
 """
 )
 
@@ -516,6 +599,37 @@ evaluate!(m1, measure = rmse, verbosity = 0) |> summarize
 """
 ,
 """
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import Pipeline
+from sklearn.compose import ColumnTransformer
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import make_scorer
+
+def summarize(cross_val_score:np.ndarray):
+    return {
+        "avg_rmse" : cross_val_score.mean(),
+        "rmse_per_fold": cross_val_score
+    }
+
+cars,_,_,_ = openml.datasets.get_dataset(455).get_data(dataset_format="dataframe")
+cars.dropna(inplace=True)
+X = cars.drop("mpg", axis=1)
+y = cars["mpg"]
+
+X_t = ColumnTransformer(
+    transformers=[
+        ('onehot', OneHotEncoder(), ['cylinders', 'origin'])
+    ],
+    remainder='passthrough'
+).fit_transform(X)
+
+m1 = LinearRegression()
+
+# Define a custom scorer for RMSE
+def rmse(y_true, y_pred):
+    return ((y_true - y_pred) ** 2).mean() ** 0.5
+
+summarize(cross_val_score(m1, X_t, y, scoring=make_scorer(rmse), cv=6))
 """
 )
 
@@ -548,6 +662,20 @@ evaluate!(machine(report(m2).best_model,
 """
 ,
 """
+from xgboost import XGBRegressor
+from sklearn.model_selection import GridSearchCV
+
+m2 = XGBRegressor()
+param_grid = {
+    'colsample_bytree': np.linspace(0.5, 1, 5),
+    'subsample': np.linspace(0.5, 1, 5),
+    'max_depth': np.arange(2, 7, 1)
+}
+
+grid_search = GridSearchCV(m2, param_grid, cv=4, scoring=make_scorer(rmse), n_jobs=-1)
+grid_search.fit(X_t, y)
+m2 = grid_search.best_estimator_
+summarize(cross_val_score(m2, X_t, y, cv=6, scoring=make_scorer(rmse)))
 """
 )
 
@@ -568,6 +696,18 @@ plot!(identity, w = 2, label = nothing)
 """
 ,
 """
+m1.fit(X_t, y)
+m2.fit(X_t, y)
+
+linpred = m1.predict(X_t)
+xgbpred = m2.predict(X_t)
+plt.plot(cars.mpg, linpred, 'o', label = "linear")
+plt.plot(cars.mpg, xgbpred, 'o', label = "XGBoost")
+plt.axline((0, 0), slope=1, color='red')
+plt.xlabel("actual miles per gallon")
+plt.ylabel("predicted miles per gallon")
+plt.legend()
+plt.show()
 """
 )
 
@@ -589,6 +729,10 @@ evaluate!(m3, measure = rmse, verbosity = 0) |> summarize
 """
 ,
 """
+from sklearn.ensemble import RandomForestRegressor
+
+m3 = RandomForestRegressor(n_estimators=500)
+summarize(cross_val_score(m3, X_t, y, cv=6, scoring=make_scorer(rmse)))
 """
 )
 
@@ -610,6 +754,10 @@ evaluate!(m4, measure = rmse, verbosity = 0) |> summarize
 """
 ,
 """
+from sklearn.svm import NuSVR
+
+m4 = NuSVR()
+summarize(cross_val_score(m4, X_t, y, cv=6, scoring=make_scorer(rmse)))
 """
 )
 
@@ -640,6 +788,71 @@ evaluate!(m4, measure = rmse, verbosity = 0) |> summarize
 """
 ,
 """
+from sklearn.model_selection import KFold
+
+def train_test(
+    X:np.ndarray, y:np.ndarray, X_test:np.ndarray, y_test:np.ndarray, 
+    batch_size:int=32, epochs:int=int(5e3)
+)->float:
+    "Train a simple neural network and ouput the test error"
+    X, y, X_test, y_test = map(lambda x_y: torch.tensor(x_y, dtype=torch.float32), [X, y, X_test, y_test])
+
+    train_dataloader = torch.utils.data.DataLoader(
+        torch.utils.data.TensorDataset(X, y),
+        batch_size = batch_size,
+        shuffle = True,
+    )
+
+    # fitting
+    class NeuralNetwork(torch.nn.Module):
+        def __init__(self):
+            super(NeuralNetwork, self).__init__()
+            self.layers = torch.nn.Sequential(
+                torch.nn.Linear(13, 64),
+                torch.nn.Dropout(0.1),
+                torch.nn.ReLU(),
+                torch.nn.Linear(64, 1),
+            )
+        def forward(self, x):
+            return self.layers(x)
+
+    m5 = NeuralNetwork()
+    loss_func = torch.nn.MSELoss()
+    optimizer = torch.optim.AdamW(m5.parameters())
+
+    m5.train()
+    for epoch in tqdm.tqdm(range(epochs)):
+        for i, (data, target) in enumerate(train_dataloader):
+            optimizer.zero_grad()
+            pred = m5(data)
+            loss = loss_func(pred, target)
+            loss.backward()
+            optimizer.step()
+
+    # Evaluation
+    with torch.no_grad():
+        m5.eval()
+        y_test_preds = m5(X_test)
+        test_loss = torch.sqrt(loss_func(y_test_preds, y_test))
+
+    return test_loss.numpy()
+
+num_folds = 6
+kfold = KFold(n_splits=num_folds, shuffle=True)
+nn_cross_val_scores = np.zeros(num_folds)
+y_np = y.to_numpy().reshape(-1, 1) # convert to numpy array of shape (#datapoints, 1)
+
+for fold_no, (train_idx, test_idx) in enumerate(kfold.split(X_t)):
+    nn_cross_val_scores[fold_no] = train_test(
+        X = X_t[train_idx],
+        y = y_np[train_idx],
+        X_test = X_t[test_idx],
+        y_test = y_np[test_idx],
+        batch_size = 32,
+        epochs = int(5e3)
+    )
+
+summarize(nn_cross_val_scores)
 """
 )
 
