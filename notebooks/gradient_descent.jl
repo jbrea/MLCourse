@@ -110,8 +110,8 @@ def predict_Y(b,theta,X):
 def gradient_descent(X,y, learning_rate, num_iterations, loss_fct, fct_gradient, sg = False):
 
 	b,theta=initialize(X.shape[1])
-	gd_iterations_df=pd.DataFrame(columns=['cost'])
-	result_idx=0
+	losses = []
+	params = [[b,theta]]
 	
 	for each_iter in range(num_iterations):
 		if sg==True :
@@ -121,10 +121,10 @@ def gradient_descent(X,y, learning_rate, num_iterations, loss_fct, fct_gradient,
 			
 		y_hat=predict_Y(b,theta,X1)
 		b,theta=fct_gradient(X1,y1,y_hat,b,theta,learning_rate)
-		gd_iterations_df.loc[result_idx]=[loss_fct(y1, y_hat)]
-		result_idx+=1
-
-	return gd_iterations_df,b,theta
+		losses.append(loss_fct(y1,y_hat))
+		params.append([b,theta])
+	
+	return losses, params
 
 ###
 ### Linear regression loss function
@@ -146,8 +146,8 @@ def lin_reg_gradient(x,y,y_hat,b,theta,learning_rate) :
 
 X, y = make_regression(40, 1) # create dataset
 
-gd_iterations_df,b,theta=gradient_descent(X,y,0.1,100,lin_reg_loss,lin_reg_gradient)
-gd_iterations_df
+losses, params=gradient_descent(X,y,0.1,100,lin_reg_loss,lin_reg_gradient)
+losses
 """
 ,
 showoutput = false,
@@ -268,8 +268,8 @@ X2, y2 = make_classification(n_samples=50,
 							  n_classes=2,
 							n_clusters_per_class=1)
 
-gd_iterations_df,b,theta=gradient_descent(X2,y2,0.1,100,log_reg_loss,log_reg_gradient)
-gd_iterations_df
+losses, params = gradient_descent(X2,y2,0.1,100,log_reg_loss,log_reg_gradient)
+losses
 """
 ,
 showoutput = false,
@@ -409,8 +409,8 @@ def select_indices(X,y):
 
 X, y = make_regression(40, 1) # create dataset
 
-gd_iterations_df,b,theta=gradient_descent(X,y,0.1,100,lin_reg_loss, lin_reg_gradient,True)
-gd_iterations_df
+losses, params = gradient_descent(X,y,0.1,100,lin_reg_loss, lin_reg_gradient,True)
+losses
 """
 ,
 showoutput = false,
@@ -690,5 +690,3 @@ MLCourse.save_cache(@__FILE__)
 # ╟─8459f86e-bce7-4839-9c51-57335ac6353c
 # ╟─7aa547f8-25d4-488d-9fc3-f633f7f03f57
 # ╟─9d250061-e570-4537-b1aa-f6a9019f343d
-# ╠═fac88373-4f6d-4661-9a1c-be173a725d4b
-# ╠═87aa211a-c383-4da2-b18a-f06567a4d3bf
