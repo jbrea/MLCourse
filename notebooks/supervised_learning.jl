@@ -452,6 +452,7 @@ begin
     f0(β₀, β₁, β₂) = (X1, X2) -> f0(X1, X2, β₀, β₁, β₂)
 	data_generator2(X1, X2; β₀, β₁, β₂, σ = 0.8) = f0(X1, X2, β₀, β₁, β₂) + σ * randn()
 	y = data_generator2.(X.X1, X.X2, β₀ = .4, β₁ = .5, β₂ = -.6)
+	loss(β₀, β₁, β₂) = mean((f0.(X.X1, X.X2, β₀, β₁, β₂) .- y).^2)
 end;
 
 
@@ -462,6 +463,9 @@ md"β₀ = $(@bind β₀ Slider(-1:.02:1, default = .4, show_value = true))
 
 β₂ = $(@bind β₂ Slider(-1:.02:1, default = -.6, show_value = true))
 "
+
+# ╔═╡ 95d38143-1ced-414e-bbd9-47856ae73015
+md"Current loss = $(loss(β₀, β₁, β₂))"
 
 # ╔═╡ d541a8cd-5aa4-4c2d-bfdf-5e6297bb65a8
 let
@@ -496,15 +500,16 @@ let
            for (x1, x2, z) in zip(X.X1, X.X2, y)]
     plot1 = PP.Plot([p1, p2, res...])
 #     plot_residuals!(X.X1, X.X2, y, f0(β₀, β₁, β₂))
-    lossf1 = (β₀, β₁) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2)
+	#lossf1 = (β₀, β₁) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2)
     xgrid = -1:.1:1; ygrid = -1:.1:1
-    p3 = PP.contour(x = xgrid, y = ygrid, z = lossf1.(xgrid, ygrid'),
+    p3 = PP.contour(x = xgrid, y = ygrid,
+		            z = reshape(loss.(repeat(xgrid, inner = length(ygrid)), repeat(ygrid, length(xgrid)), fill(β₂, length(xgrid)*length(xgrid))), length(xgrid), :),
                     ncontours = 50, ylabel = "β₁", showscale = false, title = "loss")
     p4 = PP.scatter(x = [β₀], y = [β₁], mode = "markers", marker_color = "red")
     plot2 = PP.Plot([p3, p4], PP.Layout(title = "loss function"))
-    lossf2 = (β₀, β₂) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2)
+    #lossf2 = (β₀, β₂) -> mean((β₀ .+ β₁ .* X.X1 .+ β₂ .* X.X2 .- y).^2)
     p5 = PP.contour(x = xgrid, y = ygrid,
-                    z = lossf2.(xgrid, ygrid'),
+                    z = reshape(loss.(repeat(xgrid, inner = length(ygrid)), fill(β₁, length(xgrid)*length(ygrid)), repeat(ygrid, length(xgrid))), length(xgrid), :),
                     ncontours = 50, xlabel = "β₀", ylabel = "β₂")
     p6 = PP.scatter(x = [β₀], y = [β₂], mode = "markers", marker_color = "red")
     plot3 = PP.Plot([p5, p6])
@@ -1202,6 +1207,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─c65b81bd-395f-4461-a73b-3535903cb2d7
 # ╟─0f544053-1b7a-48d6-b18b-72092b124305
 # ╟─51c9ea74-3110-4536-a4af-7cc73b45a4a6
+# ╟─95d38143-1ced-414e-bbd9-47856ae73015
 # ╟─d541a8cd-5aa4-4c2d-bfdf-5e6297bb65a8
 # ╟─c261ac30-b215-47a2-a22d-6706470b57b4
 # ╟─f63c0588-eefe-11eb-1b0b-db185fcbdc4e
