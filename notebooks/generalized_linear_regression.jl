@@ -786,33 +786,17 @@ In this exercise we will familiarize ourselves with the loss function implicitly
 - Show that one can always set ``\theta_{K0}, \theta_{K1}, \ldots, \theta_{Kp}`` to zero. *Hint* Show that the softmax function with the transformed parameters ``\tilde\theta_{ij}=\theta_{ij} - \theta_{Kj}`` has the same value as the softmax function in the original parameters.
 
 ## Applied
-#### Exercise 4
-In the multiple linear regression of the weather data set above we used all
-   available predictors. We do not know if all of them are relevant. In this exercise our aim is to find models with fewer predictors and quantify the loss in prediction accuracy.
-- Systematically search for the model with at most 2 predictors that has the lowest test rmse. *Hint* write a function `train_and_evaluate` that takes the training and the test data as input as well as an array of two predictors; remember that `data[:, [\"A\", \"B\"]]` returns a sub-dataframe with columns \"A\" and \"B\". This function should fit a `LinearRegressor` on the training set with those two predictors and return the test rmse for the two predictors. To get a list of all pairs of predictors you can use something like `predictors = setdiff(names(train), ["time", "LUZ_wind_peak"]); predictor_pairs = [[p1, p2] for p1 in predictors, p2 in predictors if p1 != p2 && p1 > p2]`
-- How much higher is the test error compared to the fit with all available predictors?
-- How many models did you have to fit to find your result above?
-- How many models would you have to fit to find the best model with at most 5 predictors? *Hint* the function `binomial` may be useful.
-"""
-
-# ╔═╡ b3a2cc60-f58c-4d07-93fc-19c80a6dd4da
-md"""
-#### Exercise 5
-- Read the section on [scientific types in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types).
-- Coerce the `count` variable of the bike sharing data to `Continuous` and fit a linear model (`LinearRegressor`) with predictors `:temp` and `:humidity`.
-Create a scatter plot with the true counts `bikesharing.count` on the x-axis and the predicted mode (`predict_mode`) of the counts for the linear regression model and the Poisson model on the y-axis. If the model perfectly captures the data, the plotted points should lie on the diagonal; you can add `plot!(identity)` to the figure to display the diagonal.
-Comment on the differences you see in the plot between the Poisson model and the linear regression model.
 """
 
 # ╔═╡ a52e3700-db5b-439e-9e43-0cde9a283c38
 md"""
-#### Exercise 6
+#### Exercise 4
 In this exercise we perform linear classification of the MNIST handwritten digits
    dataset.
-   - Load the MNIST data set with `using OpenML; mnist = OpenML.load(554) |> DataFrame; dropmissing!(mnist);`
+   - Load the MNIST data set.
    - Usually the first 60'000 images are taken as training set, but for this exercise I recommend to use fewer rows, e.g. the first 5000.
-   - Scale the input values to the interval [0, 1) with `mnist[:, 1:784] ./= 255`
-   - Fit a `MLJLinearModels.MultinomialClassifier(penalty = :none)` to the data. Be patient! This can take a few minutes.
+   - Scale the input values to the interval [0, 1) by dividing all pixel values by 255.
+   - Fit a linear classifier to the data. Be patient! This can take a few minutes. *Hint*: $(mlstring(md"Use the model `MLJLinearModels.MultinomialClassifier(penalty = :none)`.", md"Use `LogisticRegression(penalty=None, multi_class='multinomial')`"))
    - Compute the misclassification rate and the confusion matrix on the training set.
    - Use as test data rows 60001 to 70000 and compute the misclassification rate
      and the confusion matrix on this test set.
@@ -823,7 +807,7 @@ In this exercise we perform linear classification of the MNIST handwritten digit
 
 # ╔═╡ 20fe6494-2214-48e9-9c05-61a5faf9f91f
 md"""
-#### Exercise 7
+#### Exercise 5
 Write a data generator function that samples inputs ``x`` normally distributed
    with mean 2 and standard deviation 3. The response ``y\in\{\mbox{true, false}\}``
    should be sampled from a Bernoulli distribution with rate of ``\mbox{true}``
@@ -837,6 +821,16 @@ Write a data generator function that samples inputs ``x`` normally distributed
    - Compute the test error at ``x = 4`` using the fitted parameters and compare your result to the previous result. *Hint:* Have a look at the slides for how to compute the test error when the parameters of the generator and the fitted function are known.
    - Rerun your solution with different training sets of size ``n = 20`` and write down your observations.
    - Rerun your solution multiple times with training sets of size ``n = 10^4``. Compare the fitted parameters to the one of the generator and look at the test error. Write down your observations.
+"""
+
+# ╔═╡ b3a2cc60-f58c-4d07-93fc-19c80a6dd4da
+md"""
+#### Exercise 6 (optional)
+In this exercise we have a closer look at the bike sharing data of section "Poisson Regression".
+- Follow the code examples in section "Poisson Regression" to run a Poisson regression on the responses `count` with predictors `temp` and `humidity`.
+- For comparison, run a linear regression on the same inputs and output. $(mlstring(md"*Hint*: Read the section on [scientific types in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types) and coerce the `count` variable of the bike sharing data to `Continuous`", ""))
+- Create a scatter plot with the true counts on the x-axis and the predictions $(mlstring(md"(`predict_mode`)", "")) of the counts for the linear regression model and the Poisson model on the y-axis. If the model perfectly captures the data, the plotted points should lie on the diagonal; add the diagonal to the figure to help seeing deviations from perfect preditions.
+- Comment on the differences you see in the plot between the Poisson model and the linear regression model.
 """
 
 # ╔═╡ 20c5c7bc-664f-4c04-8215-8f3a9a2095c9
@@ -1058,9 +1052,9 @@ MLCourse.save_cache(@__FILE__)
 # ╟─b8bb7c85-0be8-4a87-96da-4e1b37aea96d
 # ╟─d3d7fa67-ca7d-46e1-b705-e30ec9b09f6a
 # ╟─8b0451bf-59b0-4e71-be84-549e23b5bfe7
-# ╟─b3a2cc60-f58c-4d07-93fc-19c80a6dd4da
 # ╟─a52e3700-db5b-439e-9e43-0cde9a283c38
 # ╟─20fe6494-2214-48e9-9c05-61a5faf9f91f
+# ╟─b3a2cc60-f58c-4d07-93fc-19c80a6dd4da
 # ╟─20c5c7bc-664f-4c04-8215-8f3a9a2095c9
 # ╟─7f08fcaa-000d-422d-80b4-e58a2f489d74
 # ╟─fbc70eaa-df15-423a-9885-93a5fa27fbc5
