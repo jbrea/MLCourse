@@ -70,6 +70,7 @@ mnist_x = mnist_x.reshape(-1, 1, 28, 28) # reshape by (num_samples, num_channels
 mnist_y = mnist.iloc[:, -1].values.astype(int)
 
 plt.imshow(mnist_x[0, 0, :], cmap='gray')
+plt.show()
 """
 )
 
@@ -701,6 +702,7 @@ m2.fit(X_t, y)
 
 linpred = m1.predict(X_t)
 xgbpred = m2.predict(X_t)
+plt.figure()
 plt.plot(cars.mpg, linpred, 'o', label = "linear")
 plt.plot(cars.mpg, xgbpred, 'o', label = "XGBoost")
 plt.axline((0, 0), slope=1, color='red')
@@ -821,7 +823,7 @@ def train_test(
     optimizer = torch.optim.AdamW(m5.parameters())
 
     m5.train()
-    for epoch in tqdm.tqdm(range(epochs)):
+    for epoch in tqdm.tqdm(range(epochs), disable = True): # set False to see progress
         for i, (data, target) in enumerate(train_dataloader):
             optimizer.zero_grad()
             pred = m5(data)
