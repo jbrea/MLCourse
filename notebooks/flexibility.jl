@@ -880,7 +880,7 @@ Apply K-nearest neighbors regression to the weather data set. Use as input all p
 
 # ╔═╡ c98a4d29-4dfe-4ca4-a2f1-5342788da6c0
 md"
-#### Exercise 6
+#### Exercise 6 (optional)
 In this exercise we review the error-decomposition and the bias-variance decomposition.
 * Write a data generator where the mean of the output depends through the non-linear function ``f(x) = x^2 * \sin(x) + 4 * \tanh(10x)`` on the input and normally distributed noise ``\epsilon`` with mean 0 and standard deviation 1.5.
     * Take the linear function ``\hat f(x) = 2x`` and estimate its reducible error at input point ``x = 0`` and at input point ``x = 2`` in two ways:
