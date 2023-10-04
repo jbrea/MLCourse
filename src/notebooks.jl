@@ -218,6 +218,7 @@ function _usings(s)
     pkgs, structs
 end
 function save_cache(file)
+    haskey(ENV, "DISABLE_CACHE_SAVE") && return
     fn = _cache_path(file)
     pkgs = ""
     structs = ""

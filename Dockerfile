@@ -18,11 +18,12 @@ RUN git checkout -t origin/main
 # COPY --chown=MLCourse . /home/MLCourse
 ENV html_export=true
 ENV JULIA_PKG_DEVDIR=/home
+ENV DISABLE_CACHE_SAVE
 COPY --chown=MLCourse notebooks/.cache notebooks/.cache
 
 # Initialize the julia project environment that will be used to run the bind server.
 # RUN julia --project=/home/MLCourse -e "import Pkg; Pkg.instantiate(); Pkg.precompile(); using MLCourse"
-RUN julia -e 'import Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse")); Pkg.instantiate(); Pkg.activate(joinpath(Pkg.devdir(), "MLCourse", "RLEnv")); Pkg.instantiate();'
+RUN julia -e 'import Pkg; Pkg.activate(joinpath(Pkg.devdir(), "MLCourse")); Pkg.instantiate(); Pkg.activate(joinpath(Pkg.devdir(), "MLCourse", "RLEnv")); session = Pluto.ServerSession(); session.options.server.port = 40404; session.options.server.launch_browser = false; session.options.security.require_secret_for_access = false; Pkg.instantiate(); using Pluto, MLCourse, MLJ, MLJLinearModels; t = @async Pluto.run(session); sleep(30); @async Base.throwto(t, InterruptException())'
 
 # The "default command" for this docker thing.
 CMD ["julia", "--project=/home/MLCourse", "-e", "import PlutoSliderServer; PlutoSliderServer.run_git_directory(\".\"; Export_baked_notebookfile = false, SliderServer_port=8000, SliderServer_exclude = [\"extras/transfer_learning.jl\", \"extras/generative_models.jl\"], Export_exclude = [\"extras/transfer_learning.jl\", \"extras/generative_models.jl\"], SliderServer_host=\"0.0.0.0\", Export_slider_server_url=\"https://bio322.epfl.ch/\")"]
