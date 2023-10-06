@@ -623,10 +623,53 @@ losses(m3, test_input, test_labels)
 ,
 )
 
-# ╔═╡ b6689b27-e8a2-44e4-8791-ce237767ee63
-md"# 5. Poisson Regression
+# ╔═╡ 2b54e611-b477-4b8c-abc6-8e99d0908bd6
+md"# 5. Visualization of Multinomial Regression"
 
-In this section we have a look at a regression problem where the response is a count variable. As an example we use a Bike sharing data set. In this data set, the number of rented bikes in Washington D.C. at a given time is recorded together with the weather condition. Remove the semicolon in the cell below, if you want to learn more about this dataset.
+# ╔═╡ 8f3ada94-b8a9-48be-8d66-7818933f851f
+md"""
+θ₁₀  = $(@bind theta10 Slider(-4:.1:4, default = 2.))
+θ₁₁  = $(@bind theta11 Slider(-4:.1:4, default = -2.))
+θ₁₂  = $(@bind theta12 Slider(-4:.1:4, default = .3))
+
+θ₂₀  = $(@bind theta20 Slider(-4:.1:4, default = -.5))
+θ₂₁  = $(@bind theta21 Slider(-4:.1:4, default = 1.1))
+θ₂₂  = $(@bind theta22 Slider(-4:.1:4, default = 2.8))
+
+θ₃₀  = $(@bind theta30 Slider(-4:.1:4, default = -2.))
+θ₃₁  = $(@bind theta31 Slider(-4:.1:4, default = 2.1))
+θ₃₂  = $(@bind theta32 Slider(-4:.1:4, default = .5))
+"""
+
+# ╔═╡ a40563d1-0ad7-4ca6-a39b-c9ce9c4fe1cc
+let
+	x = repeat(-10:.2:10, 101)
+	y = repeat(-10:.2:10, inner = 101)
+	input = [ones(length(x))'
+			 x'
+			 y']
+	θ = [theta10 theta11 theta12
+		 theta20 theta21 theta22
+	     theta30 theta31 theta32]
+	p = exp.(θ * input)
+	mode = reshape(getindex.(argmax(p, dims = 1), 1), :)
+	colors = [:red, :blue, :yellow][mode]
+	scatter(x, y, xlabel = "X₁", ylabel = "X₂",
+		c = colors, markersize = 2, markerstrokewidth = 0, label = nothing)
+end
+
+# ╔═╡ 64ac8f64-ebf8-4c1d-af88-63c2e59e2fbd
+md"""In the figure above, we classify each two-dimensional input point into one of three classes, indicated by the colors. The class label (colors) are selected according to the following rule:
+
+```math
+\arg\max_{i \in \{1, 2, 3\}} \frac{e^{\theta_{i0} + \theta_{i1}X_1 + \theta_{i2}X_2}}{\sum_{j = 1}^3e^{\theta_{j0} + \theta_{j1}X_1 + \theta_{j2}X_2}}
+```
+"""
+
+# ╔═╡ b6689b27-e8a2-44e4-8791-ce237767ee63
+md"# 6. Poisson Regression
+
+In this section we have a look at a regression problem where the response is a count variable. As an example we use a Bike sharing data set. In this data set, the number of rented bikes in Washington D.C. at a given time is recorded together with the weather condition.
 
 In this section our goal will be to predict the number of rented bikes at a given temperature and windspeed. Here is the description of the dataset:
 "
@@ -1036,6 +1079,10 @@ MLCourse.save_cache(@__FILE__)
 # ╟─a30578dd-aecb-46eb-b947-f009282cf2fc
 # ╟─8ed39cdc-e99e-48ff-9973-66df41aa0f78
 # ╟─935adbcd-48ab-4a6f-907c-b04137ca3abe
+# ╟─2b54e611-b477-4b8c-abc6-8e99d0908bd6
+# ╟─8f3ada94-b8a9-48be-8d66-7818933f851f
+# ╟─a40563d1-0ad7-4ca6-a39b-c9ce9c4fe1cc
+# ╟─64ac8f64-ebf8-4c1d-af88-63c2e59e2fbd
 # ╟─b6689b27-e8a2-44e4-8791-ce237767ee63
 # ╟─310999a0-f212-4e69-a4cb-346b3f49f202
 # ╟─6384a36d-1dac-4d72-9d7b-84511f20e6ca
