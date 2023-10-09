@@ -639,6 +639,10 @@ md"""
 θ₃₀  = $(@bind theta30 Slider(-4:.1:4, default = -2.))
 θ₃₁  = $(@bind theta31 Slider(-4:.1:4, default = 2.1))
 θ₃₂  = $(@bind theta32 Slider(-4:.1:4, default = .5))
+
+θ₄₀  = $(@bind theta40 Slider(-4:.1:4, default = -1.2))
+θ₄₁  = $(@bind theta41 Slider(-4:.1:4, default = .1))
+θ₄₂  = $(@bind theta42 Slider(-4:.1:4, default = -.5))
 """
 
 # ╔═╡ a40563d1-0ad7-4ca6-a39b-c9ce9c4fe1cc
@@ -650,19 +654,20 @@ let
 			 y']
 	θ = [theta10 theta11 theta12
 		 theta20 theta21 theta22
-	     theta30 theta31 theta32]
+	     theta30 theta31 theta32
+	     theta40 theta41 theta42]
 	p = exp.(θ * input)
 	mode = reshape(getindex.(argmax(p, dims = 1), 1), :)
-	colors = [:red, :blue, :yellow][mode]
+	colors = [:red, :blue, :yellow, :green][mode]
 	scatter(x, y, xlabel = "X₁", ylabel = "X₂",
 		c = colors, markersize = 2, markerstrokewidth = 0, label = nothing)
 end
 
 # ╔═╡ 64ac8f64-ebf8-4c1d-af88-63c2e59e2fbd
-md"""In the figure above, we classify each two-dimensional input point into one of three classes, indicated by the colors. The class label (colors) are selected according to the following rule:
+md"""In the figure above, we classify each two-dimensional input point into one of four classes, indicated by the colors. The class label (colors) are selected according to the following rule:
 
 ```math
-\arg\max_{i \in \{1, 2, 3\}} \frac{e^{\theta_{i0} + \theta_{i1}X_1 + \theta_{i2}X_2}}{\sum_{j = 1}^3e^{\theta_{j0} + \theta_{j1}X_1 + \theta_{j2}X_2}}
+\arg\max_{i \in \{1, 2, 3, 4\}} \frac{e^{\theta_{i0} + \theta_{i1}X_1 + \theta_{i2}X_2}}{\sum_{j = 1}^4e^{\theta_{j0} + \theta_{j1}X_1 + \theta_{j2}X_2}}
 ```
 """
 
