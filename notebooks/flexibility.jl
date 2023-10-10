@@ -24,7 +24,7 @@ Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
 using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, Statistics, NearestNeighborModels
 import MLCourse: fitted_linear_func
 import PlutoPlotly as PP
-const M = MLCourse.JlMod
+const M = MLCourse.JlMod 
 redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
 MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
