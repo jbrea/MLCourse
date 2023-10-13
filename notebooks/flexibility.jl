@@ -873,6 +873,7 @@ Suppose that we take a data set with mutually distinct inputs ``x_i\neq x_j`` fo
 ## Applied
 #### Exercise 5
 Apply K-nearest neighbors regression to the weather data set. Use as input all predictors except `:time` and `:LUZ_wind_peak`.
+* Use the same kind of preprocessing as in the example of linear regression (or exercise 6) in [2. supervised learning](https://bio322.epfl.ch/notebooks/supervised_learning.html), i.e. load the training and the test set and make sure to shift the predictors and the response by 5 hours.
 * Compute the training and the test loss for ``K = 5, 10, 20, 50, 100``.
 * Which value of the hyper-parameter ``K`` should we prefer to make predictions on new data?
 * Should we prefer K-nearest neighbors with optimal ``K`` or multiple linear regression to make predictions on new data? *Hint*: Remember that we found a training error (RMSE) of approximately 8.1 and a test error of 8.9.
