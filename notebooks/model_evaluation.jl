@@ -40,6 +40,7 @@ md"The goal of this week is to
 
 3. Learn how to use different resampling strategies, like the validation set approach or cross-validation.
 4. Learn how to do hyper-parameter tuning.
+5. See one application of the bootstrap.
 "
 
 # ╔═╡ 7eb6a060-f948-4d85-881a-4909e74c15bd
@@ -386,6 +387,93 @@ nested_cv.report_per_fold
 """
 )
 
+# ╔═╡ 166b363f-6bae-43be-889d-0b8b9251832e
+md"""# 5. The Bootstrap
+
+The bootstrap is a resampling strategy to generate "new" datasets of the same size as an existing one by sampling rows with replacement.
+
+In the following we take as our original dataset a subset of the weather dataset.
+Our goal is to estimate if the sunshine duration positively co-varies with the wind peak.
+"""
+
+# ╔═╡ a9d3a6e8-f10f-45bc-85b4-c9faba6e8827
+mlcode("""
+using CSV, DataFrames
+
+weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
+                   DataFrame)[80:5000, [:LUZ_sunshine_duration, :LUZ_wind_peak]]
+"""
+,
+"""
+import numpy as np
+import pandas as pd
+
+weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv").loc[79:4999, ['LUZ_sunshine_duration', 'LUZ_wind_peak']]
+weather
+"""
+)
+
+# ╔═╡ c5bb2ca4-2759-4946-bda3-94993a1dd373
+mlcode(
+"""
+function bootstrap(data)
+	idxs = rand(1:nrow(data), nrow(data))
+	data[idxs, :]
+end
+bootstrap(weather)
+"""
+,
+"""
+def bootstrap(data):
+    idxs = np.random.choice(range(data.shape[0]), size=data.shape[0])
+    return data.iloc[idxs, :]
+
+bootstrap(weather)
+"""
+)
+
+# ╔═╡ c4297b53-6a11-4178-8e47-b552d22f7be7
+mlcode(
+"""
+using MLJ, MLJLinearModels, Plots
+
+function bootstrap_and_fit(data)
+    data_bootstrapped = bootstrap(data)
+    m = machine(LinearRegressor(),
+                select(data_bootstrapped, Not(:LUZ_wind_peak)),
+                data_bootstrapped.LUZ_wind_peak)
+    fit!(m, verbosity = 0)
+    fitted_params(m).coefs[1][2] # extract the slope of the linear regression
+end
+slopes = [bootstrap_and_fit(weather) for _ in 1:1000]
+histogram(slopes, label = nothing, xlabel = "slope", ylabel = "counts")
+"""
+,
+"""
+import numpy as np
+from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
+
+def bootstrap_and_fit(data):
+    data_bootstrapped = bootstrap(data)
+    X = data_bootstrapped.drop(columns=['LUZ_wind_peak'])
+    y = data_bootstrapped['LUZ_wind_peak']
+    model = LinearRegression()
+    model.fit(X, y)
+    return model.coef_[0] # extract the slope of the linear regression
+
+slopes = [bootstrap_and_fit(weather) for _ in range(1000)]
+plt.figure()
+plt.hist(slopes)
+plt.xlabel("slope")
+plt.ylabel("counts")
+plt.show()
+"""
+)
+
+# ╔═╡ 45d6d454-eaac-4401-9a46-390d3d667794
+md"The distribution of slope values is clearly on the positive side. This means that the wind peak indeed co-varies with the sunshine duration."
+
 # ╔═╡ ee89c448-1e69-4fd1-a4b8-7297a09f2685
 md"# Exercises
 
@@ -693,6 +781,11 @@ MLCourse.save_cache(@__FILE__)
 # ╟─3e9c6f1c-4cb6-48d8-8119-07a4b03c2e4b
 # ╟─171fbe78-5e1d-4a6b-8d7b-f602db1162fb
 # ╟─c8d26ab6-86ec-4b37-9540-0f785fd8cdc2
+# ╟─166b363f-6bae-43be-889d-0b8b9251832e
+# ╟─a9d3a6e8-f10f-45bc-85b4-c9faba6e8827
+# ╟─c5bb2ca4-2759-4946-bda3-94993a1dd373
+# ╟─c4297b53-6a11-4178-8e47-b552d22f7be7
+# ╟─45d6d454-eaac-4401-9a46-390d3d667794
 # ╟─ee89c448-1e69-4fd1-a4b8-7297a09f2685
 # ╟─22679be7-2502-4084-9ce0-35bb73451b52
 # ╟─c0e33f73-59cc-4c8b-965b-21d8ea83d1ce
