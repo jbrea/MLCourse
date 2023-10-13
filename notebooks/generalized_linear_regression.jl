@@ -149,7 +149,7 @@ classification_data
 # ╔═╡ 7dfa42e3-c409-43a7-9952-a64fbad63c7f
 mlstring(md"In the cell above we used the function `categorical` to tell the computer that the strings \"A\" and \"B\" indicate membership in different categories."
 ,
-"
+md"
 In the cell above we used the function `pd.Categorical` to tell the computer that the strings \"A\" and \"B\" indicate membership in different categories.
 "
 )
@@ -182,7 +182,11 @@ mach3.fit(
 ("coeff : ", mach3.coef_ , "intercept", mach3.intercept_)
 """
 ,
+recompute = true
 )
+
+# ╔═╡ 7825ce0f-ba0f-49b9-a9b7-b306ed7337eb
+md"""Note that the fitted parameters are for ``P(Y = \mathrm{B}| θ₀ + θ₁X)``. If we want instead to have the parameters for ``P(Y = \mathrm{A}| θ₀ + θ₁X)`` (as in the slides), we need to flip the signs."""
 
 # ╔═╡ a9c7ca33-ce22-49b3-a976-8c180916fa5e
 md"**Training data and conditional probabilites.** The training data is shown as blue dots (y-labels on the left), the probability of \"A\" under the data generator as a green curve (y-labels on the right). Note that ``Y = \mbox{B}`` at ``X = 3`` is very unlikely under the given data generator, but also unlikely events happen occasionally. The fitted probabilities are shown in red.
@@ -1041,6 +1045,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─7dfa42e3-c409-43a7-9952-a64fbad63c7f
 # ╟─5233d53e-0104-4eeb-a742-687bd9c9978a
 # ╟─f63c061e-eefe-11eb-095b-8be221b33d49
+# ╟─7825ce0f-ba0f-49b9-a9b7-b306ed7337eb
 # ╟─88741216-4736-4491-a167-31a7852a54e4
 # ╟─a9c7ca33-ce22-49b3-a976-8c180916fa5e
 # ╟─0e775dfb-0da4-4536-886c-ada8c176a073
