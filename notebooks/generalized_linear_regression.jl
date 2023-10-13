@@ -182,7 +182,6 @@ mach3.fit(
 ("coeff : ", mach3.coef_ , "intercept", mach3.intercept_)
 """
 ,
-recompute = true
 )
 
 # ╔═╡ 7825ce0f-ba0f-49b9-a9b7-b306ed7337eb
