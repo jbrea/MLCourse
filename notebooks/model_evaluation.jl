@@ -536,20 +536,20 @@ md"""
 Take the `classification_data` in our notebook on
    \"flexibility and bias-variance-decomposition notebook\" and find with 10-fold
    cross-validation the optimal number ``k`` of neighbors of kNN
-   classification, using the AUC measure. Hint: `MLJ` has the builtin function `auc`.
+   classification, using the AUC measure. Hint: $(mlstring(md"`MLJ` has the builtin function `auc`.", md"`sklearn` has the builtin metric `sklearn.metric.auc`."))
    Plot the validation AUC for ``k = 1, \ldots, 50``.
 """
 
 # ╔═╡ 186fa41b-5e74-4191-bc2d-e8d865606fc1
 md"
 #### Exercise 6
-With the same data as in the previous exercise, use the `MLJ` function `evaluate!` and a self tuning machine to estimate with the validation set approach the test error of kNN classifier whose hyper-parameter is tuned with 5 fold cross-validation. Use one quarter of the data for the test set.
+With the same data as in the previous exercise, estimate test error with the validation set approach for a kNN classifier whose hyper-parameter is tuned with 5 fold cross-validation. Use one quarter of the data for the test set.
 "
 
 # ╔═╡ 6f3fea58-8587-4b03-a11a-bac8a46abe67
 md"
-#### Exercise 7
-In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download a dataset with `using OpenML; cars = DataFrame(OpenML.load(455))`. In the cleaning step we will remove all rows that contain missing values (you can use the function `dropmissing`). We select the machine learning methods polynomial regression and k nearest neighbors regression and we take as measure the `rmse`. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found. *Hint:* use `TuningModels` and the `range` function (see examples above) to tune the hyper-parameters.
+#### Exercise 7 (optional)
+In this exercise you apply our \"recipe for supervised learning\" (see slides). The goal is to predict the miles a car can drive per gallon fuel (mpg) as a function of its horsepower. You can download the dataset from openml; the dataset id is `455`. In the cleaning step we will remove all rows that contain missing values. We select the machine learning methods polynomial regression and k nearest neighbors regression and we take as measure the root mean squared error. Make sure to go trough the steps 2, 5, 9 of the recipe. Plot the predictions of the best method you found. *Hint:* take inspiration from the examples above to tune the hyper-parameters.
 "
 
 # ╔═╡ a26864cc-fc27-4bc4-8bf2-f703db905624
