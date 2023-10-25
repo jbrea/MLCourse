@@ -798,7 +798,7 @@ g(x)`` has exactly the same partial derivative in ``x`` as ``L(x, \lambda)`` and
 therefore all critical points of ``L(x)`` have corresponding critical
 points of ``L(x,\lambda)``. Because of this, regularization is often formulated
 as \"adding a regularization term to the cost function\". For example, given the loss
-    function of linear regression ``L(\beta) = \frac1n\sum_{i=1}^n(y_i - \beta_0 + \beta_1x_{i1} + \cdots + \beta_p x_{ip})^2`` one can define the
+    function of linear regression ``L(\beta) = \frac1n\sum_{i=1}^n(y_i - \beta_0 - \beta_1x_{i1} - \cdots - \beta_p x_{ip})^2`` one can define the
         L1-regularized loss function ``L_\mathrm{L1}(\beta) = L(\beta) + \lambda
 \|\beta\|_1`` and choose a value for ``\lambda`` instead of the size ``s`` of the
 allowed area.
