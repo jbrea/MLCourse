@@ -46,7 +46,7 @@ md"# 1. Data Cleaning
 
 ## Dealing with Missing Data
 
-In the following artififial dataset the age and the gender is missing for some of the subjects.
+In the following artificial dataset the age and the gender is missing for some of the subjects.
 "
 
 # ╔═╡ c7dab115-b990-4760-85d0-4214d33ada5d
@@ -289,7 +289,7 @@ let d = 10*Beta(2, 6) + 16
     fp = fitted_params(st_mach)
     a = fp.stds[1]; b = fp.means[1]
 	st_data = MLJ.transform(st_mach, data)
-	p2 = histogram(st_data.x, nbins = 100, normalize = :pdf, xlabel = "x", ylabel = "probability density", label = "scaled data", title = "scaled data")
+	p2 = histogram(st_data.x, nbins = 100, normalize = :pdf, xlabel = "z", ylabel = "probability density", label = "scaled data", title = "scaled data")
     plot!(z -> a*pdf(d, a*z + b), c = :orange, w = 2, label = "\$f_Z(z)\$")
     plot(p1, p2, layout = (1, 2), yrange = (0, .5), size = (700, 400))
 end
@@ -531,7 +531,7 @@ fitted_params(spline_fit)
 
 # ╔═╡ 0815ba19-5c7d-40d6-b948-8edccfb5c386
 begin grid = minimum(M.wage.AGE):maximum(M.wage.AGE)
-	scatter(M.wage.AGE, M.wage.WAGE)
+	scatter(M.wage.AGE, M.wage.WAGE, xlabel = "age [years]", ylabel = "wage [USD/hour]")
 	plot!(grid, predict(spline_fit, DataFrame(x = grid)), w = 3)
 	vline!([knot1, knot2, knot3, knot4], linestyle = :dash, legend = false)
 end
