@@ -41,17 +41,17 @@ md"The goal of this week is to
 "
 
 # ╔═╡ 9f18f610-79e2-403a-a792-fe2dafd2054a
-md"# 1. Gradient Descent
+md"""# 1. Gradient Descent
 
 Gradient descent is beautifully simple. Given a loss function and an initial parameter value, it moves the parameter values iteratively in the opposite direction of the vector of partial derivatives. Thanks to powerful automatic differentiation packages, we do not need to calculate the partial derivatives ourselves, but they are computed for basically any loss function.
 
 ## Gradient Descent for Linear Regression
 
-In this section we write the `gradient_descent` function.
+In this section we write the `gradient_descent` function. To avoid having to compute partial derivatives manually, we use $(mlstring(md"the `gradient` funtion defined in the `Zygote` package.", md"`torch` (PyTorch). To use `torch`, all data and parameters need to be `torch.tensors`. The gradient computation is somewhat hidden in `torch`: whenever the `backward()` function is called on a `torch.tensor`, the partial derivatives for all tensors with argument `requires_grad = True` are computed."))
 
 For later examples we only need to write a new loss function.
 Here we define the loss function for linear regression and run it to illustrate gradient descent. Note that, usually, linear regression is not solved with gradient descent, because there are other (specialized) methods that find the minimum of the loss function more efficiently.
-"
+"""
 
 # ╔═╡ fcbac567-36db-40c5-9436-6315c0caa40a
 mlcode(
@@ -61,6 +61,7 @@ mlcode(
 ###
 
 using Zygote
+import Statistics: mean
 
 function gradient_descent(loss, x; η, T, callback = x -> nothing)
     for t in 1:T
@@ -77,16 +78,15 @@ end
 
 lin_reg_loss(β₀, β₁, x, y) = mean((y .- β₀  .- β₁ * x).^2)
 function lin_reg_loss_function(X, y) # returns loss for given dataset
-    β -> lin_reg_loss(β[1], β[2], X.x1, y)
+    β -> lin_reg_loss(β[1], β[2], X, y)
 end
 
 ###
 ### Running gradient descent for linear regression
 ###
 
-using MLJ
-
-X, y = make_regression(40, 1, rng = 16) # create dataset
+X = randn(40)
+y = .1 .- .4 * X .+ .1 * randn(40)
 loss = lin_reg_loss_function(X, y) # loss for this dataset
 
 params = [.1, .2] # initial parameters
@@ -95,59 +95,40 @@ gradient_descent(loss, params, η = .1, T = 100)
 ,
 """
 import numpy as np
-import random
-from sklearn.datasets import make_regression
-import pandas as pd
-
-def initialize(dim):
-	b=random.random()
-	theta=np.random.rand(dim)
-	return b,theta
-
-def predict_Y(b,theta,X):
-	return b + np.dot(X,theta)
-
-def gradient_descent(X,y, learning_rate, num_iterations, loss_fct, fct_gradient, sg = False):
-
-	b,theta=initialize(X.shape[1])
-	gd_iterations_df=pd.DataFrame(columns=['cost'])
-	result_idx=0
-	
-	for each_iter in range(num_iterations):
-		if sg==True :
-			X1,y1 = select_indices(X,y)
-		else :
-			X1,y1 = X,y
-			
-		y_hat=predict_Y(b,theta,X1)
-		b,theta=fct_gradient(X1,y1,y_hat,b,theta,learning_rate)
-		gd_iterations_df.loc[result_idx]=[loss_fct(y1, y_hat)]
-		result_idx+=1
-
-	return gd_iterations_df,b,theta
+import torch
 
 ###
-### Linear regression loss function
+### Gradient Descent
 ###
 
-def lin_reg_loss(y, y_hat):
-    return np.mean((y - y_hat)**2)
-
-def lin_reg_gradient(x,y,y_hat,b,theta,learning_rate) :
-  db=(np.sum(y_hat-y)*2)/len(y)        
-  dw=(np.dot((y_hat-y),x)*2)/len(y) # Calculating the gradients
-  b_1=b-learning_rate*db 			# Updating weights and bias
-  theta_1=theta-learning_rate*dw
-  return b_1,theta_1
+def gradient_descent(loss, x, eta, T):
+	for t in range(T):
+		loss(x).backward() # compute gradient
+		x.data -= eta * x.grad.data # update parameters
+		x.grad.data.zero_() # reset gradient to zero for next iteration
+	return x
 
 ###
-### Running gradient descent for linear regression
+### Linear Regression Loss Function
 ###
 
-X, y = make_regression(40, 1) # create dataset
+def lin_reg_loss(X, y):
+	def loss(beta): 
+		return torch.mean((y - beta[0] - beta[1]*X)**2)
+	return loss
 
-gd_iterations_df,b,theta=gradient_descent(X,y,0.1,100,lin_reg_loss,lin_reg_gradient)
-gd_iterations_df
+###
+### Running Gradient Descent of Linear Regression
+###
+
+X = torch.tensor(np.random.randn(40))                   # input as a torch tensor
+y = .1 - .4 * X + .1*torch.tensor(np.random.randn(40))  # output
+loss = lin_reg_loss(X, y)                               # loss function
+
+# Initial parameter values. As we want to compute the partial derivatives with respect to these parameters, we set `require_grad = True`.
+beta = torch.tensor(np.array([.1, .2]), requires_grad = True)
+
+gradient_descent(loss, beta, .1, 100)
 """
 ,
 showoutput = false,
@@ -190,7 +171,7 @@ end;
 # ╔═╡ bbc0b514-4789-44d1-8d90-9fc325d9ad6b
 let X = M.X, y = M.y,
     lin_reg_loss = (x, y) -> M.loss([x, y])
-    p1 = scatter(X.x1, y, xlim = (-2.5, 2.5), ylim = (-2, 2),
+    p1 = scatter(X, y, xlim = (-2.5, 2.5), ylim = (-2, 2),
                  legend = :bottomright,
                  xlabel = "x", ylabel = "y", label = "training data")
     plot!(x -> lin_reg_path[t+1]' * [1, x], c = :red, w = 2, label = "current fit")
@@ -223,53 +204,46 @@ function log_reg_loss(β₀, β₁, x, y)
     -mean(@. y * log(p) + (1-y) * log(1 - p)) # negative log-likelihood
 end
 function log_reg_loss_function(X, y)
-    β -> log_reg_loss(β[1], β[2], X.x1, int.(y) .- 1)
+    β -> log_reg_loss(β[1], β[2], X, y)
 end
 
 ###
 ### Running gradient descent for logistic regression
 ###
 
-X2, y2 = make_regression(50, 1, binary = true, rng = 161)
+X2 = randn(500)
+y2 = σ.(-.1 .+ 1.7*X2) .> rand(500)
 logloss = log_reg_loss_function(X2, y2)
 params = [.1, .2] # initial parameters
 gradient_descent(logloss, params, η = .1, T = 100)
 """
 ,
 """
-from sklearn.datasets import make_classification
-
 ###
 ### Logistic regression loss function
 ###
 
 def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
+    return 1 / (1 + torch.exp(-x))
 
-def log_reg_loss(y, y_hat):
-	p = sigmoid(y_hat)
-	return -np.mean(y * np.log(p) + (1-y) * np.log(1 - p)) # negative log-likelihood
-
-def log_reg_gradient(x,y,y_hat,b,theta,learning_rate) :
-	db=(np.sum(sigmoid(y_hat)-y)*2)/len(y)        
-	dw=(np.dot((sigmoid(y_hat)-y),x)*2)/len(y) # Calculating the gradients
-	b_1=b-learning_rate*db 			# Updating weights and bias
-	theta_1=theta-learning_rate*dw
-	return b_1,theta_1
+def log_reg_loss(X, y):
+	def loss(beta):
+		p = sigmoid(beta[0] + beta[1]*X)
+ 		# negative log-likelihood. Note ~y negates the boolean tensor y
+		return -torch.mean(y * torch.log(p) + ~y * torch.log(1 - p))
+	return loss
 
 ###
 ### Running gradient descent for Logistic regression
 ###
 
-X2, y2 = make_classification(n_samples=50,
-							n_features=1,
-							  n_informative=1,
-							  n_redundant=0,
-							  n_classes=2,
-							n_clusters_per_class=1)
+X2 = torch.tensor(np.random.randn(500))
+y2 = sigmoid(-.1 + 1.7*X2) > torch.tensor(np.random.rand(500))
+loss2 = log_reg_loss(X2, y2)
 
-gd_iterations_df,b,theta=gradient_descent(X2,y2,0.1,100,log_reg_loss,log_reg_gradient)
-gd_iterations_df
+beta2 = torch.tensor(np.array([.1, .2]), requires_grad = True)
+
+gradient_descent(loss2, beta2, .1, 100)
 """
 ,
 showoutput = false,
@@ -295,9 +269,9 @@ begin
 end;
 
 # ╔═╡ 33bdc912-e46a-4310-9184-733be7871768
-let path = tracker2.path, X2 = M.X2, y2 = int.(M.y2) .- 1,
+let path = tracker2.path, X2 = M.X2, y2 = M.y2
     log_reg_loss = (x, y) -> M.logloss([x, y])
-    p1 = scatter(X2.x1, y2, xlim = (-3.5, 3.5), ylim = (-.1, 1.1),
+    p1 = scatter(X2, y2, xlim = (-3.5, 3.5), ylim = (-.1, 1.1),
                  legend = :bottomleft, marker_style = :vline,
                  xlabel = "x", ylabel = "y", label = "training data")
     plot!(x -> σ(path[t2+1]' * [1, x]), c = :red, w = 2, label = "current fit")
@@ -386,7 +360,7 @@ In each step of stochastic gradient descent (SGD) the gradient is computed only 
 # ╔═╡ e821fb15-0bd3-4fa7-93ea-692bf05097b5
 mlcode(
 """
-function lin_reg_loss_st_function(X, y)
+function lin_reg_loss_stochastic(X, y)
     # With Zygote.ignore the batch selection is not considered in the gradient
     # computation, i.e. the gradient gets computed as if xb and yb were the
     # full data.
@@ -394,7 +368,7 @@ function lin_reg_loss_st_function(X, y)
         xb, yb = Zygote.ignore() do
             batch = rand(1:4)                 # select batch
             idxs = (batch-1)*10 + 1:batch*10  # compute indices for this batch
-            X.x1[idxs], y[idxs]
+            X[idxs], y[idxs]
         end
         lin_reg_loss(β[1], β[2], xb, yb)
     end
@@ -402,15 +376,17 @@ end
 """
 ,
 """
-def select_indices(X,y):
-	batch = np.random.randint(1, 4)                 # select batch
-	idxs = np.arange((batch-1)*10, batch*10)     # compute indices for this batch
-	return X[idxs], y[idxs]
+def lin_reg_loss_stochastic(X, y):
+	def loss(beta):
+		batch = np.random.randint(1, 4)            # select batch
+		idxs = np.arange((batch-1)*10, batch*10)   # compute indices for this batch
+		return torch.mean((y[idxs] - beta[0] - beta[1]*X[idxs])**2)
+	return loss
 
-X, y = make_regression(40, 1) # create dataset
+loss = lin_reg_loss_stochastic(X, y)              # loss function
+beta = torch.tensor(np.array([.1, .2]), requires_grad = True)
 
-gd_iterations_df,b,theta=gradient_descent(X,y,0.1,100,lin_reg_loss, lin_reg_gradient,True)
-gd_iterations_df
+gradient_descent(loss, beta, .1, 100)
 """
 ,
 showoutput = false,
@@ -429,13 +405,13 @@ begin
     Random.seed!(seed)
     params_st = [b0, b1]
     tracker_st = Tracker(params_st)
-    M.gradient_descent(M.lin_reg_loss_st_function(M.X, M.y), params_st, η = η_st, T = 100, callback = tracker_st)
+    M.gradient_descent(M.lin_reg_loss_stochastic(M.X, M.y), params_st, η = η_st, T = 100, callback = tracker_st)
 end;
 
 # ╔═╡ 7541c203-f0dc-4445-9d2a-4cf16b7e912a
 let path = tracker_st.path,
     X = M.X, y = M.y
-    lin_reg_loss_b(i) = (β₀, β₁) -> M.lin_reg_loss(β₀, β₁, X.x1[(i-1)*10+1:i*10],
+    lin_reg_loss_b(i) = (β₀, β₁) -> M.lin_reg_loss(β₀, β₁, X[(i-1)*10+1:i*10],
                                                    y[(i-1)*10+1:i*10])
     Random.seed!(seed)
     batches = rand(1:4, 101)
@@ -443,14 +419,14 @@ let path = tracker_st.path,
     colors = [:green, :blue, :orange, :purple]
     ma = fill(.2, 40)
     ma[(b-1)*10 + 1:b*10] .= 1
-    p1 = scatter(X.x1, y, xlim = (-2.5, 2.5), ylim = (-2, 2),
+    p1 = scatter(X, y, xlim = (-2.5, 2.5), ylim = (-2, 2),
                  legend = false, ma = ma,
                  c = vcat([fill(c, 10)
                            for c in colors]...),
                  xlabel = "x", ylabel = "y", label = "training data")
     plot!(x -> path[t5+1]' * [1, x], c = :red, w = 2,
           label = "current fit")
-    p2 = contour(-3:.1:3, -3:.1:3, (β₀, β₁) -> M.lin_reg_loss(β₀, β₁, X.x1, y), cbar = false,
+    p2 = contour(-3:.1:3, -3:.1:3, (β₀, β₁) -> M.lin_reg_loss(β₀, β₁, X, y), cbar = false,
                  xlabel = "β₀", ylabel = "β₁",
                  linestyle = :dash, c = :black, aspect_ratio = 1)
     for i in 1:4
@@ -482,19 +458,35 @@ using Flux
 function advanced_gradient_descent(loss, x; T, optimizer = ADAMW(),
                                          callback = x -> nothing)
     for t in 1:T
-        ∇loss = gradient(loss, x)[1] # compute ∇f
-		Flux.update!(optimizer, x, ∇loss) # apply the changes to x
+        ∇loss = gradient(loss, x)[1]       # compute ∇f
+		Flux.update!(optimizer, x, ∇loss)  # apply the changes to x
         callback(x) # the callback will be used to save intermediate values
     end
     x
 end
+
+callback = let learning_curve = Float64[]
+	x -> push!(learning_curve, loss(x))
+end
+params = [0., 0.]
+advanced_gradient_descent(loss, params; T = 1000, callback)
+(params, callback.learning_curve)
 """
 ,
 """
-from sklearn.neural_network import MLPClassifier
+def advanced_gradient_descent(loss, x, optimizer, T):
+	learning_curve = []
+	for t in range(T):
+		optimizer.zero_grad()            # set old partial derivatives to zero
+		l = loss(x)                      # compute loss
+		learning_curve.append(l.item())  # append loss to learning curve
+		l.backward()                     # compute new partial derivatives
+		optimizer.step()                 # update parameters
+	return x, learning_curve
 
-# Note that ADAM is already implemented in other widely used python ML libraries such as Pytorch and Tensorflow.
-nn_adam= MLPClassifier(solver='adam')
+beta = torch.tensor(np.array([0., 0.]), requires_grad = True)
+optimizer = torch.optim.Adam((beta,)) # or torch.optim.AdamW((beta,))
+advanced_gradient_descent(loss, beta, optimizer, 1000)
 """
 ,
 showoutput = false,
@@ -601,6 +593,8 @@ $(mlstring(md"For once, we do not use a `DataFrame` here but represent the input
 
 # ╔═╡ 8f3a30c3-0d7b-4028-a8cd-185fb1858b40
 mlcode("""
+import Distributions: Laplace
+
 function data_generator(; n = 100, β = [1., 2., 3.])
     x = randn(n, 3)
     y = x * β .+ rand(Laplace(0, 0.3), n)
@@ -608,6 +602,8 @@ function data_generator(; n = 100, β = [1., 2., 3.])
 end
 """,
 """
+import numpy as np
+
 def data_generator(n=100, beta=[1., 2., 3.]):
     x = np.random.randn(n, 3)
     y = np.dot(x, beta) + np.random.laplace(0, 0.3, n)
@@ -616,7 +612,7 @@ def data_generator(n=100, beta=[1., 2., 3.]):
 
 
 # ╔═╡ c0285107-0131-404f-9617-229f1c88f091
-md"
+md"""
 (b) Calculate with paper and pencil the negative log-likelihood loss. Apply transformations to the negative log-likelihood function to obtain a good loss function for gradient descent based on the practical considerations in the slides.
 The solution you should find is
 ```math
@@ -624,18 +620,18 @@ The solution you should find is
 ```
 
 (c) Code a function to compute the loss on the training set for a given
-parameter vector. *Hint:* use matrix multiplication, e.g. `data.x * β`.
+parameter vector. *Hint:* use matrix multiplication, e.g. $(mlstring(md"`data.x * β`", md"`torch.matmul(data.x, beta)`")).
 
 (d) Perform gradient descent on the training set. Plot the learning curve to see
 whether gradient descent has converged. If you see large fluctuations at the end
 of training, decrease the learning rate. If the learning curve is not flat at
-the end, increase the maximal number of steps. To see well the loss towards the end of gradient descent it is advisable to use log-scale for the y-axis (`yscale = :log10`).
+the end, increase the maximal number of steps. To see well the loss towards the end of gradient descent it is advisable to use log-scale for the y-axis.
 
 (e) Estimate the coefficients with the standard linear regression.
-Hint: do not forget that we fit without intercept (use `fit_intercept = false` in the `LinearRegressor`).
+Hint: do not forget that we fit without intercept.
 
 (f) Compare which method (d) or (e) found parameters closer to the one of our data generating process `[1, 2, 3]` and explain your finding.
-"
+"""
 
 # ╔═╡ cb9f858a-f60a-11eb-3f0e-a9b68cf33921
 MLCourse.list_notebooks(@__FILE__)
