@@ -586,7 +586,7 @@ end
 
 
 # ╔═╡ e0cc188c-9c8f-47f1-b1fe-afc2a578973d
-md"# Exercise
+md"""# Exercise
 
 Assume the noise in a linear regression setting comes from a Laplace
 distribution, i.e. the conditional probability density of the response is given by
@@ -596,7 +596,8 @@ and does not need to be fitted.
 
 (a) Generate a training set of 100 points with the following data generator.
 Notice that the noise follows a Laplace distribution instead of a normal distribution.
-For once, we do not use a `DataFrame` here but represent the input explicitly as a matrix and the full dataset as a `NamedTuple`. If you run `data = data_generator()`, you can access the input matrix as `data.x` and the output vector as `data.y`."
+$(mlstring(md"For once, we do not use a `DataFrame` here but represent the input explicitly as a matrix and the full dataset as a `NamedTuple`. If you run `data = data_generator()`, you can access the input matrix as `data.x` and the output vector as `data.y`.",""))
+"""
 
 # ╔═╡ 8f3a30c3-0d7b-4028-a8cd-185fb1858b40
 mlcode("""
