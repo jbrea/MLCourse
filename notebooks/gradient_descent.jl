@@ -620,7 +620,7 @@ The solution you should find is
 ```
 
 (c) Code a function to compute the loss on the training set for a given
-parameter vector. *Hint:* use matrix multiplication, e.g. $(mlstring(md"`data.x * β`", md"`torch.matmul(data.x, beta)`")).
+parameter vector. *Hint:* use matrix multiplication, e.g. $(mlstring(md"`data.x * β`", md"`torch.matmul(data["x"], beta)`. For conversion from `numpy` to `torch` there are multiple options, like `torch.tensor(numpy_array)` or `torch.from_numpy(numpy_array)`. For conversion back one can use `torch_tensor.detach().numpy()` or `torch_tensor.data.numpy()`")).
 
 (d) Perform gradient descent on the training set. Plot the learning curve to see
 whether gradient descent has converged. If you see large fluctuations at the end
