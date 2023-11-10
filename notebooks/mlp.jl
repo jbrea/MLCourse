@@ -1073,17 +1073,74 @@ Let us assume you want to predict the proportion ``y`` of citizens voting for on
 * What is the advantage of using a beta distribution instead of trying to predict directly the expected proportion with a neural network, which has a single sigmoid output unit?
 #### Exercise 4
 (Optional) Grant Sanderson has some beautiful [videos about neural networks](https://www.3blue1brown.com/topics/neural-networks). Have a look at them, if you are interested.
+"
 
-## Applied
+
+# ╔═╡ ac346344-a855-4cff-8b31-986e1038e7c1
+md"## Applied"
+
+# ╔═╡ e34fbada-7019-43ee-afe0-a793ae38b361
+MLCourse.language_selector()
+
+# ╔═╡ 11be6a84-2e9e-4064-bc31-d6749ed28f98
+begin
+hintstring = md"*Hint:* you can select all these columns based on name with `select(data, r\"absorbance\")` (The \"r\" in this command stands for Regex and it means that all columns with name containing the word \"absorbance\" should be selected)"
+md"""
 #### Exercise 5
-In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set `OpenML.describe_dataset(505)`. The first 100 columns of this data set contain measurements of near infrared absorbance at different frequencies for different pieces of meat. *Hint:* you can select all these columns based on name with `select(data, r\"absorbance\")` (The \"r\" in this command stands for Regex and it means that all columns with name containing the word \"absorbance\" should be selected). The column `:fat` contains the fat content of each piece of meat. You can either use a validation set approach with the first 172 data points for training and (cross-)validation and the rest of the data points as a test set or you can take a nested cross-validation approach (for the neural network this may take some time to run). Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline.
+
+In this exercise our goal is to find a good machine learning model to predict the fat content of a meat sample on the basis of its near infrared absorbance spectrum. We use the Tecator data set, which has ID 505 in openml ($(mlstring(md"`OpenML.describe_dataset(505)`", md"`openml.datasets.get_dataset(505).description`"))). The first 100 columns of this data set contain measurements of near infrared absorbance at different frequencies for different pieces of meat. $(mlstring(hintstring, md"")). The last column contains the fat content of each piece of meat. You can either use a validation set approach with the first 172 data points for training and (cross-)validation and the rest of the data points as a test set or you can take a nested cross-validation approach (for the neural network this may take some time to run). Take our recipe for supervised learning (last slide of the presentation on \"Model Assessment and Hyperparameter Tuning\") as a guideline.
 - Have a look at the raw data by e.g. checking if there are missing values and looking at a correlation plot.
 - Fit some multiple linear regression models (with e.g. regularization constants tuned with cross-valdiation), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content.
 - Fit some neural network model (with 2 hyper-paramters of your choice tuned by cross-validation; warning: it may take quite some time to fit if you use a high number for `nfolds`), compute the `rmse` of your best model on the test set and create a scatter plot that shows the actual fat content of the test data point versus the predicted fat content.
     * *Hint 1:* standardization of input and output matters.
-    * *Hint 2:* If you want to tune neural network parameters in a pipeline you can access them in the `range` function, for example, as `:(neural_network_regressor.builder.dropout)`.
-"
+    * *Hint 2:* $(mlstring(md"If you want to tune neural network parameters in a pipeline you can access them in the `range` function. For example:", md"You can use the [`skorch`](https://skorch.readthedocs.io/en/stable/) package to combine hyperparameter tuning methods in `sklearn` with `torch`. For example:"))
+.
+"""
+end
 
+# ╔═╡ bf8b0726-83a5-4726-8ab9-f1054c34b11b
+mlcode(
+"""
+pipe = Standardizer() |> (x -> Float32.(x)) |>
+       NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
+                                                      σ = relu),
+                              optimiser = ADAM(),
+                              batch_size = 32)
+model2 = TransformedTargetModel(pipe, transformer = Standardizer())
+ranges = [range(model2,
+                :(model.neural_network_regressor.builder.dropout),
+                values = [0., .1, .2]),
+          range(model2,
+                :(model.neural_network_regressor.epochs),
+                values = [500, 1000, 2000])]
+tuned_model2 = TunedModel(model = model2,
+                          resampling = CV(nfolds = 5),
+                          range = ranges,
+                          measure = rmse)
+
+""",
+"""
+from skorch import NeuralNetRegressor #sklearn + pytorch
+
+# create model with skorch
+model_skorch = NeuralNetRegressor(
+    NN_model,
+    criterion=nn.MSELoss,
+    optimizer=optim.Adam,
+    max_epochs=1000,
+    batch_size=32,
+    verbose=False
+)
+
+# Define the parameter grid for hyperparameter tuning
+param_grid = {
+    'module__n_neurons': [32, 64, 128],
+    'module__dropout_rate': [0, 0.1, 0.2]
+}
+"""
+,
+eval = false
+)
 
 # ╔═╡ 7c6951e8-726a-4181-b15f-b629a2835d03
 MLCourse.list_notebooks(@__FILE__)
@@ -1198,6 +1255,10 @@ MLCourse.save_cache(@__FILE__)
 # ╟─5f8a6035-059d-4288-8007-e9176ed5c297
 # ╟─4266ce96-d65a-42f9-bd44-ab6cbf7e92ea
 # ╟─2f034d19-1c00-4a10-a880-99436ab00957
+# ╟─ac346344-a855-4cff-8b31-986e1038e7c1
+# ╟─e34fbada-7019-43ee-afe0-a793ae38b361
+# ╟─11be6a84-2e9e-4064-bc31-d6749ed28f98
+# ╟─bf8b0726-83a5-4726-8ab9-f1054c34b11b
 # ╟─7c6951e8-726a-4181-b15f-b629a2835d03
 # ╟─825c40e9-de99-4829-aad0-0c5c901df5e9
 # ╟─83e2c454-042f-11ec-32f7-d9b38eeb7769
