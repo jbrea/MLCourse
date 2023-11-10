@@ -612,6 +612,8 @@ def data_generator(n=100, beta=[1., 2., 3.]):
 
 
 # ╔═╡ c0285107-0131-404f-9617-229f1c88f091
+begin
+pyhint = md"""`torch.matmul(data["x"], beta)`. For conversion from `numpy` to `torch` there are multiple options, like `torch.tensor(numpy_array)` or `torch.from_numpy(numpy_array)`. For conversion back one can use `torch_tensor.detach().numpy()` or `torch_tensor.data.numpy()`"""
 md"""
 (b) Calculate with paper and pencil the negative log-likelihood loss. Apply transformations to the negative log-likelihood function to obtain a good loss function for gradient descent based on the practical considerations in the slides.
 The solution you should find is
@@ -620,7 +622,7 @@ The solution you should find is
 ```
 
 (c) Code a function to compute the loss on the training set for a given
-parameter vector. *Hint:* use matrix multiplication, e.g. $(mlstring(md"`data.x * β`", md"`torch.matmul(data["x"], beta)`. For conversion from `numpy` to `torch` there are multiple options, like `torch.tensor(numpy_array)` or `torch.from_numpy(numpy_array)`. For conversion back one can use `torch_tensor.detach().numpy()` or `torch_tensor.data.numpy()`")).
+parameter vector. *Hint:* use matrix multiplication, e.g. $(mlstring(md"`data.x * β`", pyhint)).
 
 (d) Perform gradient descent on the training set. Plot the learning curve to see
 whether gradient descent has converged. If you see large fluctuations at the end
@@ -632,6 +634,7 @@ Hint: do not forget that we fit without intercept.
 
 (f) Compare which method (d) or (e) found parameters closer to the one of our data generating process `[1, 2, 3]` and explain your finding.
 """
+end
 
 # ╔═╡ cb9f858a-f60a-11eb-3f0e-a9b68cf33921
 MLCourse.list_notebooks(@__FILE__)
