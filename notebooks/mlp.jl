@@ -30,7 +30,6 @@ MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
 end
 
-
 # ╔═╡ 83e2c454-042f-11ec-32f7-d9b38eeb7769
 begin
     using PlutoUI
