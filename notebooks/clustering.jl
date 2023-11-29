@@ -245,6 +245,7 @@ from sklearn.cluster import AgglomerativeClustering
 hc = make_pipeline(StandardScaler(),
                    AgglomerativeClustering(distance_threshold=0,
                                            n_clusters = None,
+                                           compute_distances = True,
                                            metric = "euclidean",
                                            linkage = "complete"))
 hc.fit(iris.drop(["class"], axis = 1))
@@ -442,34 +443,44 @@ In this exercise, you will generate simulated data and perform K-means clusterin
 # ╔═╡ d6adf823-be4e-4dd3-87e0-867fbd8aa7a9
 mlcode(
 """
-function data_generator(d; n = 20)
-    cluster1 = rand(MvNormal([0; -d; fill(0, 48)], [3; fill(.5, 49)]), n)
-    cluster2 = rand(MvNormal([0; 0; fill(0, 48)], [3; fill(.5, 49)]), n)
-    cluster3 = rand(MvNormal([0; d; fill(0, 48)], [3; fill(.5, 49)]), n)
+using Random, Distributions, DataFrames
+
+function data_generator(d; rng = Xoshiro(5))
+    cluster1 = rand(rng, MvNormal([0; -d; fill(0, 48)], [3; fill(.5, 49)]), 20)
+    cluster2 = rand(rng, MvNormal([0; 0; fill(0, 48)], [3; fill(.5, 49)]), 20)
+    cluster3 = rand(rng, MvNormal([0; d; fill(0, 48)], [3; fill(.5, 49)]), 20)
     (data = DataFrame(vcat(cluster1', cluster2', cluster3'), :auto),
-     true_labels = [fill(1, n); fill(2, n); fill(3, n)])
+     true_labels = [fill(1, 20); fill(2, 20); fill(3, 20)])
 end
 """
 ,
 """
+import numpy as np
+import pandas as pd
+
 def data_generator(d, n=20):
-    cluster1 = np.random.multivariate_normal([0,-d]+[0]*48, np.tile(([3] +[0.5]*49),(50,1)), n)
-    cluster2 = np.random.multivariate_normal([0, 0] + [0]*48, np.tile(([3] +[0.5]*49),(50,1)), n)
-    cluster3 = np.random.multivariate_normal([0, d] + [0]*48, np.tile(([3] +[0.5]*49),(50,1)), n)
-    data = pd.DataFrame(np.vstack((cluster1, cluster2, cluster3)), columns=['x'+str(i) for i in range(50)])
-    true_labels = np.hstack((np.ones(n), 2*np.ones(n), 3*np.ones(n)))
+    cluster1 = np.random.multivariate_normal([0,-d]+[0]*48,
+                                              np.diag([3] +[0.5]*49), n)
+    cluster2 = np.random.multivariate_normal([0, 0] + [0]*48,
+                                              np.diag([3] +[0.5]*49), n)
+    cluster3 = np.random.multivariate_normal([0, d] + [0]*48,
+                                             np.diag([3] +[0.5]*49), n)
+    data = pd.DataFrame(np.vstack((cluster1, cluster2, cluster3)),
+                        columns=['x'+str(i) for i in range(50)])
+    true_labels = np.hstack((0*np.ones(n), np.ones(n), 2*np.ones(n)))
     return data, true_labels
+
 """
 )
 
 
 # ╔═╡ add72e27-5e6e-4112-b1bf-9f579a845384
 md"""
-(b) PCA is an unsupervised machine learning method (you will learn more about it next week) that allows to visualize high-dimensional data in lower dimensions. You can use the command
-$(mlstring(md"`MLJ.transform(fit!(machine(PCA(maxoutdim = 2), data)), data)`", ""))
+(b) PCA is an unsupervised machine learning method (you will learn more about it next week) that allows to visualize high-dimensional data in lower dimensions. You can use the following code
+$(mlstring(md"`using MLJMultivariateStatsInterface; MLJ.transform(fit!(machine(PCA(maxoutdim = 2), data)), data)`", md"`from sklearn.decomposition import PCA; data2d = PCA(n_components=2).fit_transform(data)`"))
 to fit an unsupervised machine (with at most 2 output dimensions) to the data and transform the data according to this machine to 2 dimensions. Plot the result. Use a different color to indicate the observations in each of the three classes.
 
-(c) Perform K-means clustering of the observations with ``K = 3``. Repeat K-means clustering for multiple random initializations and keep the best result. *Hint:* for reproducibility you can use `Random.seed!(SEED)`, where SEED is positive integer. How well do the clusters that you obtained in K-means clustering compare to the true class labels? *Hint:* a `confusion_matrix` may be helpful to comare the result to the true labels.
+(c) Perform K-means clustering of the observations with ``K = 3``. Repeat K-means clustering for multiple random initializations and keep the best result. *Hint:* for reproducibility you can use $(mlstring(md"`Random.seed!(SEED)`", md"`np.random.seed(SEED)`")), where SEED is positive integer. How well do the clusters that you obtained in K-means clustering compare to the true class labels? *Hint:* a $(mlstring(md"`confusion_matrix`",md"`sklearn.metrics.confusion_matrix`")) may be helpful to comare the result to the true labels.
 
 
 (d) Perform K-means clustering with ``K = 2``. Describe your results.
