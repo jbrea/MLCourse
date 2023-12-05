@@ -152,6 +152,34 @@ Let us start with dimensionality reduction from 2 to 1 dimension. Below we can t
 # ╔═╡ 89f0af1e-bb2f-428e-b2c3-a6985fe3bc8e
 @bind ϕ Slider(0:.1:2π)
 
+# ╔═╡ 4432623a-9b48-4661-b3f4-413e22aa2259
+begin
+    Random.seed!(23)
+    example_data = randn(2, 2) * randn(2, 50) ./ 3.5
+end;
+
+# ╔═╡ c80fd0c3-4bbc-4ed3-90f2-984b391f76f5
+let loading = [cos(ϕ), sin(ϕ)], data1 = example_data
+		@show size(data1)
+       scatter(data1[1, :], data1[2, :], aspect_ratio = 1, legend = false,
+                   xrange = (-3, 3), yrange = (-2, 2), c = :green)
+       plot!([0, loading[1]], [0, loading[2]], lw = 3, c = :red)
+       annotate!([(-2.5, 1.8, text("ϕ₁ = (ϕ₁₁, ϕ₂₁) ≈ ($(round(loading[1], sigdigits = 2)), $(round(loading[2], sigdigits = 2)))", 9, :red, :left))])
+       annotate!([(-2.5, 1.5, text("1/n∑ zᵢ₁² ≈ $(round(mean(abs2, data1'*loading), sigdigits = 3))", 9, :blue, :left))])
+       idx = argmax(data1[2, :])
+       annotate!((1.1*data1[:, idx]..., text("1", 9, :green, :right)))
+       plot!([-2sin(-ϕ), 2sin(-ϕ)], [-2cos(ϕ), 2cos(ϕ)], linestyle = :dash, c = :black)
+       for i in axes(data1, 2)
+               x0 = data1[:, i]
+               x1 = x0 - (x0'*loading)*loading
+               plot!([x0[1], x1[1]], [x0[2], x1[2]], c = :blue)
+               if i == idx
+                       annotate!([(1.1*x1..., text("z₁₁ ≈ $(round(x0'*loading, sigdigits = 2))", 9, :blue, :left))])
+               end
+       end
+       plot!()
+end
+
 # ╔═╡ 8c4dab97-52b5-46a2-8025-65c98cdc5b78
 md"""The second principal component points in the direction of maximal variance *under the constraint, that it is orthogonal to the first principal component vector*. In the figure below you see a visualization of the variance along the first, second or third principal component (loading vectors ``\phi_1, \phi_2, \phi_3``). The colored lines are parallel to the loading vector you pick in the dropdown menu. They go from each data point to the "center"-plane that goes through the origin ``(0, 0, 0)`` and stands perpendicular to the picked component (loading vector). **The length of the line that starts at data point ``i`` is given by the score ``z_{ij}`` for principal component ``j``**. The average squared length of these lines is the variance along the chosen principal component."""
 
@@ -476,25 +504,25 @@ import matplotlib.pyplot as plt
 
 def biplot(PC1, PC2, scalePC1, scalePC2, features, ldngs) :
   fig, ax = plt.subplots(figsize=(14, 9))
-  
+
   for i, feature in enumerate(features):
     print(i)
-    ax.arrow(0, 0, ldngs[0, i], 
-	             ldngs[1, i], 
-	             head_width=0.03, 
-	             head_length=0.03, 
+    ax.arrow(0, 0, ldngs[0, i],
+	             ldngs[1, i],
+	             head_width=0.03,
+	             head_length=0.03,
 	             color="red")
-    ax.text(ldngs[0, i] * 1.15, 
-	            ldngs[1, i] * 1.15, 
+    ax.text(ldngs[0, i] * 1.15,
+	            ldngs[1, i] * 1.15,
 	            feature,color="red", fontsize=18)
     ax.scatter(PC1 * scalePC1,
 	                    PC2 * scalePC2, s=5)
-	 
+
   for i in range(0,len(PC1)):
-    ax.text(PC1[i] * scalePC1, 
-	            PC2[i] * scalePC2, str(i), 
+    ax.text(PC1[i] * scalePC1,
+	            PC2[i] * scalePC2, str(i),
 	            fontsize=10)
-	
+
   ax.set_xlabel('PC1', fontsize=20)
   ax.set_ylabel('PC2', fontsize=20)
   ax.set_title('Biplot', fontsize=20)
@@ -539,7 +567,6 @@ biplot (PC1, PC2, scalePC1, scalePC2, features, ldngs)
 plt.show()
 """
 ,
-recompute = true
 )
 
 # ╔═╡ ecc77003-c138-4ea9-93a7-27df46aa1e89
@@ -1123,7 +1150,7 @@ plot!(xlabel = "PC 1", ylabel = "PC 2", legend_position = (0.1, .95))
 """
 ,
 """
-import seaborn as sns 
+import seaborn as sns
 
 mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
 mnist['class'] = mnist["class"].astype('category')
@@ -1474,11 +1501,11 @@ img = FileIO.load(download(\"http://kenia.pordescubrir.com/wp-content/uploads/20
 # importing modules
 import urllib.request
 from PIL import Image
-  
+
 urllib.request.urlretrieve(
   'http://kenia.pordescubrir.com/wp-content/uploads/2008/08/windsurf.jpg',
    "gfg.jpg")
-  
+
 img = Image.open("gfg.jpg")
 
 """
@@ -1523,6 +1550,8 @@ MLCourse.save_cache(@__FILE__)
 # ╟─08401f05-7e4a-4d51-8f96-d2bee22db808
 # ╟─c1262304-6846-4811-ae82-397863255415
 # ╟─89f0af1e-bb2f-428e-b2c3-a6985fe3bc8e
+# ╟─c80fd0c3-4bbc-4ed3-90f2-984b391f76f5
+# ╟─4432623a-9b48-4661-b3f4-413e22aa2259
 # ╟─8c4dab97-52b5-46a2-8025-65c98cdc5b78
 # ╟─b2688c20-a578-445f-a5c4-335c85931862
 # ╟─f9a506bb-6bdf-48aa-8f81-8fb6de078533
