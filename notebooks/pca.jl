@@ -54,64 +54,13 @@ md"# 1. Principal Component Analysis
 ## For Dimensionality Reduction"
 
 # ╔═╡ 1bb3d957-06dc-4be4-bed7-d14da43c25ee
-md"If all the 3-dimensional data are parallel to the X₁-X₂-plane we can simply take the first and the second coordinate of each point to obtain a 2-dimensional representation of the data."
+md"Let us assume, we want to visualize 3-dimensional data in 2 dimensions.
 
-# ╔═╡ d40fa053-39ed-4d36-ad4c-54356d0146cf
-let
-    Random.seed!(1247)
-    x = randn(50);
-    y = randn(50);
-    z = fill(2, 50);
-    c = ["red"; "blue"; "green"; fill("black", 47)]
-    p1 = PP.Plot(PP.scatter3d(; x, y, z,
-                              mode = "markers",
-                              marker_color = c,
-                              marker_size = 3))
-    p2 = PP.Plot(PP.scatter(; x = x, y = y, marker_color = c,
-                            mode = "markers"))
-    l = PP.Layout(yaxis2_scaleanchor = "x",
-                  xaxis2_title = "X₁", yaxis2_title = "X₂",
-                  scene1 = PP.attr(xaxis_title = "X₁",
-                                   yaxis_title_text = "X₂",
-                                   zaxis_title = "X₃",
-                                   camera_eye = PP.attr(x = 2.8, y = -1, z = 1)),
-                  uirevision = 1, showlegend = false)
-    plot = [p1 p2]
-    PP.relayout!(plot, l)
-    PP.PlutoPlot(plot)
-end
+If all the 3-dimensional data are parallel to the X₁-X₂-plane we can simply take the first and the second coordinate of each point to obtain a 2-dimensional representation of the data.
 
-# ╔═╡ 029c165b-8d34-42e3-9b68-4d97cfad074e
-md"If all the 3-dimensional data are parallel to the X₁-X₃-plane we can take the first and the *third* coordinate of each point to obtain a 2-dimensional representation of the data. Note that it would not make much sense to take the first and the *second* coordinate in this example, because the data points just lie on a line in the X₁-X₂-plane."
+If all the 3-dimensional data are parallel to the X₁-X₃-plane we can take the first and the *third* coordinate of each point to obtain a 2-dimensional representation of the data. Note that it would not make much sense to take the first and the *second* coordinate in this example, because the data points just lie on a line in the X₁-X₂-plane.
 
-# ╔═╡ 4f960f96-4218-44db-801c-a67222848062
-let
-    Random.seed!(2468)
-    x = randn(50);
-    y = randn(50);
-    z = fill(2, 50);
-    c = ["red"; "blue"; "green"; fill("black", 47)]
-    p1 = PP.Plot(PP.scatter3d(; x, y = z, z = y,
-                              mode = "markers",
-                              marker_color = c,
-                              marker_size = 3))
-    p2 = PP.Plot(PP.scatter(; x = x, y = y, marker_color = c,
-                            mode = "markers"))
-    l = PP.Layout(yaxis2_scaleanchor = "x",
-                  xaxis2_title = "X₁", yaxis2_title = "X₃",
-                  scene1 = PP.attr(xaxis_title = "X₁",
-                                   yaxis_title_text = "X₂",
-                                   zaxis_title = "X₃",
-                                   camera_eye = PP.attr(x = 2.8, y = -1, z = 1)),
-                  uirevision = 1, showlegend = false)
-    plot = [p1 p2]
-    PP.relayout!(plot, l)
-    PP.PlutoPlot(plot)
-end
-
-
-# ╔═╡ 59654b1f-011a-4f2d-8665-d2c885b76553
-md"If all the 3-dimensional data lie in an arbitrarily oriented plane we can rotate the coordinate system first, and then take the first and the second coordinate of the roated points to obtain a 2-dimensional representation of the data."
+If all the 3-dimensional data lie in an arbitrarily oriented plane we can rotate the coordinate system first, and then take the first and the second coordinate of the roated points to obtain a 2-dimensional representation of the data."
 
 
 # ╔═╡ a935143d-52f8-4a5e-bede-58467065caed
@@ -141,7 +90,7 @@ end
 
 
 # ╔═╡ 08401f05-7e4a-4d51-8f96-d2bee22db808
-md"Even if the data points do not lie perfectly on a plane, one may want to find a low-dimensional representation of the data that shows as much as possible."
+md"Even if the data points do not lie perfectly on a plane, one may want to find a low-dimensional representation of the data that shows \"as much as possible\" in the sense that the data does not change much in the direction that is projected away."
 
 # ╔═╡ c1262304-6846-4811-ae82-397863255415
 md"""## PCA Finds the Directions of Largest Variance
@@ -160,7 +109,6 @@ end;
 
 # ╔═╡ c80fd0c3-4bbc-4ed3-90f2-984b391f76f5
 let loading = [cos(ϕ), sin(ϕ)], data1 = example_data
-		@show size(data1)
        scatter(data1[1, :], data1[2, :], aspect_ratio = 1, legend = false,
                    xrange = (-3, 3), yrange = (-2, 2), c = :green)
        plot!([0, loading[1]], [0, loading[2]], lw = 3, c = :red)
@@ -1543,10 +1491,6 @@ MLCourse.save_cache(@__FILE__)
 # ╟─a7ba035f-7433-46f3-a64f-8bf3d6c6cbad
 # ╟─78d7653f-1139-4833-b65c-43adb4fca9b1
 # ╟─1bb3d957-06dc-4be4-bed7-d14da43c25ee
-# ╟─d40fa053-39ed-4d36-ad4c-54356d0146cf
-# ╟─029c165b-8d34-42e3-9b68-4d97cfad074e
-# ╟─4f960f96-4218-44db-801c-a67222848062
-# ╟─59654b1f-011a-4f2d-8665-d2c885b76553
 # ╟─a935143d-52f8-4a5e-bede-58467065caed
 # ╟─08401f05-7e4a-4d51-8f96-d2bee22db808
 # ╟─c1262304-6846-4811-ae82-397863255415
