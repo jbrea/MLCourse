@@ -1377,7 +1377,7 @@ end)
 (c) How large approximately is the proportion of variance explained by the third component?
 
 
-#### Exercise 3
+#### Exercise 3 (optional)
 
 In this exercise you will explore the connection between PCA and SVD.
 
