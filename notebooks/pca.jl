@@ -1461,8 +1461,8 @@ img = Image.open("gfg.jpg")
 
 # ╔═╡ cc2136d5-7d79-47ea-8b8c-6ce7f7a98ac0
 md"""
-Transform it to grayscale with $(mlstring(md"`Gray.(img)`","")) and to a data frame with
-$(mlstring(md"`DataFrame(float.(real.(Gray.(img))), :auto)`", "")).
+Transform it to grayscale with $(mlstring(md"`Gray.(img)`",md"`from PIL import ImageOps; ImageOps.grayscale(img)`")) and to a data frame with
+$(mlstring(md"`DataFrame(float.(real.(Gray.(img))), :auto)`", md"`pd.DataFrame(np.array(ImageOps.grayscale(img)))`")).
 
 The goal is to compress this image with PCA.
 To do so, treat each row of this image as a single data point.
