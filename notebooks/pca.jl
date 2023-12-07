@@ -924,42 +924,47 @@ let
 end
 
 
+
+
 # ╔═╡ 218d4c11-45a1-4d92-8b48-d08251804638
-md"## PCA Applied to the Weather Data"
+# md"## PCA Applied to the Weather Data"
+# 
+
 
 # ╔═╡ 0943f000-a148-4470-ae5e-9d8d39cd8207
-mlcode(
-"""
-using CSV, DataFrames, MLJ
-
-weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
-                   DataFrame)
-weather = select(weather, (x -> match(r"direction", x) == nothing &&
-                                match(r"time", x) == nothing).(names(weather)))
-weather_mach = machine(Standardizer() |> PCA(), weather)
-fit!(weather_mach, verbosity = 0)
-
-p1 = biplot(weather_mach, weather, score_style = 2)
-p2 = biplot(weather_mach, weather, score_style = 2, pc = (3, 4))
-vars = report(weather_mach).pca.principalvars ./
-        report(weather_mach).pca.tprincipalvar
-p3 = plot(vars, label = nothing, yscale = :log10,
-          xlabel = "component", ylabel = "proportion of variance explained")
-p4 = plot(cumsum(vars),
-          label = nothing, xlabel = "component",
-          ylabel = "cumulative prop. of variance explained")
-plot(p1, p2, p3, p4, layout = (2, 2), size = (700, 800))
-"""
-,
-"""
-weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
-# select columns of the data frame "weather" that do not contain the words "direction" or "time" in their column names
-weather = weather.loc[:, ~(weather.columns.str.contains('direction|time'))]
-
-mweather = make_pipeline(StandardScaler(), PCA()).fit(X)
-"""
-,
-)
+# mlcode(
+# """
+# using CSV, DataFrames, MLJ
+# 
+# weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
+#                    DataFrame)
+# weather = select(weather, (x -> match(r"direction", x) == nothing &&
+#                                 match(r"time", x) == nothing).(names(weather)))
+# weather_mach = machine(Standardizer() |> PCA(), weather)
+# fit!(weather_mach, verbosity = 0)
+# 
+# p1 = biplot(weather_mach, weather, score_style = 2)
+# p2 = biplot(weather_mach, weather, score_style = 2, pc = (3, 4))
+# vars = report(weather_mach).pca.principalvars ./
+#         report(weather_mach).pca.tprincipalvar
+# p3 = plot(vars, label = nothing, yscale = :log10,
+#           xlabel = "component", ylabel = "proportion of variance explained")
+# p4 = plot(cumsum(vars),
+#           label = nothing, xlabel = "component",
+#           ylabel = "cumulative prop. of variance explained")
+# plot(p1, p2, p3, p4, layout = (2, 2), size = (700, 800))
+# """
+# ,
+# """
+# weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
+# # select columns of the data frame "weather" that do not contain the words "direction" or "time" in their column names
+# weather = weather.loc[:, ~(weather.columns.str.contains('direction|time'))]
+# 
+# mweather = make_pipeline(StandardScaler(), PCA()).fit(X)
+# """
+# ,
+# )
+#
 
 # ╔═╡ d44be4c6-a409-421a-8e68-39fa752db4c0
 md"# 3. Limitations of PCA as a Dimension Reduction Tool
