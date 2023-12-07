@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.32
 
 using Markdown
 using InteractiveUtils
@@ -899,7 +899,7 @@ let pcs = M.faces_pcs
 end
 
 # ╔═╡ 7c020b97-384d-43fc-af1c-a4bf75a6f06c
-md"cumulative proportion of variance explained $(@bind variance_ratio Slider(.9:.001:.999, show_value = true))"
+md"cumulative proportion of variance explained $(@bind variance_ratio Slider([.9, .93, .96, .99, .993, .996, .999], show_value = true))"
 
 # ╔═╡ cddfed10-7c9c-47b0-83fc-b3322da522ed
 begin faces = M.faces
@@ -909,7 +909,7 @@ begin faces = M.faces
 end
 
 # ╔═╡ 03f92562-7419-4d8e-baa2-67f5b021219e
-md"Image number $(@bind imgid Select(string.(1:nrow(faces))))"
+md"Image number $(@bind imgid Select(string.(1:4)))"
 
 # ╔═╡ 8e466825-0c84-41c7-93c6-e3cc81a60ef5
 let
