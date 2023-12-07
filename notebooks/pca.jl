@@ -1486,7 +1486,6 @@ MLCourse.FOOTER
 # ╔═╡ b24d7fbf-bd2b-4bd7-90ef-c77ec9099bc8
 MLCourse.save_cache(@__FILE__)
 
-
 # ╔═╡ Cell order:
 # ╟─a7ba035f-7433-46f3-a64f-8bf3d6c6cbad
 # ╟─78d7653f-1139-4833-b65c-43adb4fca9b1
