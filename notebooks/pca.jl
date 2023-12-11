@@ -1131,8 +1131,8 @@ sns.scatterplot(x="pca-one", y="pca-two", hue="y",
 plt.show()
 """
 ,
-showoutput = true,
-cache_jl_vars = [:mnist_proj, :mnist_y],
+showoutput = false,
+# cache_jl_vars = [:mnist_proj, :mnist_y],
 )
 
 # ╔═╡ fd8f7308-c38c-420c-a2a1-56ecbb208671
@@ -1169,6 +1169,8 @@ plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(10))
 plt.title('Visualizing MNIST through t-SNE', fontsize=24)
 plt.show()
 """
+,
+showoutput = false,
 )
 
 
@@ -1216,6 +1218,8 @@ plt.title("MNIST data embedded into two dimensions by UMAP", fontsize=18)
 
 plt.show()
 """
+,
+showoutput = false
 )
 
 # ╔═╡ 273de5a4-4400-48c9-8a0d-296e57cf26a4
