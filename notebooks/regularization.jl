@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -44,7 +44,14 @@ md"# 1. Ridge Regression (L2)
 "
 
 # ╔═╡ 1009e251-59af-4f1a-9d0a-e96f4b696cad
-md"λ₂ = $(@bind λ₂ Slider(0:.01:5, show_value = true))"
+md"λ₂ = $(@bind λ₂ Slider([0; 10. .^ (-6:.25:3)], show_value = true))"
+
+# ╔═╡ e3081073-9ff8-45c5-b98d-ce7932639a1a
+md"
+**Regularization allows reducing the variance.**
+
+In the figure below, each dot is the result of one dataset, obtained from the data generating process. We see that the coefficients vary a lot for small values of the regularization constant, whereas for large values of the regularization constant, the β₁ coefficient starts to be biased. The test error is smallest for some optimally chosen regularization constant.
+"
 
 # ╔═╡ 64b9cfa0-99f7-439b-b70e-f9266754ff74
 md" ## Implementation Details
@@ -90,19 +97,25 @@ begin
         β₁ = (x̄ * ȳ - xy)/(x̄^2 - x2)
         β₀ = ȳ - β₁ * x̄
         β₀old, β₁old = zero(β₀), zero(β₁)
+        i = 0
         while β₀old != β₀ || β₁old != β₁
             β₀old, β₁old = β₀, β₁
             β₁ = updateβ₁(x̄, ȳ, x2, xy, β₀, λ)
             β₀ = updateβ₀(x̄, ȳ, β₁, λ)
+            i += 1
+            i == 10^4 && break # prevent infinite loop
         end
        (β₀ = β₀, β₁ = β₁)
     end
 end
 
 # custom dataset
-n = 30
+using Random
+Random.seed!(8)
+
+n = 10
 x = rand(n)
-y = 2.2x .+ .3 .+ .2randn(n)
+y = .1x .+ .2randn(n)
 """
 ,
 """
@@ -137,9 +150,9 @@ def lasso(x, y, l):
     return (b0, b1)
 
 # custom dataset
-n = 30
+n = 10
 x = np.random.rand(n)
-y = 2.2 * x + 0.3 + 0.2 * np.random.randn(n)
+y = .1 * x + 0.2 * np.random.randn(n)
  
 """
 ;
@@ -157,35 +170,69 @@ let r = λ₂ == 0 ? 6 : norm([l2coefs...]),
     ccol = plot_color(:blue, .3),
 	ridge_regression = M.ridge_regression,
     x = M.x, y = M.y
-    path = hcat([[ridge_regression(x, y, l)...] for l in 0:.01:5]...)
+    ls = [0; 10. .^ (-6:.25:3)]
+    lbx = -.1; lby = -.1; ubx = .2; uby = .2
+    path = hcat([[ridge_regression(x, y, l)...] for l in ls]...)
     p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y",
 	             legend = :topleft)
     plot!(x -> l2coefs.β₀ + x * l2coefs.β₁, w = 3, label = "ridge regression")
-    p2 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
+    p2 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
                  label = "loss", title = "loss with constraints",
 		         legend = :bottomright,
-                 levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
     plot!(t -> r * sin(t), t -> r * cos(t), 0:.001:2π,
           fill = (0, ccol), label = "constraint", color = ccol)
     plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
     scatter!([l2coefs.β₀], [l2coefs.β₁], label = "current fit", markersize = 6, color = :red)
-    p3 = plot(0:.01:5, path[1, :], label = "β₀", xlabel = "λ₂", ylabel = "")
-    plot!(0:.01:5, path[2, :], label = "β₁", ylims = (0, 2.4))
-    scatter!([λ₂], [l2coefs.β₀], label = nothing, markersize = 6, color = :red)
-    scatter!([λ₂], [l2coefs.β₁], label = nothing, markersize = 6, color = :red)
-    p4 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2) + λ₂ * (β₀^2 + β₁^2),
+#     logl = [0; 10. .^ (-6:.25:3)]
+p3 = plot(log10.(ls), path[1, :], label = "β₀", xlabel = "log₁₀(λ₂)", ylabel = "")
+    plot!(log10.(ls), path[2, :], label = "β₁", ylims = (-.05, .2))
+    scatter!([log10(λ₂)], [l2coefs.β₀], label = nothing, markersize = 6, color = :red)
+    scatter!([log10(λ₂)], [l2coefs.β₁], label = nothing, markersize = 6, color = :red)
+    p4 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2) + λ₂ * (β₀^2 + β₁^2),
                  label = "loss", title = "regularized loss",
-                 levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
     scatter!([l2coefs.β₀], [l2coefs.β₁], markersize = 6, label = nothing, color = :red)
     plot(p1, p4, p3, p2,
          layout = (2, 2), size = (700, 600), cbar = false)
+end
+
+# ╔═╡ e79b7859-ff6d-4b39-bfff-7d9ab98ba1de
+let
+    test_x = rand(10^4)
+    test_y = .1 * test_x .+ .2*randn(10^4)
+    dataset = () -> let x = rand(10)
+                    (x, .1 * x .+ .2 * randn(10))
+                end
+
+	ridge_regression = M.ridge_regression
+    ls = 10 .^ (-6:.25:4)
+    logls = log10.(ls)
+    n = 500
+    markerstyle = (markershape = :circ, markercolor = :white, markeralpha = .5, markerstrokecolor = :darkblue, markersize = 1)
+    coeffs = [ridge_regression(dataset()..., l) for l in ls, _ in 1:n]
+    p1 = scatter(repeat(logls, outer = n), reshape(first.(coeffs), :);
+                 xlabel = "log₁₀(λ₂)", ylabel = "β₀", label = nothing, markerstyle...)
+    plot!(logls, mean(first.(coeffs), dims = 2), lw = 3, label = "average")
+    plot!(logls, zero(ls), lw = 3, label = "true β₀")
+    p2 = scatter(repeat(logls, outer = n), reshape(last.(coeffs), :);
+                 xlabel = "log₁₀(λ₂)", ylabel = "β₁", label = nothing, markerstyle...)
+    plot!(logls, mean(last.(coeffs), dims = 2), lw = 3, label = "average")
+    plot!(logls, zero(ls) .+ .1, lw = 3, label = "true β₁")
+    testerrs = [mean(abs2, c.β₀ .+ c.β₁ * test_x - test_y) for c in coeffs]
+    p3 = scatter(repeat(logls, outer = n),
+                 reshape(testerrs, :); xlabel = "log₁₀(λ₂)", ylabel = "test MSE", label = nothing,
+                 markerstyle...)
+    plot!(logls, mean(testerrs, dims = 2), label = "average", lw = 3)
+    plot!(logls, zero(ls) .+ .2^2, label = "irreducible error", lw = 2, ylims = (.03, .1))
+    plot(plot(p1, p2, layout = (2, 1)), p3)
 end
 
 # ╔═╡ f43a82e2-1145-426d-8e0e-5363d1c38ccf
 md"# 2. Lasso (L1)"
 
 # ╔═╡ ff7cc2bf-2a38-46d2-8d11-529159b08c82
-md"λ₁ = $(@bind λ₁ Slider(0:.01:1, show_value = true))"
+md"λ₁ = $(@bind λ₁ Slider([0; 10. .^ (-8:.25:1)], show_value = true))"
 
 # ╔═╡ 4841f9ba-f3d2-4c65-9225-bc8d0c0a9478
 l1coefs = M.lasso(M.x, M.y, λ₁)
@@ -195,25 +242,27 @@ let r = λ₁ == 0 ? 10 : norm([l1coefs...], 1),
     ccol = plot_color(:blue, .3),
     lasso = M.lasso,
     x = M.x, y = M.y
-    path = hcat([[lasso(x, y, l)...] for l in 0:.01:1]...)
+    ls = [0; 10. .^ (-8:.25:1)]
+    lbx = -.1; lby = -.1; ubx = .2; uby = .2
+    path = hcat([[lasso(x, y, l)...] for l in ls]...)
     p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y", legend = :topleft)
     plot!(x -> l1coefs.β₀ + x * l1coefs.β₁, w = 3, label = "lasso")
-    p2 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
+    p2 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
                  label = "loss", title = "loss with constraints",
-		         legend = :topright,
-                 levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
+		         legend = :topleft,
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
     plot!([0, r, 0, -r, 0], [r, 0, -r, 0, r],
           fill = (0, ccol), label = "constraint", color = ccol)
     plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
     scatter!([l1coefs.β₀], [l1coefs.β₁], label = "current fit", markersize = 6,
 		     color = :red)
-    p3 = plot(0:.01:1, path[1, :], label = "β₀", xlabel = "λ₁", ylabel = "")
-    plot!(0:.01:1, path[2, :], label = "β₁", ylims = (0, 2.4))
-    scatter!([λ₁], [l1coefs.β₀], label = nothing, markersize = 6, color = :red)
-    scatter!([λ₁], [l1coefs.β₁], label = nothing, markersize = 6, color = :red)
-    p4 = contour(-1:.1:3, -1:.1:3, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2)/2 + λ₁ * (abs(β₀) + abs(β₁)),
+    p3 = plot(log10.(ls), path[1, :], label = "β₀", xlabel = "log₁₀(λ₁)", ylabel = "")
+    plot!(log10.(ls), path[2, :], label = "β₁", ylims = (-0.05, .2))
+    scatter!([log10(λ₁)], [l1coefs.β₀], label = nothing, markersize = 6, color = :red)
+    scatter!([log10(λ₁)], [l1coefs.β₁], label = nothing, markersize = 6, color = :red)
+    p4 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2)/2 + λ₁ * (abs(β₀) + abs(β₁)),
                  label = "loss", title = "regularized loss",
-                 levels = 100, aspect_ratio = 1, ylims = (-1, 3), xlims = (-1, 3))
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
     scatter!([l1coefs.β₀], [l1coefs.β₁], markersize = 6, label = nothing, color = :red)
     plot(p1, p4, p3, p2,
          layout = (2, 2), size = (700, 600), cbar = false)
@@ -895,6 +944,8 @@ MLCourse.save_cache(@__FILE__)
 # ╟─1009e251-59af-4f1a-9d0a-e96f4b696cad
 # ╟─50ac0b07-ffee-40c3-843e-984b3c628282
 # ╟─58746554-ca5a-4e8e-97e5-587a9c2aa44c
+# ╟─e3081073-9ff8-45c5-b98d-ce7932639a1a
+# ╟─e79b7859-ff6d-4b39-bfff-7d9ab98ba1de
 # ╟─64b9cfa0-99f7-439b-b70e-f9266754ff74
 # ╟─8bd483cc-f490-11eb-38a1-b342dd2551fd
 # ╟─f43a82e2-1145-426d-8e0e-5363d1c38ccf

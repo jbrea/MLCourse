@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -320,7 +320,7 @@ md"Because we have two-dimensional input, the polynomial contains also mixtures 
 # ╔═╡ 1dfb4619-a77a-4d56-93d3-94b0ab832de4
 md"Change the noise levels with the following slider. `s_gen` is the steepness of the logistic function in the data generating process of the classification task.
 
-s\_gen = $(@bind s_gen Slider(5:50, default = 20, show_value = true))
+s\_gen = $(@bind s_gen Slider(5:30, default = 20, show_value = true))
 "
 
 
@@ -360,7 +360,7 @@ md"The area under the ROC curve (AUC) of the linear classifier is small, because
 
 # ╔═╡ 16f0d1b3-bd97-407d-9a79-25b0fb05bbeb
 begin
-    classification_test_data = M.classification_data_generator(n = 10^4)
+    classification_test_data = M.classification_data_generator(n = 10^4, s = s_gen)
     cplosses = hcat([let m = fit!(machine(Polynomial(degree = d,
                                                      predictors = (:X1, :X2)) |>
                                           LogisticClassifier(penalty = :none),
@@ -407,10 +407,10 @@ end
 
 # ╔═╡ 3fa49ea1-df82-472c-914b-0a67e7412b2c
 let
-	fprs_l, tprs_l, _ = roc(predict(m2, select(classification_test_data, Not(:y))), classification_test_data.y)
-	fprs_p, tprs_p, _ = roc(predict(m4, select(classification_test_data, Not(:y))), classification_test_data.y)
+	fprs_l, tprs_l, _ = roc_curve(predict(m2, select(classification_test_data, Not(:y))), classification_test_data.y)
+	fprs_p, tprs_p, _ = roc_curve(predict(m4, select(classification_test_data, Not(:y))), classification_test_data.y)
 	p = M.σ.(s_gen*(M.f.(classification_test_data.X1) .- classification_test_data.X2))
-	fprs_o, tprs_o, _ = roc(UnivariateFinite.(Ref([false, true]), p, augment = true, pool = missing), classification_test_data.y)
+	fprs_o, tprs_o, _ = roc_curve(UnivariateFinite.(Ref([false, true]), p, augment = true, pool = missing, ordered = true), classification_test_data.y)
 	plot(fprs_l, tprs_l, label = "linear classifier",
 		legend_position = :bottomright, ylabel = "true positive rate",
 	    xlabel = "false positive rate", title = "ROC curve")

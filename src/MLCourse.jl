@@ -24,6 +24,8 @@ if isdefined(Main, :PlutoRunner) && isdefined(Main.PlutoRunner, :embed_display)
     pyexec("""
 import matplotlib as mpl
 mpl.use("module://juliacall.matplotlib")
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 """
 ,
 PyMod)

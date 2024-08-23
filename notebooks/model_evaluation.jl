@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -125,8 +125,8 @@ begin
         mach = fit!(machine(model, select(data.train, :x), data.train.y),
                     verbosity = 0)
         (train_rmse = rmse(predict(mach, select(data.train, :x)), data.train.y),
-         valid_rmse = rmse(predict(mach, select(data.valid, :x)), data.valid.y),
-         test_rmse = rmse(predict(mach, select(data.test, :x)), data.test.y))
+         valid_rmse = length(data.valid.y) > 0 ? rmse(predict(mach, select(data.valid, :x)), data.valid.y) : missing,
+         test_rmse = length(data.test.y) > 0 ? rmse(predict(mach, select(data.test, :x)), data.test.y) : missing)
     end
 end;
 
@@ -759,7 +759,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─a7c88b3f-92cb-4253-a889-c78683722c1d
 # ╟─0b81c3d5-277a-4fe6-889b-550e2f83c39d
 # ╟─b3aed705-5072-4d9b-bb8f-865ac1561bf6
-# ╟─6916273a-d116-4173-acaa-2bcac1d1753b
+# ╠═6916273a-d116-4173-acaa-2bcac1d1753b
 # ╟─5747d116-1e61-45f0-a87b-89372c6f270f
 # ╟─890f4d59-ef7d-43d4-bbef-ded8b6b030eb
 # ╟─c268fb85-e695-4b18-8baf-2ab4e656102f

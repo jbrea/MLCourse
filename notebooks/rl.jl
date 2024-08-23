@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.32
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -840,10 +840,18 @@ let
         scatter!([0], [0], c = :black, legend = false, markerstrokewidth = 0) # dummy
         annotate!([(.5, .5, "K.O.", :red)])
     end
-    rs = length(chasse.episode_recorder) == 0 ? [0] : getindex.(chasse.episode_recorder, 3)
-    annotate!([(.5, .9, "reward = $(chasse.reward)", :white),
-               (.5, .8, "cumulative reward = $(join(rs, " + ")) = $(round(sum(rs), sigdigits = 2))", :white)
-              ])
+    _i = length(chasse.episode_recorder)
+    if _i > 0
+        suba = _i == 1 ? "₁" : "₂"
+        subr = _i == 1 ? "₂" : "₃"
+        annotate!([(.1, .9, "A$suba = $(chasse.episode_recorder[end][2] == 1 ? "left" : "right")", :white),
+                   (.6, .9, "R$subr = $(chasse.reward)", :white)])
+        if _i == 2
+            rs = getindex.(chasse.episode_recorder, 3)
+            annotate!([(.6, .8, "G₁ = R₂ + R₃ = $(join(rs, " + ")) = $(round(sum(rs), sigdigits = 2))", :white)])
+        end
+    end
+	plot!()
 end
 
 # ╔═╡ e876c526-30f9-458d-abf5-e20e6aa0268e

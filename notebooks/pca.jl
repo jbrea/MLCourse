@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.32
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -1131,7 +1131,7 @@ sns.scatterplot(x="pca-one", y="pca-two", hue="y",
 plt.show()
 """
 ,
-showoutput = false,
+showoutput = true,
 # cache_jl_vars = [:mnist_proj, :mnist_y],
 )
 
@@ -1163,6 +1163,7 @@ import matplotlib.pyplot as plt
 
 tsne = TSNE(random_state = 42, n_components=2,verbose=0, perplexity=40, n_iter=300).fit_transform(mnist_x[:7000])
 
+plt.figure()
 plt.scatter(tsne[:, 0], tsne[:, 1], s= 5, c=mnist_y[:7000].astype(int), cmap='Spectral')
 plt.gca().set_aspect('equal', 'datalim')
 plt.colorbar(boundaries=np.arange(11)-0.5).set_ticks(np.arange(10))
@@ -1170,7 +1171,7 @@ plt.title('Visualizing MNIST through t-SNE', fontsize=24)
 plt.show()
 """
 ,
-showoutput = false,
+showoutput = true,
 )
 
 
@@ -1210,6 +1211,7 @@ sns.set(context="paper", style="white")
 reducer = umap.UMAP(random_state=42)
 embedding = reducer.fit_transform(mnist_x)
 
+plt.figure()
 fig, ax = plt.subplots(figsize=(12, 10))
 color = mnist_y.astype(int)
 plt.scatter(embedding[:, 0], embedding[:, 1], c=color, cmap="Spectral", s=0.1)
@@ -1219,7 +1221,7 @@ plt.title("MNIST data embedded into two dimensions by UMAP", fontsize=18)
 plt.show()
 """
 ,
-showoutput = false
+showoutput = true
 )
 
 # ╔═╡ 273de5a4-4400-48c9-8a0d-296e57cf26a4

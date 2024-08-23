@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -407,7 +407,7 @@ class NeuralNetExample1(torch.nn.Module):
         self.layers = torch.nn.Sequential(
             torch.nn.Linear(3, 30),
             torch.nn.ReLU(),
-            torch.nn.Linear(3, 2)
+            torch.nn.Linear(30, 2)
         )
 
     def forward(self, x):
@@ -534,7 +534,7 @@ Some explanations for the code below:
 mlcode(
 """
 # preparing the data
-using CSV, DataFrames, MLJFlux
+using Random, MLJ, CSV, DataFrames, MLJFlux, Optimisers
 
 weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
                    DataFrame)
@@ -548,13 +548,12 @@ weather_test_x = select(weather_test, Not([:LUZ_wind_peak, :time]))[1:end-5, :]
 weather_test_y = weather_test.LUZ_wind_peak[6:end]
 
 # setting up the model
-using Random, MLJ, MLJFlux, Flux
 
 Random.seed!(66)
 nn = NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
                                                     dropout = .5,
                                                     σ = relu),
-                            optimiser = ADAMW(),
+                            optimiser = Optimisers.AdamW(),
                             batch_size = 128,
                             epochs = 150)
 model = TransformedTargetModel(Standardizer() |> (x -> Float32.(x)) |> nn,
@@ -727,7 +726,6 @@ function loss(x, y)
     s = softplus.(output[2, :])
     mean((m .- y) .^ 2 ./ (2 * s) .+ 1/2 * log.(s))
 end
-
 """
 ,
 """
@@ -782,7 +780,7 @@ using Flux
 nn = Chain(Dense(1, 50, tanh), Dense(50, 2)) # note that we define 2 output dims
 
 # Training with stochastic gradient descent
-opt = ADAMW()
+opt = Flux.ADAMW()
 p = Flux.params(nn) # these are the parameters to be adapted.
 data = Flux.DataLoader((weather_input', weather_output), batchsize = 32)
 for epoch in 1:20 # run for 20 epochs
@@ -914,6 +912,7 @@ x_test = np.random.randn(grid.shape[0], 1000)
 x_test[:, 6] = grid
 x_test = torch.tensor(x_test, dtype=torch.float32)
 
+plt.figure()
 plt.plot(grid, (grid ** 2 - 1).reshape(-1, 1), label="ground truth")
 plt.plot(grid, model(x_test).detach().numpy(), label="model prediction")
 plt.xlabel("x")
@@ -982,17 +981,14 @@ mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="datafram
 x = (mnist.iloc[:, :-1].values.astype(float)/255) # normalising
 y = mnist.iloc[:, -1].values.astype(int)
 
-one_hot_enc = OneHotEncoder()
-y_ohe = one_hot_enc.fit_transform(y.reshape(-1, 1)) # one hot encoding
-y_ohe = np.array(y_ohe.todense()) # fit_transform outputs a sparse matrix but it is easier to work wiith an array
-
-x_train, y_train, x_test, y_test = x[:60000], y_ohe[:60000], x[60000:], y_ohe[60000:] # train-test split
+x_train, y_train, x_test, y_test = x[:60000], y[:60000], x[60000:], y[60000:] # train-test split
 
 # converting to pytorch tensors
-x_train, y_train, x_test, y_test = map(
+x_train, x_test = map(
     lambda data: torch.tensor(data, dtype=torch.float32), 
-    [x_train, y_train, x_test, y_test],
+    [x_train, x_test],
 )
+y_train = torch.tensor(y_train, dtype=torch.int64)
 
 # Pytorch data loader, for using batches
 train_dataloader = torch.utils.data.DataLoader(
@@ -1029,10 +1025,9 @@ for epoch in tqdm.tqdm(range(epochs)):
 
 with torch.no_grad():
     model.eval()
-    test_preds = one_hot_enc.inverse_transform(model(x_test).detach().numpy())
-    test_gt = y[60000:].reshape(-1, 1)
+    _, test_preds = torch.max(model(x_test), 1)
     
-f'Missclassifictation rate: {np.mean((test_preds != test_gt))}'
+f'Missclassifictation rate: {np.mean((test_preds.data.numpy() != y_test))}'
 """
 )
 
@@ -1103,7 +1098,7 @@ mlcode(
 pipe = Standardizer() |> (x -> Float32.(x)) |>
        NeuralNetworkRegressor(builder = MLJFlux.Short(n_hidden = 128,
                                                       σ = relu),
-                              optimiser = ADAM(),
+                              optimiser = Adam(),
                               batch_size = 32)
 model2 = TransformedTargetModel(pipe, transformer = Standardizer())
 ranges = [range(model2,

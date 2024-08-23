@@ -1,8 +1,8 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.9.3"
+julia_version = "1.9.4"
 manifest_format = "2.0"
-project_hash = "acef88c1addd3e8a3733a94abfca4534bbe84657"
+project_hash = "c904cee8e902f33060e1d16ff10d2b957afe36b0"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -518,6 +518,12 @@ git-tree-sha1 = "03b753748fd193a7f2730c02d880da27c5a24508"
 uuid = "da5c29d0-fa7d-589e-88eb-ea29b0a81949"
 version = "1.6.0"
 
+[[deps.EpollShim_jll]]
+deps = ["Artifacts", "JLLWrappers", "Libdl"]
+git-tree-sha1 = "8e9441ee83492030ace98f9789a654a6d0b1f643"
+uuid = "2702e6a9-849d-5ed8-8c21-79e8b8f9ee43"
+version = "0.0.20230411+0"
+
 [[deps.ExceptionUnwrapping]]
 deps = ["Test"]
 git-tree-sha1 = "e90caa41f5a86296e014e148ee061bd6c3edec96"
@@ -982,6 +988,12 @@ git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
 
+[[deps.JLD2]]
+deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "PrecompileTools", "Printf", "Reexport", "Requires", "TranscodingStreams", "UUIDs"]
+git-tree-sha1 = "c2d0f45afcb5f6209155670bffd100c3b4937ea3"
+uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+version = "0.4.40"
+
 [[deps.JLFzf]]
 deps = ["Pipe", "REPL", "Random", "fzf_jll"]
 git-tree-sha1 = "f377670cda23b6b7c1c0b3893e37451c5c1a2185"
@@ -1138,12 +1150,12 @@ version = "0.1.3"
 [[deps.LibCURL]]
 deps = ["LibCURL_jll", "MozillaCACerts_jll"]
 uuid = "b27032c2-a3e7-50c8-80cd-2d36dbcbfd21"
-version = "0.6.3"
+version = "0.6.4"
 
 [[deps.LibCURL_jll]]
 deps = ["Artifacts", "LibSSH2_jll", "Libdl", "MbedTLS_jll", "Zlib_jll", "nghttp2_jll"]
 uuid = "deac9b47-8bc7-5906-a0fe-35ac56dc84c0"
-version = "7.84.0+0"
+version = "8.4.0+0"
 
 [[deps.LibGit2]]
 deps = ["Base64", "NetworkOptions", "Printf", "SHA"]
@@ -1152,7 +1164,7 @@ uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 [[deps.LibSSH2_jll]]
 deps = ["Artifacts", "Libdl", "MbedTLS_jll"]
 uuid = "29816b5a-b9ab-546f-933c-edad1886dfa8"
-version = "1.10.2+0"
+version = "1.11.0+1"
 
 [[deps.Libdl]]
 uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
@@ -1280,7 +1292,7 @@ uuid = "856f044c-d86e-5d09-b602-aeab76dc8ba7"
 version = "2023.2.0+0"
 
 [[deps.MLCourse]]
-deps = ["ARFFFiles", "ArrayInterface", "Base64", "CSV", "Clustering", "CodecZlib", "Conda", "CondaPkg", "DataFrames", "Distances", "Distributions", "FileIO", "Flux", "GLM", "GLMNet", "HDF5", "HTML_Entities", "HypertextLiteral", "ImageMagick", "LIBSVM", "Languages", "LinearAlgebra", "MLJ", "MLJClusteringInterface", "MLJDecisionTreeInterface", "MLJFlux", "MLJGLMInterface", "MLJLIBSVMInterface", "MLJLinearModels", "MLJModels", "MLJMultivariateStatsInterface", "MLJTuning", "MLJXGBoostInterface", "Markdown", "MultivariateStats", "NearestNeighborModels", "OpenML", "Pkg", "PlotlyBase", "Plots", "Pluto", "PlutoPlotly", "PlutoSliderServer", "PlutoUI", "PrecompilePlutoCourse", "PythonCall", "Random", "Requires", "ScientificTypes", "Serialization", "SpecialFunctions", "Statistics", "StatsBase", "StatsPlots", "TSne", "Tar", "TextAnalysis", "UMAP", "Unicode", "Zygote"]
+deps = ["ARFFFiles", "ArrayInterface", "Base64", "CSV", "Clustering", "CodecZlib", "Conda", "CondaPkg", "DataFrames", "Distances", "Distributions", "FileIO", "Flux", "GLM", "GLMNet", "HDF5", "HTML_Entities", "HypertextLiteral", "ImageMagick", "JLD2", "LIBSVM", "Languages", "LinearAlgebra", "MLJ", "MLJClusteringInterface", "MLJDecisionTreeInterface", "MLJFlux", "MLJGLMInterface", "MLJLIBSVMInterface", "MLJLinearModels", "MLJModels", "MLJMultivariateStatsInterface", "MLJTuning", "MLJXGBoostInterface", "Markdown", "MultivariateStats", "NearestNeighborModels", "OpenML", "Pkg", "PlotlyBase", "Plots", "Pluto", "PlutoPlotly", "PlutoSliderServer", "PlutoUI", "PrecompilePlutoCourse", "PythonCall", "Random", "Requires", "ScientificTypes", "Serialization", "SpecialFunctions", "Statistics", "StatsBase", "StatsPlots", "TSne", "Tar", "TextAnalysis", "UMAP", "Unicode", "Zygote"]
 path = ".."
 uuid = "bdb52a37-b1f4-4443-a4d5-f8ef0db855e0"
 version = "0.3.0"
@@ -2048,6 +2060,12 @@ git-tree-sha1 = "6ff3a185a583dca7265cbfcaae1da16aa3b6a962"
 uuid = "88f46535-a3c0-54f4-998e-4320a1339f51"
 version = "2.2.0+0"
 
+[[deps.Sobol]]
+deps = ["DelimitedFiles", "Random"]
+git-tree-sha1 = "5a74ac22a9daef23705f010f72c81d6925b19df8"
+uuid = "ed01d8cd-4d21-5b2a-85b4-cc3bdc58bad4"
+version = "1.5.0"
+
 [[deps.Sockets]]
 uuid = "6462fe0b-24de-5631-8697-dd941f90decc"
 
@@ -2361,7 +2379,7 @@ uuid = "81def892-9a0e-5fdd-b105-ffc91e053289"
 version = "1.3.0"
 
 [[deps.Wayland_jll]]
-deps = ["Artifacts", "Expat_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg", "XML2_jll"]
+deps = ["Artifacts", "EpollShim_jll", "Expat_jll", "JLLWrappers", "Libdl", "Libffi_jll", "Pkg", "XML2_jll"]
 git-tree-sha1 = "ed8d92d9774b077c53e1da50fd81a36af3744c1c"
 uuid = "a2964d1f-97da-50d4-b82a-358c7fce9d89"
 version = "1.21.0+0"
@@ -2652,7 +2670,7 @@ version = "1.4.9+0"
 [[deps.nghttp2_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "8e850ede-7688-5339-a07c-302acd2aaf8d"
-version = "1.48.0+0"
+version = "1.52.0+1"
 
 [[deps.p7zip_jll]]
 deps = ["Artifacts", "Libdl"]

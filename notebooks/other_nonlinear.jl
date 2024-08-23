@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -191,7 +191,9 @@ md"## Language Detection with a Recurrent Neural Network
 
 The following code (adapted from [here](https://github.com/FluxML/model-zoo/blob/master/text/lang-detection/model.jl)) uses wikipedia articles to detect the language of a sentence
 by simply reading each character of the sentence with a recurrent neural network
-and applying a classifier to the last hidden state.
+and applying a classifier to the last hidden state. There is no python code for this example; switch to julia to see some figures.
+
+$(MLCourse.language_selector())
 "
 
 # ╔═╡ c76ab462-333f-4852-b0bf-2d7d603c34ab

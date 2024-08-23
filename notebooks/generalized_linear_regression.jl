@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -939,7 +939,7 @@ begin
 end;
 
 # ╔═╡ f1a48773-2971-4069-a240-fd1e10aeb1ed
-confusion_matrix(auc_samples_x .> 1/(2.0^s) * logodds(threshold),
+confusion_matrix(categorical(auc_samples_x .> 1/(2.0^s) * logodds(threshold), levels = [false, true]),
                  categorical(auc_samples_y, levels = [false, true], ordered = true))
 
 # ╔═╡ c98524b5-d6b3-469c-82a1-7d231cc792d6

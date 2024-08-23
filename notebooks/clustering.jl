@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.46
 
 using Markdown
 using InteractiveUtils
@@ -205,7 +205,7 @@ digit classes. This can further be seen by looking at the confusion_matrix.
 # ╔═╡ fdf190cc-0426-4327-a710-80fe2ead632c
 mlcode(
 """
-confusion_matrix(mnist_pred, mnist_y) |> x -> DataFrame(x.mat, x.labels)
+confusion_matrix(mnist_pred, Int.(int(mnist_y)))
 """
 ,
 """
