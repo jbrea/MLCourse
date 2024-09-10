@@ -802,14 +802,14 @@ The following table shows one-hot encoded input for columns `mean_of_transport` 
 | 0   | 1     | 0        |  1    |
 | 0   | 0     | 0        |  0    |
 
-#### Exercise 3 (optional)
+#### Exercise 3
 In the \"Vector Features\" section we said that the xor problem has a non-linear decision boundary in the original ``X_1, X_2`` coordinates, but a linear decision boundary in the ``H_1, H_2, H_3, H_4`` coordinates, with ``H_i = \max(0, w_i^TX)`` and we use the vector features ``w_1 = [1, 1]``, ``w_2 = [1, -1]``, ``w_3 = [-1, 1]`` and ``w_4 = [-1, -1]``. Here we prove that ``-H_1 + H_2 + H_3 - H_4 = 0`` defines indeed a linear decision boundary that solves the xor-problem.
 * Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 > 0`` and ``X_2 > 0``.
 * Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 < 0`` and ``X_2 < 0``.
 * Show that ``-H_1 + H_2 + H_3 - H_4  > 0`` for all other points.
 
 ## Applied
-#### Exercise 4
+#### Exercise 4 (optional)
 Load the mushroom data set `OpenML.load(24)` and determine if a linear logistic regression can correctly classify all datapoints if
    * rows with missing values are dropped.
    * rows with missing values are imputed with the most common class.
