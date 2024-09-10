@@ -586,7 +586,15 @@ distribution, i.e. the conditional probability density of the response is given 
 For simplicity we assume throughout this exercise that the intercept ``\beta_0 = 0``
 and does not need to be fitted.
 
-(a) Generate a training set of 100 points with the following data generator.
+(a) Calculate with paper and pencil the negative log-likelihood loss. Apply transformations to the negative log-likelihood function to obtain a good loss function for gradient descent based on the practical considerations in the slides.
+The solution you should find is
+```math
+\tilde L = \frac1{n} \sum_{i=1}^n |y_i - x_i^T\beta|.
+```
+
+(b) Assume the training data consists of ``x_1 = (1, 0, 0), y_1 = 4`` and ``x_2 = (1, 0, 2), y_2 = -1`` and you start with ``\beta_1^{(0)} = \beta_2^{(0)} = \beta_3^{(0)} = 0``. Compute with paper and pencil two steps of gradient descent on the negative log-likelihood loss with learning rate ``\eta  = \frac1{10}``.
+
+(c) Generate a training set of 100 points with the following data generator.
 Notice that the noise follows a Laplace distribution instead of a normal distribution.
 $(mlstring(md"For once, we do not use a `DataFrame` here but represent the input explicitly as a matrix and the full dataset as a `NamedTuple`. If you run `data = data_generator()`, you can access the input matrix as `data.x` and the output vector as `data.y`.",""))
 """
@@ -615,24 +623,18 @@ def data_generator(n=100, beta=[1., 2., 3.]):
 begin
 pyhint = md"""`torch.matmul(data["x"], beta)`. For conversion from `numpy` to `torch` there are multiple options, like `torch.tensor(numpy_array)` or `torch.from_numpy(numpy_array)`. For conversion back one can use `torch_tensor.detach().numpy()` or `torch_tensor.data.numpy()`"""
 md"""
-(b) Calculate with paper and pencil the negative log-likelihood loss. Apply transformations to the negative log-likelihood function to obtain a good loss function for gradient descent based on the practical considerations in the slides.
-The solution you should find is
-```math
-\tilde L = \frac1{n} \sum_{i=1}^n |y_i - x_i^T\beta|.
-```
-
-(c) Code a function to compute the loss on the training set for a given
+(d) Code a function to compute the loss on the training set for a given
 parameter vector. *Hint:* use matrix multiplication, e.g. $(mlstring(md"`data.x * β`", pyhint)).
 
-(d) Perform gradient descent on the training set. Plot the learning curve to see
+(e) Perform gradient descent on the training set. Plot the learning curve to see
 whether gradient descent has converged. If you see large fluctuations at the end
 of training, decrease the learning rate. If the learning curve is not flat at
 the end, increase the maximal number of steps. To see well the loss towards the end of gradient descent it is advisable to use log-scale for the y-axis.
 
-(e) Estimate the coefficients with the standard linear regression.
+(f) Estimate the coefficients with the standard linear regression.
 Hint: do not forget that we fit without intercept.
 
-(f) Compare which method (d) or (e) found parameters closer to the one of our data generating process `[1, 2, 3]` and explain your finding.
+(g) Compare which method (e) or (f) found parameters closer to the one of our data generating process `[1, 2, 3]` and explain your finding.
 """
 end
 
