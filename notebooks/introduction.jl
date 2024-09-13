@@ -181,7 +181,7 @@ If you want to know more about julia's package manager, have a look [here](https
 md"""
 #### MLCourse environment
 
-$(DownloadButton("name: MLCourse\nchannels:\n  - conda-forge\ndependencies:\n  - python=3.10\n  - numpy=1.26\n  - scikit-learn\n  - matplotlib\n  - pandas\n  - openml\n  - seaborn\n  - ca-certificates\n  - openssl\n", "BIO322.yml"))Download the environment file and run:
+$(DownloadButton("name: MLCourse\nchannels:\n  - conda-forge\ndependencies:\n  - python=3.10\n  - numpy=1.26\n  - scikit-learn\n  - matplotlib\n  - pandas\n  - openml\n  - seaborn\n  - ca-certificates\n  - openssl\n  - jupyter\n", "BIO322.yml"))Download the environment file and run:
 ```python
 conda create -n MLCourse -f BIO322.yml
 conda activate MLCourse
