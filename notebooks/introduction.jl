@@ -162,7 +162,7 @@ In the julia REPL press `]` to enter the package manager.
 Create a new environment with
 
 ```julia
-(@v1.9) pkg> activate MLCourse # creates a new environment
+(@v1.10) pkg> activate MLCourse # creates a new environment
 (MLCourse) pkg> add DataFrames, Distributions, Plots, CSV, OpenML
 ```
 Leave package mode with the `backspace` key and load the packages you want with
@@ -172,7 +172,7 @@ julia> using DataFrames, Distributions, Plots
 
 Whenever you want to go back to working with this environment, navigate to the folder that contains `MLCourseSolutions`, open julia, type `]` and run again
 ```julia
-(@v1.9) pkg> activate MLCourseSolutions
+(@v1.10) pkg> activate MLCourseSolutions
 ```
 
 If you want to know more about julia's package manager, have a look [here](https://pkgdocs.julialang.org/v1/getting-started/).
@@ -180,7 +180,15 @@ If you want to know more about julia's package manager, have a look [here](https
 ,
 md"""
 #### MLCourse environment
-Create an MLCourse python environment using:
+
+$(DownloadButton("BIO322.yml", "BIO322.yml"))Download the environment file and run:
+```python
+conda create -n MLCourse -f BIO322.yml
+conda activate MLCourse
+```
+
+
+In case you would like to build the environment yourself, run:
 
 ```python
 conda create -n MLCourse python=3.10.8
