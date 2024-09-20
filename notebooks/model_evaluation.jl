@@ -272,7 +272,7 @@ scores = cross_val_score(pipeline, X, y, cv=10, scoring='neg_root_mean_squared_e
 # ╔═╡ 29683c99-6a6a-4f65-bea2-d592895d887e
 md"""# 4. Model Tuning
 
-Finding good hyper-parameters (tuning) is such an important step in the process of finding good machine learning models that there exist some nice utility functions to tune the hyper-parameters $(mlstring(md"(see e.g. [tuning section in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/tuning_models/))", "")).
+Finding good hyper-parameters (tuning) is such an important step in the process of finding good machine learning models that there exist some nice utility functions to tune the hyper-parameters $(mlstring(md"(see e.g. [tuning section in the MLJ manual](https://juliaai.github.io/MLJ.jl/dev/tuning_models/))", "")).
 
 ## Simple Tuning without Test Error Estimation
 In the cell below you see an example where the degree of polynomial regression is automatically tuned on a given dataset by performing 10-fold cross-validation on all degrees on a \"grid\", i.e. of all degrees from 1 to 17 are tested."""

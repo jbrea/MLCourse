@@ -110,7 +110,7 @@ md"""
 * [Get started with Julia](https://julialang.org/learning)
 * [Julia Youtube tutorials](https://www.youtube.com/@TheJuliaLanguage/playlists?view=50&sort=dd&shelf_id=5)
 * [Julia Programming for ML (TU Berlin)](https://adrhill.github.io/julia-ml-course/)
-* [Machine Learning in Julia (MLJ)](https://alan-turing-institute.github.io/MLJ.jl/dev/)
+* [Machine Learning in Julia (MLJ)](https://juliaai.github.io/MLJ.jl/dev/)
 * [the Julia manual](https://docs.julialang.org/en/v1/)
 * [cheat sheet](https://juliadocs.github.io/Julia-Cheat-Sheet/)
 * [Noteworthy differences to other programming languages](https://docs.julialang.org/en/v1/manual/noteworthy-differences/)

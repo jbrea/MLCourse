@@ -879,7 +879,7 @@ md"""
 #### Exercise 6 (optional)
 In this exercise we have a closer look at the bike sharing data of section "Poisson Regression".
 - Follow the code examples in section "Poisson Regression" to run a Poisson regression on the responses `count` with predictors `temp` and `humidity`.
-- For comparison, run a linear regression on the same inputs and output. $(mlstring(md"*Hint*: Read the section on [scientific types in the MLJ manual](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types) and coerce the `count` variable of the bike sharing data to `Continuous`", ""))
+- For comparison, run a linear regression on the same inputs and output. $(mlstring(md"*Hint*: Read the section on [scientific types in the MLJ manual](https://juliaai.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types) and coerce the `count` variable of the bike sharing data to `Continuous`", ""))
 - Create a scatter plot with the true counts on the x-axis and the predictions $(mlstring(md"(`predict_mode`)", "")) of the counts for the linear regression model and the Poisson model on the y-axis. If the model perfectly captures the data, the plotted points should lie on the diagonal; add the diagonal to the figure to help seeing deviations from perfect preditions.
 - Comment on the differences you see in the plot between the Poisson model and the linear regression model.
 """

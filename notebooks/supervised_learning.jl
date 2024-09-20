@@ -938,7 +938,7 @@ mlstring(
 md"Our weather data set contains multiple measurements.
 With `names(weather)` we see all the columns of the the weather data frame.
 
-With `DataFrame(schema(weather))` we get additionally information about the type of data. `MLJ` distinguished between the [scientific type](https://alan-turing-institute.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types) and the number type of a column. This distinction is useful, because e.g. categorical variables (class 1, class 2, class 3, ...) can be represented as an integer but also count variables (e.g. number of items) can be represented as an integer, but suitability of a given machine learning method depends more on the scientific type than on the number type.
+With `DataFrame(schema(weather))` we get additionally information about the type of data. `MLJ` distinguished between the [scientific type](https://juliaai.github.io/MLJ.jl/dev/getting_started/#Data-containers-and-scientific-types) and the number type of a column. This distinction is useful, because e.g. categorical variables (class 1, class 2, class 3, ...) can be represented as an integer but also count variables (e.g. number of items) can be represented as an integer, but suitability of a given machine learning method depends more on the scientific type than on the number type.
 ",
 md"Our weather data set contains multiple measurements.
 With `weather.columns` we see all the names of the columns of the the weather data frame.
