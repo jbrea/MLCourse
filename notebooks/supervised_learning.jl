@@ -433,6 +433,17 @@ md"**Left:** The data is given by the red points; the current probability densit
     - The optimal solution in ``\theta_0`` and ``\theta_1`` does not depend on the value of ``\sigma``. Changing ``\sigma`` only changes the \"steepness of the log-likelihood hill\".
 "
 
+# ╔═╡ 11e86688-d002-4baa-a0ba-bf191c412d04
+Markdown.parse("""
+Instead of visualizing the likelihood maximization perspective with a heatmap as in the interactive figure above, we can also use "little Gaussian bumps" as in the figure below.
+
+$(MLCourse.embed_figure("lr.png"))
+
+Side remark: In standard linear regression the assumption is that the variance of the conditional Gaussian distribution is the same (homoscedastic noise), everywhere. For some datasets this is not the case (heteroscedastic noise), which justifies the usage of so-called weighted linear regression, where each data point is weighted with the inverse of the (approximate) standard deviation of the noise at this point.
+
+$(MLCourse.embed_figure("lr_heteroscedastic.png"))
+""")
+
 # ╔═╡ c65b81bd-395f-4461-a73b-3535903cb2d7
 md"## Multiple Linear Regression
 
@@ -1205,6 +1216,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─65c228c1-f6f2-4542-9870-066448b182ee
 # ╟─5ba1c12a-75ce-4d01-aca5-8804d8e747cf
 # ╟─edb726aa-cca0-492b-bcf4-5ba80a5c1c44
+# ╟─11e86688-d002-4baa-a0ba-bf191c412d04
 # ╟─c65b81bd-395f-4461-a73b-3535903cb2d7
 # ╟─0f544053-1b7a-48d6-b18b-72092b124305
 # ╟─51c9ea74-3110-4536-a4af-7cc73b45a4a6
