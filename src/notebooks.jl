@@ -509,6 +509,7 @@ const FOOTER = @htl """
         }
       });
     }
+    toggle_code(readCookie("mlcourselang"))
     </script>
 
 <p> This page is part of an <a href="https://bio322.epfl.ch">introductory machine learning course</a> taught by Johanni Brea.<br>The course is inspired by <a href="https://www.statlearning.com/">"An Introduction to Statistical Learning"</a>.</p> <a href="https://www.epfl.ch"><img src="https://www.epfl.ch/wp/5.5/wp-content/themes/wp-theme-2018/assets/svg/epfl-logo.svg"></img></a>

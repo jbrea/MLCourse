@@ -321,14 +321,14 @@ mlstring(
 md"The `range(model, :hyper, values = ...)` function in the cell above returns a `NominalRange(polynomial.degree = 1, 2, 3, ...)` to the tuner. This specifies the degrees of the polynomial that should be tested during tuning.
 
 In general, for any given model you may first want to find out, how the parameters are called that you would like to tune. This can be done by inspecting the model.
-In the output below you see that the model is a `DeterministiPipeline`, with a `polynomial` and a `linear_regressor`. To tune the degree of the `polynomial` we choose `:(polynomial.degree) in the range function above.
+In the output below you see that the model is a `DeterministicPipeline`, with a `polynomial` and a `linear_regressor`. To tune the degree of the `polynomial` we choose `:(polynomial.degree) in the range function above.
 
 Have a look at the best models found for each fold in the output above.
 "
 ,
-"
-In general, for any given model you may first want to find out, how the parameters are called that you would like to tune. This can be done by inspecting the model. The model is a `DeterministiPipeline`, with a `polynomial` and a `linear_regressor`.
-We can see in the Pipeline that the transform `PolynomialFeatures` is named `polynomial`. To tune the degree of the `polynomial` we choose `:(polynomial__degree)` in the param_grid.
+md"
+In general, for any given model you may first want to find out, how the parameters are called that you would like to tune. This can be done by inspecting the model. The model is a `Pipeline`, with a `polynomial` and a `linear_regressor`.
+We can see in the Pipeline that the transform `PolynomialFeatures` is named `polynomial`. To tune the degree of the `polynomial` we choose `'polynomial__degree'` in the param_grid.
 
 Have a look at the best models found for each fold in the output above.
 "
@@ -473,7 +473,9 @@ plt.show()
 )
 
 # ╔═╡ 45d6d454-eaac-4401-9a46-390d3d667794
-md"The distribution of slope values is clearly on the positive side. This means that the wind peak indeed co-varies with the sunshine duration."
+md"The slope in the figure above refers to the slope of the line found by linear regression. Because we ran linear regression on many bootstrapped datasets, we found many different values for the slope. If the distribution of slopes would be centered at 0, we could conclude that the sunshine_duration is unlikely to be correlated with the wind_peak. However, the distribution of slope values is clearly on the positive side. This means that the wind peak indeed co-varies with the sunshine duration.
+
+Note that we can be more confident about our statement than if we would have just computed the slope once with the full data set. Why? Because a positive slope could come out randomly for a finite data set, even if the two variables wouldn't be correlated. After bootstrapping, we know that the positive slope is a consistent feature of the dataset that doesn't disappear, when some data points are removed."
 
 # ╔═╡ ee89c448-1e69-4fd1-a4b8-7297a09f2685
 md"# Exercises
@@ -759,7 +761,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─a7c88b3f-92cb-4253-a889-c78683722c1d
 # ╟─0b81c3d5-277a-4fe6-889b-550e2f83c39d
 # ╟─b3aed705-5072-4d9b-bb8f-865ac1561bf6
-# ╠═6916273a-d116-4173-acaa-2bcac1d1753b
+# ╟─6916273a-d116-4173-acaa-2bcac1d1753b
 # ╟─5747d116-1e61-45f0-a87b-89372c6f270f
 # ╟─890f4d59-ef7d-43d4-bbef-ded8b6b030eb
 # ╟─c268fb85-e695-4b18-8baf-2ab4e656102f
