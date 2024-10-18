@@ -344,7 +344,7 @@ $(MLCourse.language_selector())` `
 
 
 Create an artificial data set with 3 columns named A, B and C.
-   1. Column A contains 10 random numbers sampled from a Bernoulli distribution with rate 0.3, column B contains 10 random numbers from the uniform distribution over the interval [0, 1), and column C contains 10 samples from the set `("hip", "hop")`, where `"hip"` and `"hop"` have equal probability. *Hint:* $(mlstring(md"You can use the function `Bernoulli` from the `Distributions` package and the built-in function `rand` with the trick in exercise 2.", md"You can the function `np.random.binomial` or the trick in exercise 2."))
+   1. Column A contains 10 random numbers sampled from a Bernoulli distribution with rate 0.3, column B contains 10 random numbers from the uniform distribution over the interval [0, 1), and column C contains 10 samples from the set `("hip", "hop")`, where `"hip"` and `"hop"` have equal probability. *Hint:* $(mlstring(md"You can use the function `Bernoulli` from the `Distributions` package and the built-in function `rand` with the trick in exercise 2.", md"You can use the function `np.random.binomial` or the trick in exercise 2."))
    2. Create a vector whose i'th element contains the sum of the i'th entries of columns A and B of the data frame created in 1.
    3. Select all rows with `"hop"` in column C and display the resulting data frame.
 """
