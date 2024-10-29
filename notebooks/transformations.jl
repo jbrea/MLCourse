@@ -433,7 +433,7 @@ categorical_columns = ["RACE", "OCCUPATION", "SECTOR", "MARR", "UNION", "SEX", "
 numerical_columns = ["EDUCATION", "EXPERIENCE", "AGE"]
 
 preprocessor = make_column_transformer(
-    (OneHotEncoder(drop="if_binary"), categorical_columns),
+    (OneHotEncoder(drop="first"), categorical_columns),
     remainder="passthrough",
     verbose_feature_names_out=False,  # avoid to prepend the preprocessor names
 )
