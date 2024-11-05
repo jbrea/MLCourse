@@ -414,7 +414,7 @@ class NeuralNetExample1(torch.nn.Module):
         return self.layers(x)
 
 nn = NeuralNetExample1()
-w1, b1 = map(lambda parameter: parameter.data.numpy(),           
+w1, b1 = map(lambda parameter: parameter.detach().numpy(),           
              list(nn.layers[0].parameters()))
 (w1,b1)
 """
@@ -437,7 +437,7 @@ nn(x) # apply neural network to input x
 ,
 """
 x = torch.rand(3)
-nn(x).data.numpy()
+nn(x).detach().numpy()
 """
 )
 
@@ -452,7 +452,7 @@ b² + w² * relu.(b¹ + w¹ * x)
 """
 ,
 """
-w1, b1, w2, b2 = map(lambda parameter: parameter.data.numpy(), list(nn.layers.parameters())) 
+w1, b1, w2, b2 = map(lambda parameter: parameter.detach().numpy(), list(nn.layers.parameters())) 
 b2 + np.dot(w2, relu(b1 + np.dot(w1, x)))
 """
 )
@@ -490,7 +490,7 @@ class NeuralNetExample2(torch.nn.Module):
         return self.layers(x)
 
 nn2 = NeuralNetExample2()
-nn2(torch.rand(20)).data.numpy()
+nn2(torch.rand(20)).detach().numpy()
 """
 )
 
@@ -1027,7 +1027,7 @@ with torch.no_grad():
     model.eval()
     _, test_preds = torch.max(model(x_test), 1)
     
-f'Missclassifictation rate: {np.mean((test_preds.data.numpy() != y_test))}'
+f'Missclassifictation rate: {np.mean((test_preds.detach().numpy() != y_test))}'
 """
 )
 

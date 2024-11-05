@@ -621,7 +621,7 @@ def data_generator(n=100, beta=[1., 2., 3.]):
 
 # ╔═╡ c0285107-0131-404f-9617-229f1c88f091
 begin
-pyhint = md"""`torch.matmul(data["x"], beta)`. For conversion from `numpy` to `torch` there are multiple options, like `torch.tensor(numpy_array)` or `torch.from_numpy(numpy_array)`. For conversion back one can use `torch_tensor.detach().numpy()` or `torch_tensor.data.numpy()`"""
+pyhint = md"""`torch.matmul(data["x"], beta)`. For conversion from `numpy` to `torch` there are multiple options, like `torch.tensor(numpy_array)` or `torch.from_numpy(numpy_array)`. For conversion back one can use `torch_tensor.detach().numpy()` or `torch_tensor.detach().numpy()`"""
 md"""
 (d) Code a function to compute the loss on the training set for a given
 parameter vector. *Hint:* use matrix multiplication, e.g. $(mlstring(md"`data.x * β`", pyhint)).
