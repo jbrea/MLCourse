@@ -232,46 +232,83 @@ train_data, test_data, unknown_chars = get_processed_data(corpora)
 """
 ,
 """
+import requests
+import random
+import string
+from collections import defaultdict
+from functools import reduce
+from sklearn.utils import shuffle
+from itertools import chain
+import unicodedata
+
+
+def load_corpora(langs=None):
+    if langs is None:
+        langs = ["es", "en", "da", "it", "fr"]
+    corpora = defaultdict(list)
+    for lang in langs:
+        url = "https://go.epfl.ch/bio322-" + lang + ".txt"
+        response = requests.get(url)
+        corpus = response.text.split(".")
+        corpus = [unicodedata.normalize('NFKD', s.lower().strip()) for s in corpus]
+        corpus = [s for s in corpus if s]
+        corpora[lang] = corpus
+    return corpora
+
+def onehot(char, vocabulary, unk_char='_'):
+    vec = [0] * len(vocabulary)
+    if char in vocabulary:
+        vec[vocabulary.index(char)] = 1
+    else:
+        vec[vocabulary.index(unk_char)] = 1
+    return vec
+
+def onehotbatch(sequence, vocabulary, unk_char='_'):
+    return [onehot(char, vocabulary, unk_char) for char in sequence]
+
+def get_processed_data(corpora, test_len=100):
+    vocabulary = list(string.ascii_lowercase + string.digits + ' \\n_')
+    langs = list(corpora.keys())
+    
+    # See which chars will be represented as "unknown"
+    all_chars = set(chain.from_iterable(corpora.values()))
+    unknown_chars = set(filter(lambda x: x not in vocabulary, ''.join(all_chars)))
+    
+    dataset = [(onehotbatch(s, vocabulary, '_'), onehot(l, langs)) 
+               for l in langs for s in corpora[l]]
+    dataset = shuffle(dataset, random_state=171)
+    train, test = dataset[:-test_len], dataset[-test_len:]
+    
+    return train, test, unknown_chars
+
+random.seed(171)
+
+corpora = load_corpora()
+train_data, test_data, unknown_chars = get_processed_data(corpora)
+
 """
 ,
 showoutput = false,
-collapse = "Data Loading and Preprocessing"
+collapse = "Data Loading and Preprocessing",
+cache_jl_vars = [:corpora]
 )
 
 # ╔═╡ c769c35c-ea59-4d4a-8451-a9343fc75d88
 md"We downloaded a few pages from wikipedia in 5 different languages, applied some normalization and split the text into sentences. Here is the result:
 "
 
-# ╔═╡ cee63cef-6ce3-4738-941d-632b2d43f647
-mlcode(
-"""
-corpora
-"""
-,
-"""
-"""
-,
-showinput = false
-)
+# ╔═╡ e61b19ca-6932-4547-9908-8cb794b9e7bb
+MLCourse.JlMod.corpora
 
 # ╔═╡ 736ffb3d-64a7-43f6-b781-66cf2540bb42
 md"These raw sentences are encoded on a character level into a one-hot code with the use of a vocabulary. In our case, the vocabulary consists of characters 'a' to 'z', numbers '0' to '9', white space ' ' and newline '\n' and the placeholder '_' for all characters that are not in this set. Our vocabulary consists of 39 elements. Therefore, a sentence of ``K`` characters is represented as a matrix of size ``39\times K``, as you can see in the following examples, where we encode, first, one word and, second, a full sentence:
 "
 
 # ╔═╡ 789b6c31-ae1d-49b2-8fac-365e6517a3cc
-mlcode(
-"""
-examples = let vocabulary = ['a':'z'; '0':'9'; ' '; '\n'; '_']
+examples = let vocabulary = ['a':'z'; '0':'9'; ' '; '\n'; '_'], corpora = MLCourse.JlMod.corpora, onehotbatch = MLCourse.JlMod.onehotbatch
 Dict(corpora["fr"][1] => onehotbatch(corpora["fr"][1], vocabulary, '_'),
 corpora["fr"][23] => onehotbatch(corpora["fr"][23], vocabulary, '_'))
 end
-"""
-,
-"""
-"""
-,
-showinput = false
-)
 
 # ╔═╡ 75aed643-0185-4fe4-abdf-02634865404e
 md"""
@@ -308,6 +345,52 @@ scanner, classifier = build_model(vocabulary_len = 39, langs_len = 5, N = 64)
 """
 ,
 """
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+
+class CombinedModel(nn.Module):
+    def __init__(self, vocabulary_len, hidden_dim, langs_len):
+        super(CombinedModel, self).__init__()
+        self.scanner = Scanner(vocabulary_len, hidden_dim)
+        self.classifier = Classifier(hidden_dim, langs_len)
+
+    def forward(self, x):
+        x = self.scanner(x)[:, -1, :] # Take the last state of the LSTM
+        x = self.classifier(x)
+        return x
+
+class Scanner(nn.Module):
+    def __init__(self, vocabulary_len, hidden_dim):
+        super(Scanner, self).__init__()
+        self.dense = nn.Linear(vocabulary_len, hidden_dim)
+        self.lstm = nn.LSTM(hidden_dim, hidden_dim, batch_first=True)
+
+    def forward(self, x):
+        x = F.relu(self.dense(x))
+        x, _ = self.lstm(x)
+        return x
+
+class Classifier(nn.Module):
+    def __init__(self, hidden_dim, langs_len):
+        super(Classifier, self).__init__()
+        self.hidden_dense = nn.Linear(hidden_dim, hidden_dim)
+        self.output_dense = nn.Linear(hidden_dim, langs_len)
+
+    def forward(self, state):
+        x = F.relu(self.hidden_dense(state))
+        x = self.output_dense(x)
+        return x
+    
+# Define model parameters
+vocabulary_len = 39
+langs_len = 5
+hidden_dim = 64
+
+# Build model
+combined_model = CombinedModel(vocabulary_len, hidden_dim, langs_len)
+
 """
 ,
 cache = false
@@ -318,23 +401,13 @@ md"Below you see the result of applying the scanner to two sentences in the trai
 "
 
 # ╔═╡ 4bc9a437-d9a9-4543-ae3a-f41c208da351
-mlcode(
-"""
-let ks = collect(keys(examples))
+let ks = collect(keys(examples)), scanner = MLCourse.JlMod.scanner
 states = mapslices(scanner, examples[ks[1]], dims = 1)
-p1 = heatmap(states, title = "word \\"wikipedia\\"", ylabel = "scanner activity", xlabel = "character number")
+p1 = heatmap(states, title = "word \"wikipedia\"", ylabel = "scanner activity", xlabel = "character number")
 states = mapslices(scanner, examples[ks[2]], dims = 1)
 p2 = heatmap(states, title = "example sentence", ylabel = "scanner activity", xlabel = "character number")
 plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
-"""
-,
-"""
-"""
-,
-showinput = false,
-)
-
 
 # ╔═╡ c51b2449-b1b5-4e91-a86b-0cd1e645b16b
 md"The important point to realize here is that also this complicated example follows actually a simple pattern:
@@ -381,6 +454,96 @@ end
 """
 ,
 """
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import random
+import numpy as np
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+
+# Set seed for reproducibility
+random.seed(123)
+torch.manual_seed(123)
+
+
+
+
+# Initialize model and optimizer
+combined_model = CombinedModel(vocabulary_len, hidden_dim, langs_len)
+optimizer = optim.Adam(combined_model.parameters(), lr=1e-3)
+
+def collate_fn(batch):
+    inputs, targets = zip(*batch)
+    inputs = torch.tensor(inputs).float()
+    targets = torch.tensor(targets).float()
+    return inputs, targets
+
+# Convert data into DataLoader
+train_loader = DataLoader(train_data, batch_size=1, shuffle=True, collate_fn=collate_fn)
+test_loader = DataLoader(test_data, batch_size=1, shuffle=False, collate_fn=collate_fn)
+
+training_curve = []
+validation_curve = []
+criterion = nn.CrossEntropyLoss()
+# Training loop
+results = {'training': {"loss":[], "accuracy":[]}, 'validation': {"loss":[], "accuracy":[]}}
+num_epochs = 10
+max_patience = 3 # Early stopping patience
+with tqdm(total=num_epochs, desc=f"Epoch 0/{num_epochs}", position=0) as pbar:
+    best_loss = float('inf')
+    for epoch in range(num_epochs):    
+        losses = []
+        accuracies = []
+        combined_model.train()
+        for x, y in train_loader:
+            optimizer.zero_grad()
+            y_pred = combined_model(x)
+            loss = criterion(y_pred, y)
+            loss.backward()
+            optimizer.step()
+            losses.append(loss.item())
+            accuracies.append(torch.argmax(y_pred).item() == torch.argmax(y).item())
+        epoch_loss = np.mean(losses)
+        results['training']['loss'].append(epoch_loss)
+        results['training']['accuracy'].append(np.mean(accuracies))
+        losses = []
+        accuracies = []
+        combined_model.eval()
+        with torch.no_grad():
+            for x, y in test_loader:
+                y_pred = combined_model(x)
+                loss = criterion(y_pred, y)
+                losses.append(loss.item())
+                accuracies.append(torch.argmax(y_pred).item() == torch.argmax(y).item())
+        val_loss = np.mean(losses)
+        if val_loss<best_loss:
+            best_loss = val_loss
+            patience = 0
+        else:
+            patience+=1
+
+        if patience == max_patience:
+            break
+        results['validation']['loss'].append(val_loss)
+        results['validation']['accuracy'].append(np.mean(accuracies))
+        pbar.set_description(f"Epoch {epoch + 1}/{num_epochs}")
+        pbar.set_postfix(train_loss=epoch_loss , val_loss=val_loss, patience=patience)
+        pbar.update(1)
+        pbar.refresh()
+
+from matplotlib import pyplot as plt
+plt.figure(figsize=(20, 6))
+
+plt.subplot(1, 2, 1)
+plt.plot(results['training']['loss'], label='Training Loss')
+plt.plot(results['validation']['loss'], label='Validation Loss')
+plt.legend()
+
+plt.subplot(1, 2, 2)
+plt.plot(results['training']['accuracy'], label='Training Accuracy')
+plt.plot(results['validation']['accuracy'], label='Validation Accuracy')
+plt.show()
 """
 ,
 eval = true,
@@ -932,7 +1095,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─dd12ea16-f087-4507-a571-c95bf38aa976
 # ╟─c76ab462-333f-4852-b0bf-2d7d603c34ab
 # ╟─c769c35c-ea59-4d4a-8451-a9343fc75d88
-# ╟─cee63cef-6ce3-4738-941d-632b2d43f647
+# ╟─e61b19ca-6932-4547-9908-8cb794b9e7bb
 # ╟─736ffb3d-64a7-43f6-b781-66cf2540bb42
 # ╟─789b6c31-ae1d-49b2-8fac-365e6517a3cc
 # ╟─75aed643-0185-4fe4-abdf-02634865404e
