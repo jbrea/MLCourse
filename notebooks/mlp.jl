@@ -16,6 +16,7 @@ end
 
 # ╔═╡ 87f59dc7-5149-4eb6-9d81-440ee8cecd72
 begin
+
 using Pkg
 stdout_orig = stdout
 stderr_orig = stderr
@@ -1198,6 +1199,7 @@ $(MLCourse.embed_figure("overparametrized.png"))
 
 # ╔═╡ 8c72c4b5-452d-4ba3-903b-866cac1c799d
 MLCourse.FOOTER
+
 
 # ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
 MLCourse.save_cache(@__FILE__)
