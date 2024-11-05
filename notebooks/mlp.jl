@@ -975,7 +975,7 @@ import openml
 from sklearn.preprocessing import OneHotEncoder
 
 # data loading
-mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
+mnist,_,_,_ = openml.datasets.get_dataset(554, download_data = False, download_qualities = False, download_features_meta_data = False).get_data(dataset_format="dataframe")
 
 # pre-processing
 x = (mnist.iloc[:, :-1].values.astype(float)/255) # normalising
