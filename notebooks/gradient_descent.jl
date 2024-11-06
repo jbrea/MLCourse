@@ -354,7 +354,7 @@ end
 # ╔═╡ ca1301fd-8978-44d6-bfae-e912f939d7a8
 md"# 2. Stochastic Gradient Descent
 
-In each step of stochastic gradient descent (SGD) the gradient is computed only on a (stochastically selected) subset of the data. As long as the selected subset of the data is somewhat representative of the full dataset the gradient will point more or less in the same direction as the full gradient computed on the full dataset. The advantage of computing the gradient only on a subset of the data is that it takes much less time to compute the gradient on a small dataset than on a large dataset. In the figure below you see the niveau lines of the full loss in black and the niveau lines of the loss computed on a green, purple, yellow and a blue subset. The gradient computed on, say, the yellow subset is always perpendicular to the yellow niveau lines but it may not be perpendicular to the niveau lines of the full loss. When selecting in each step another subset we observe a jittered trajectory around the full gradient descent trajectory.
+In each step of stochastic gradient descent (SGD) the gradient is computed only on a (stochastically selected) subset of the data. As long as the selected subset of the data is somewhat representative of the full dataset the gradient will point more or less in the same direction as the full gradient computed on the full dataset. The advantage of computing the gradient only on a subset of the data is that it takes much less time to compute the gradient on a small dataset than on a large dataset. In the figure below you see the level lines of the full loss in black and the level lines of the loss computed on a green, purple, yellow and a blue subset. The gradient computed on, say, the yellow subset is always perpendicular to the yellow level lines but it may not be perpendicular to the level lines of the full loss. When selecting in each step another subset we observe a jittered trajectory around the full gradient descent trajectory.
 "
 
 # ╔═╡ e821fb15-0bd3-4fa7-93ea-692bf05097b5
@@ -394,7 +394,7 @@ cache = false
 )
 
 # ╔═╡ 75528011-05d9-47dc-a37b-e6bb6be52c25
-md"η = $(@bind η_st Slider(.01:.01:.2, default = .1, show_value = true))
+md"η = $(@bind η_st Slider(.01:.01:.2, default = .05, show_value = true))
 
 step t = $(@bind t5 Slider(0:100, show_value = true))
 "
@@ -442,6 +442,31 @@ let path = tracker_st.path,
     plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
 
+
+# ╔═╡ 7b6e950a-b3db-4a73-b4ef-06bc215365c2
+md"In the training curve below, we plot the loss for different numbers of data points used for the gradient computation. If a given data point is used multiple times, we count it multiple times: for one step of gradient descent, we use all 40 data points, whereas for one step of stochastic gradient descent with batch size 10, we use only 10 points.
+- We see that stochastic gradient descent (SGD) decreases the training loss faster for the same learning rate η.
+- For stochastic gradient descent we can plot either the true training loss of the full data set (red), or the training loss evaluated on the given batch (green, thin), or a moving average of the loss evaluated on batches (green, thick). In practice one does not compute the loss on the full dataset in each step of SGD, because this could be costly for a large training set. As the moving average of the loss evaluated on individual batches follows the true training loss quite closely, it is a useful and fast-to-compute approximation of the true training loss.
+"
+
+# ╔═╡ 07f57518-aa01-4979-8ad3-9bd052aee1fd
+let X = M.X, y = M.y, sgd_path = tracker_st.path
+	lin_reg_loss_b(i) = (β₀, β₁) -> M.lin_reg_loss(β₀, β₁, X[(i-1)*10+1:i*10],
+                                                   y[(i-1)*10+1:i*10])
+	Random.seed!(seed)
+    batches = rand(1:4, 101)
+	f = plot(length(y)*eachindex(lin_reg_path),
+		     M.loss.(lin_reg_path), xlabel = "number of data points used for gradient computation", ylabel = "training loss", yscale = :log10, label = "gradient descent η = $η", lw = 3)
+	loss_per_batch = [lin_reg_loss_b(batches[i])(x[1], x[2]) for (i, x) in pairs(sgd_path)]
+	plot!(length(y)/4*eachindex(sgd_path),
+	      loss_per_batch, label = "SGD (loss evaluated on batches) η = $η_st", c = :green)
+	plot!(length(y)/4*(3:length(sgd_path)-3),
+	      [mean(loss_per_batch[i-3+1:i+3]) for i in 3:length(sgd_path)-3], label = "SGD (moving average of loss evaluated on batches) η = $η_st", c = :green, lw = 4)
+	plot!(length(y)/4*eachindex(sgd_path),
+	         M.loss.(sgd_path), label = "SGD (loss evaluated on all data) η = $η_st", lw = 2, c = :red)
+	xlims!(0, 1500)
+	f
+end
 
 # ╔═╡ 913cf5ee-ca1e-4063-bd34-6cccd0cc548b
 md"# 3. Improved Versions of (S)GD
@@ -675,6 +700,8 @@ MLCourse.save_cache(@__FILE__)
 # ╟─fa706e4b-eaa9-4be2-b4f5-1906931c8ef6
 # ╟─75528011-05d9-47dc-a37b-e6bb6be52c25
 # ╟─7541c203-f0dc-4445-9d2a-4cf16b7e912a
+# ╟─7b6e950a-b3db-4a73-b4ef-06bc215365c2
+# ╟─07f57518-aa01-4979-8ad3-9bd052aee1fd
 # ╟─913cf5ee-ca1e-4063-bd34-6cccd0cc548b
 # ╟─2739fb52-fb1b-46d6-9708-e24bfdc459e2
 # ╟─7b57c3f0-ef5a-4dd7-946f-72c8dde2ae8f
