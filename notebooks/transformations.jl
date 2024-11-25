@@ -786,6 +786,107 @@ let
     plot(p1, p2, layout = (1, 2), size = (700, 500))
 end
 
+# ╔═╡ 07734386-6858-46ab-9ce7-9e4092cb7280
+md"""## What can we conclude from the marginal ``p(y)``?
+
+Above we plotted the marginal density ``p(y)`` of the wind peak, which differs from the conditional density ``p(y|x)`` that we try to fit in supervised learning. In fact, given the density of inputs ``p(x)``, the density of outputs is given by ``p(y) = \int_{\mathcal X}p(y|x)p(x)dx`` where the integral runs over all possible values of ``x\in\mathcal X``.
+
+To get a better feeling for different shapes of ``p(y)`` we look here at a few artificial examples. We can learn from these examples, that it is very difficult to infer the model or the noise distribution purely by looking at the marginal distribution ``p(y)``.
+
+#### Normal input, linear model, normal noise
+
+``y = 2x + 0.1 + \epsilon``, with normally distributed ``\epsilon``
+"""
+
+# ╔═╡ 40419527-aacb-4394-9b2a-98dc63dc3896
+md"""The response variable ``y`` looks clearly normally distributed.
+
+#### Normal input, non-linear model, normal noise
+
+``y = 2x^2 + 3 + \epsilon`` with normally distributed ``\epsilon``.
+"""
+
+# ╔═╡ 00280812-ad7f-4bb3-825e-9c1d920c84a3
+md"""
+Neither the marginal ``p(y)`` nor the marginal of ``log(y)`` look normally distributed, although the conditional probability ``p(y|x)`` is actually a normal distribution with mean ``2x^2 + 3``.
+
+#### Non-normal input, linear model, normal noise
+``y = 2x + 8.1 + \epsilon``, with normally distributed ``\epsilon``.
+"""
+
+# ╔═╡ 9efea3e5-fe80-489d-a5b5-948276064a6b
+md"""
+Neither the marginal ``p(y)`` nor the marginal of ``\log y`` look normally distributed, even though the conditional probability ``p(y|x)`` is actually linear with linear dependency of the mean on the input ``x``!
+
+#### Normal input, non-linear model, non-normal noise
+
+``y = 2.1 ^ {x/4 + 2 + \epsilon}``, with normally distributed ``\epsilon``. Note that the conditional is not normally distributed, because ``\epsilon`` appears in the exponent.
+"""
+
+# ╔═╡ f7a64959-ea12-4aa0-bad1-4ee03c3b1fcc
+md"""
+The marginal of ``\log(y)`` looks normally distributed.
+
+#### Normal input, linear model, laplace noise
+``y = x/4 + 2 + \epsilon``, with Laplacian ``\epsilon``.
+"""
+
+# ╔═╡ 23480396-5bf5-4f31-8a26-5f04ba5537ee
+function _example_plots(x, y; with_normal_fit = false, with_log_fit = false)
+	f1 = histogram(x, xlabel = "x", ylabel = "p(x)", nbins = 75, normalize = :pdf, label = nothing, title = "marginal input p(x)")
+	f2 = histogram2d(x, y, title = "conditional p(y|x)", nbins = 75, xlabel = "x", ylabel = "y", normalize = :pdf)
+	f3 = histogram(y, title = "marginal output p(y)", nbins = 75, xlabel = "y", ylabel = "p(y)", normalize = :pdf, label = nothing)
+	if with_normal_fit
+		normalfit = Distributions.fit(Normal, y)
+		laplacefit = Distributions.fit(Distributions.Laplace, y)
+		plot!(x -> pdf(normalfit, x), label = "Normal fit", lw = 3)
+		plot!(x -> pdf(laplacefit, x), label = "Laplace fit", lw = 3)
+	end
+	if with_log_fit
+		logfit = Distributions.fit(Normal, log.(y))
+		f4 = histogram(log.(y), title = "marginal p(log(y))", nbins = 75, xlabel = "log(y)", ylabel = "p(log(y))", normalize = :pdf, label = nothing)
+		plot!(x -> pdf(logfit, x), label = "Normal fit", lw = 3)
+	else
+		f4 = plot(axis = false)
+	end
+	plot(f1, f2, f3, f4, layout = (2, 2))
+end;
+
+# ╔═╡ eb3d3d51-7e67-4833-810f-e006ec0a882f
+let n = 5000
+	x = randn(n)
+	y = 2x .+ .1 .+ .75*randn(n)
+	_example_plots(x, y, with_normal_fit = true)
+end
+
+# ╔═╡ 9152b724-744f-4203-a46d-c11534379825
+let n = 5000
+	x = randn(n)
+	y = 2x .^ 2 .+ 3 .+ .75*randn(n)
+	_example_plots(x, y, with_normal_fit = true, with_log_fit = true)
+end
+
+# ╔═╡ 959af8e7-22b5-4563-bb02-d7aabc2fba6d
+let n = 6000
+	x = [randn(3*n÷4); randn(n÷4) .+ 3 ]
+	y = 2x .+ 8.1 .+ .75*randn(n)
+	_example_plots(x, y, with_log_fit = true, with_normal_fit = true)
+end
+
+# ╔═╡ 38554070-7233-4794-825f-2617a856bf78
+let n = 5000
+	x = randn(n)
+	y = 2.1 .^ (x/4 .+ 2 .+ .75*randn(n))
+	_example_plots(x, y, with_normal_fit = true, with_log_fit = true)
+end
+
+# ╔═╡ 80593756-ed60-4368-8801-d558a1af7adb
+let n = 5000
+	x = randn(n)
+	y = x/4 .+ 2 .+ rand(Distributions.Laplace(0, .5), n)
+	_example_plots(x, y, with_normal_fit = true, with_log_fit = false)
+end
+
 # ╔═╡ 04397866-4e00-46d2-bda4-0a61cf34e780
 md"# Exercises
 
@@ -944,6 +1045,17 @@ MLCourse.save_cache(@__FILE__)
 # ╟─ecce64bd-da0b-4d92-8234-00bb167a03e3
 # ╟─5e6d6155-c254-4ae9-a0e1-366fc6ce6403
 # ╟─ed239411-185a-4d9f-b0ec-360400f24dc7
+# ╟─07734386-6858-46ab-9ce7-9e4092cb7280
+# ╟─eb3d3d51-7e67-4833-810f-e006ec0a882f
+# ╟─40419527-aacb-4394-9b2a-98dc63dc3896
+# ╟─9152b724-744f-4203-a46d-c11534379825
+# ╟─00280812-ad7f-4bb3-825e-9c1d920c84a3
+# ╟─959af8e7-22b5-4563-bb02-d7aabc2fba6d
+# ╟─9efea3e5-fe80-489d-a5b5-948276064a6b
+# ╟─38554070-7233-4794-825f-2617a856bf78
+# ╟─f7a64959-ea12-4aa0-bad1-4ee03c3b1fcc
+# ╟─80593756-ed60-4368-8801-d558a1af7adb
+# ╟─23480396-5bf5-4f31-8a26-5f04ba5537ee
 # ╟─04397866-4e00-46d2-bda4-0a61cf34e780
 # ╟─f706c1fa-6cf1-4b12-b0c3-09565af33fd7
 # ╟─9a0e0bf7-44e6-4385-ac46-9a6a8e4245bb
