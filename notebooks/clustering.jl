@@ -178,8 +178,9 @@ nb_plot = 5
 mnist,_,_,_ = openml.datasets.get_dataset(554).get_data(dataset_format="dataframe")
 mnist["class"] = mnist["class"].astype("category")
 
-kmeans = make_pipeline(StandardScaler(), KMeans(n_clusters=10, random_state=0,
-				n_init="auto")).fit(mnist.drop(["class"], axis =1))
+kmeans = make_pipeline(StandardScaler(),
+                       KMeans(n_clusters=10, random_state=0, n_init="auto"))
+kmeans.fit(mnist.drop(["class"], axis =1))
 
 prediction = kmeans.predict(mnist.drop(["class"], axis =1))
 
@@ -191,6 +192,7 @@ for i in range(10):
     ax[i][j].imshow(mnist.iloc[idxs[i][j], :-1].values.reshape(28, 28).astype(float)/255,
            cmap='gray')
 
+plt.setp(ax, xticks=[], yticks=[])
 plt.show()
 """
 )
@@ -219,7 +221,7 @@ showinput = false
 
 # ╔═╡ ab161204-bbcd-4608-ae67-fcde39b2539b
 md"
-We see that the 8th cluster (8th row in this table and in the figure above) has indeed specialized on images with class label \"0\" and the 4th cluster has specialized on images with class label \"2\", but other clusters contain mixtures of different digits.
+We see that the some cluster have indeed specialized on images with a given class label, but other clusters contain mixtures of different digits.
 
 "
 
@@ -395,7 +397,7 @@ let d = smiley
 end
 
 # ╔═╡ 85d574c2-b823-4dcf-b711-efc755e724b7
-md"# Exercises
+md"""# Exercises
 ## Conceptual
 
 #### Exercise 1
@@ -416,7 +418,7 @@ In this exercise, you will perform clustering manually, with ``K = 2``, on a sma
 
 (a) Plot the observations.
 
-(b) Randomly assign a cluster label to each observation. You can use `rand(1:2, 6)` to do this, if you do not want to do this manually. Report the cluster labels for each observation.
+(b) Randomly assign a cluster label to each observation. You can use $(mlstring(md"`rand(1:2, 6)`", md"`np.random.rand(6) < .5`")) to do this, if you do not want to do this manually. Report the cluster labels for each observation.
 
 (c) Compute the centroid for each cluster.
 
@@ -426,9 +428,11 @@ In this exercise, you will perform clustering manually, with ``K = 2``, on a sma
 
 (f) In your plot from (a), color the observations according to the clusters labels obtained.
 
-(g) Apply hierarchical clustering with complete linkage and Euclidean metric to the same data set.  Draw the dendrogram with the links at the correct heights.
+(g) In your plot from (a), draw the boundary between the 2 clusters, to indicate to which cluster new points would be assigned.
 
-"
+(h) Apply hierarchical clustering with complete linkage and Euclidean metric to the same data set.  Draw the dendrogram with the links at the correct heights.
+
+"""
 
 # ╔═╡ 1ed55c9f-1301-4553-84ee-26ada25f9b76
 md"""
@@ -497,7 +501,7 @@ to fit an unsupervised machine (with at most 2 output dimensions) to the data an
 
 # ╔═╡ 9bf65d2c-b8ab-4f84-9774-8d7c6a3fc6f0
 md"""
-#### Exercise 3
+#### Exercise 3 (optional)
 
 On the website of the text book, there is a gene expression data set that consists of 40 tissue samples with measurements on 1000 genes. Some samples are from healthy patients, while others are from a diseased group.
 
@@ -526,6 +530,10 @@ md"""
 (c) Do the results change qualitatively with different types of linkage?
 
 (d) How many patients do you think are in each group?
+
+#### Exercise 4 (optional)
+
+Read up on [this creative application of K-means clustering for image compression](https://www.geeksforgeeks.org/image-compression-using-k-means-clustering). What is the compression ratio for an image with 200x200 pixels and 16 clusters?
 """
 
 # ╔═╡ 15830699-57c5-4bc2-bc92-54105597ab26
