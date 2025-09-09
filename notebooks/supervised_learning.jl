@@ -1,17 +1,19 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
-    quote
+    #! format: off
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+    #! format: on
 end
 
 # ╔═╡ f63c04d4-eefe-11eb-3fda-1729ac6de2cb
@@ -319,6 +321,32 @@ plt.show()
 """
 ,
 recompute = false
+)
+
+# ╔═╡ 41c9026e-b486-4fa3-a7a1-4b48d9fa9c90
+md"## Bicycle Rental Prediction
+
+In this data set, the number of rented bikes in Washington D.C. at a given time is recorded together with the weather condition.
+
+In this section our goal will be to predict the number of rented bikes at a given temperature and windspeed. Here is the description of the dataset:"
+
+# ╔═╡ 21cf966d-8ec2-4bd0-91f7-0d63759c9262
+OpenML.describe_dataset(42712)
+
+# ╔═╡ 5d27be36-40f1-4796-aa05-944abf1003a1
+mlcode(
+"""
+bikesharing = OpenML.load(42712) |> DataFrame
+"""
+,
+"""
+import openml
+
+bikesharing,_,_,_ = openml.datasets.get_dataset(42712, download_data=True, download_qualities=False, download_features_meta_data=False).get_data(dataset_format="dataframe")
+bikesharing
+"""
+,
+cache = false
 )
 
 # ╔═╡ f63c0574-eefe-11eb-2d7c-bd74b7d83f23
@@ -1205,6 +1233,9 @@ MLCourse.save_cache(@__FILE__)
 # ╟─f63c0538-eefe-11eb-2808-0f32a2fa84cf
 # ╟─ce30505e-7488-49f4-9e42-2ec457ca6aa8
 # ╟─f63c054c-eefe-11eb-13db-171084b417a9
+# ╟─41c9026e-b486-4fa3-a7a1-4b48d9fa9c90
+# ╟─21cf966d-8ec2-4bd0-91f7-0d63759c9262
+# ╟─5d27be36-40f1-4796-aa05-944abf1003a1
 # ╟─f63c0574-eefe-11eb-2d7c-bd74b7d83f23
 # ╟─d8a3bb08-df1e-4cf9-a04f-6156d27f0992
 # ╟─782a1b8a-d15e-47a3-937d-0c25b136da3d

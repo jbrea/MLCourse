@@ -1,17 +1,19 @@
 ### A Pluto.jl notebook ###
-# v0.19.46
+# v0.20.17
 
 using Markdown
 using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
-    quote
+    #! format: off
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+    #! format: on
 end
 
 # ╔═╡ 94f8e29e-ef91-11eb-1ae9-29bc46fa505a
@@ -386,6 +388,7 @@ dropmissing!(spamdata) # remove entries without any text (missing values).
 """
 ,
 """
+import pandas as pd
 spamdata = pd.read_csv("https://go.epfl.ch/bio322-spam.csv", nrows = 6000)
 spamdata.dropna(inplace=True) # Drop rows with missing values
 spamdata
@@ -440,6 +443,8 @@ m = DocumentTermMatrix(crps, small_lex)
 """
 ,
 """
+import numpy as np
+	
 words_occurence = np.sum(word_counts, axis=0) # count words occurences in all emails
 index = np.where((words_occurence>10**3) | (words_occurence<100))[0] # select words by their count score
 word_counts = np.delete(word_counts, index, 1)
@@ -480,6 +485,7 @@ predict(m3)
 """
 ,
 """
+from sklearn.linear_model import LogisticRegression
 m3 = LogisticRegression(penalty=None, max_iter = 1000)
 m3.fit(normalized_word_counts, spam_or_ham)
 """
@@ -677,13 +683,8 @@ md"""In the figure above, we classify each two-dimensional input point into one 
 # ╔═╡ b6689b27-e8a2-44e4-8791-ce237767ee63
 md"# 6. Poisson Regression
 
-In this section we have a look at a regression problem where the response is a count variable. As an example we use a Bike sharing data set. In this data set, the number of rented bikes in Washington D.C. at a given time is recorded together with the weather condition.
-
-In this section our goal will be to predict the number of rented bikes at a given temperature and windspeed. Here is the description of the dataset:
+In this section we have a look at a regression problem where the response is a count variable. As an example we use a Bike sharing data set.
 "
-
-# ╔═╡ 310999a0-f212-4e69-a4cb-346b3f49f202
-OpenML.describe_dataset(42712)
 
 # ╔═╡ 6384a36d-1dac-4d72-9d7b-84511f20e6ca
 mlcode(
@@ -694,7 +695,7 @@ bikesharing = OpenML.load(42712) |> DataFrame
 """
 import openml
 
-bikesharing,_,_,_ = openml.datasets.get_dataset(42712).get_data(dataset_format="dataframe")
+bikesharing,_,_,_ = openml.datasets.get_dataset(42712, download_data=True, download_qualities=False, download_features_meta_data=False).get_data(dataset_format="dataframe")
 bikesharing
 """
 ,
@@ -746,9 +747,9 @@ m4.coef_ # Retrieving the fitted parameters
 )
 
 # ╔═╡ 6ea40424-22a0-42b9-bfab-8d4903ab8d64
-md"Not suprisingly, at higher temperatures more bikes are rented than at lower temperatures, but humitidy coefficient is negative.
+md"""Not suprisingly, at higher temperatures more bikes are rented than at lower temperatures, but humitidy coefficient is negative.
 
-In the next cell, we see that the predictions with this machine are Poisson distributions."
+$(mlstring("In the next cell, we see that the predictions with this machine are Poisson distributions.", "The predictions are the means of the Poisson distribution"))"""
 
 # ╔═╡ f071c985-7be7-454e-8541-28416400882f
 mlcode(
@@ -1094,7 +1095,6 @@ MLCourse.save_cache(@__FILE__)
 # ╟─a40563d1-0ad7-4ca6-a39b-c9ce9c4fe1cc
 # ╟─64ac8f64-ebf8-4c1d-af88-63c2e59e2fbd
 # ╟─b6689b27-e8a2-44e4-8791-ce237767ee63
-# ╟─310999a0-f212-4e69-a4cb-346b3f49f202
 # ╟─6384a36d-1dac-4d72-9d7b-84511f20e6ca
 # ╟─db0f6302-333f-4e65-bff8-cd6c64f72cce
 # ╟─b9ba1df0-5086-4c0f-a2c9-200c2be27294
