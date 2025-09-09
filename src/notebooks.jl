@@ -492,7 +492,7 @@ function mlstring(jstr, pystr)
     """
 end
 
-
+# Silly duplication of toggle_code, because I don't know how to do this nicely with making this function available to every script.
 const FOOTER = @htl """
     <script>
     var coll = document.getElementsByClassName("collapsible");
@@ -509,7 +509,50 @@ const FOOTER = @htl """
         }
       });
     }
+    function toggle_code(lang) {
+        var myDate = new Date();
+        myDate.setMonth(myDate.getMonth() + 12);
+        if (lang == "julia") {
+            var active_code = document.getElementsByClassName("julia_code")
+            var inactive_code = document.getElementsByClassName("python_code")
+            var active_button = document.getElementsByClassName("julia_button")
+            var inactive_button = document.getElementsByClassName("python_button")
+            document.cookie = "mlcourselang=julia";
+        } else {
+            var inactive_code = document.getElementsByClassName("julia_code")
+            var active_code = document.getElementsByClassName("python_code")
+            var inactive_button = document.getElementsByClassName("julia_button")
+            var active_button = document.getElementsByClassName("python_button")
+            document.cookie = "mlcourselang=python";
+        }
+        for (var i = 0; i < active_code.length; i++) {
+            active_code[i].style.display = "";
+        }
+        for (var i = 0; i < inactive_code.length; i++) {
+            inactive_code[i].style.display = "none";
+        }
+        for (var i = 0; i < active_button.length; i++) {
+            let name = active_button[i].className
+            if (name.substring(name.length - 6) != "active") {
+                active_button[i].className += " active";
+            }
+        }
+        for (var i = 0; i < inactive_button.length; i++) {
+            inactive_button[i].className = inactive_button[i].className.replace(" active", "");
+        }
+    }
+    function readCookie(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for(var i=0;i < ca.length;i++) {
+            var c = ca[i];
+            while (c.charAt(0)==' ') c = c.substring(1,c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+        }
+        return "python";
+    }
     toggle_code(readCookie("mlcourselang"))
+
     </script>
 
 <p> This page is part of an <a href="https://bio322.epfl.ch">introductory machine learning course</a> taught by Johanni Brea.<br>The course is inspired by <a href="https://www.statlearning.com/">"An Introduction to Statistical Learning"</a>.</p> <a href="https://www.epfl.ch"><img src="https://www.epfl.ch/wp/5.5/wp-content/themes/wp-theme-2018/assets/svg/epfl-logo.svg"></img></a>
