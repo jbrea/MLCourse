@@ -1127,7 +1127,7 @@ We have some training data ``((x_1 = 0, y_1 = -1), (x_2 = 2, y_2 = 4),
    - Show for general training data ``((x_1, y_1), (x_2, y_2), \ldots, (x_n, y_n))`` that the log-likelihood function is maximized by the same ``\hat\theta`` that minimizes the loss function of linear regression.
 
 #### Exercise 2
-Suppose we generated data with ``y = 3x + 1 + \epsilon`` with ``\mathrm{E}[\epsilon] = 0`` and ``\mathrm{Var}[\epsilon] = \sigma^2``.
+Suppose we generated data with ``y = 3x + 1 + \epsilon`` with normally distributed noise ``ϵ`` with ``\mathrm{E}[\epsilon] = 0`` and ``\mathrm{Var}[\epsilon] = \sigma^2``.
 We have training data ``\mathcal D = ((0, 1), (2, 9))`` and test data ``\mathcal D_\mathrm{test} = ((0, 0), (3, 20))``.
 We define a function family ``f(x) = \theta_0 + \theta_1 x^2`` and loss function ``L(y, \hat y) = |y - \hat y|``.
 Which of the following statements is correct?
