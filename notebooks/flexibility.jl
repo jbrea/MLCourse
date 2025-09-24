@@ -840,6 +840,567 @@ let
     vline!([x_bvd], label = nothing, c = :gray)
 end
 
+# ╔═╡ 78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
+md"# 6. Regularization
+## Ridge Regression (L2)
+"
+
+# ╔═╡ 1009e251-59af-4f1a-9d0a-e96f4b696cad
+md"λ₂ = $(@bind λ₂ Slider([0; 10. .^ (-6:.25:3)], show_value = true))"
+
+# ╔═╡ 50ac0b07-ffee-40c3-843e-984b3c628282
+l2coefs = M.ridge_regression(M.x, M.y, λ₂)
+
+# ╔═╡ 58746554-ca5a-4e8e-97e5-587a9c2aa44c
+let r = λ₂ == 0 ? 6 : norm([l2coefs...]),
+    ccol = plot_color(:blue, .3),
+	ridge_regression = M.ridge_regression,
+    x = M.x, y = M.y
+    ls = [0; 10. .^ (-6:.25:3)]
+    lbx = -.1; lby = -.1; ubx = .2; uby = .2
+    path = hcat([[ridge_regression(x, y, l)...] for l in ls]...)
+    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y",
+	             legend = :topleft)
+    plot!(x -> l2coefs.β₀ + x * l2coefs.β₁, w = 3, label = "ridge regression")
+    p2 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
+                 label = "loss", title = "loss with constraints",
+		         legend = :bottomright,
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
+    plot!(t -> r * sin(t), t -> r * cos(t), 0:.001:2π,
+          fill = (0, ccol), label = "constraint", color = ccol)
+    plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
+    scatter!([l2coefs.β₀], [l2coefs.β₁], label = "current fit", markersize = 6, color = :red)
+#     logl = [0; 10. .^ (-6:.25:3)]
+p3 = plot(log10.(ls), path[1, :], label = "β₀", xlabel = "log₁₀(λ₂)", ylabel = "")
+    plot!(log10.(ls), path[2, :], label = "β₁", ylims = (-.05, .2))
+    scatter!([log10(λ₂)], [l2coefs.β₀], label = nothing, markersize = 6, color = :red)
+    scatter!([log10(λ₂)], [l2coefs.β₁], label = nothing, markersize = 6, color = :red)
+    p4 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2) + λ₂ * (β₀^2 + β₁^2),
+                 label = "loss", title = "regularized loss",
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
+    scatter!([l2coefs.β₀], [l2coefs.β₁], markersize = 6, label = nothing, color = :red)
+    plot(p1, p4, p3, p2,
+         layout = (2, 2), size = (700, 600), cbar = false)
+end
+
+# ╔═╡ e3081073-9ff8-45c5-b98d-ce7932639a1a
+md"
+**Regularization allows reducing the variance.**
+
+In the figure below, each dot is the result of one dataset, obtained from the data generating process. We see that the coefficients vary a lot for small values of the regularization constant, whereas for large values of the regularization constant, the β₁ coefficient starts to be biased. The test error is smallest for some optimally chosen regularization constant.
+"
+
+# ╔═╡ e79b7859-ff6d-4b39-bfff-7d9ab98ba1de
+let
+    test_x = rand(10^4)
+    test_y = .1 * test_x .+ .2*randn(10^4)
+    dataset = () -> let x = rand(10)
+                    (x, .1 * x .+ .2 * randn(10))
+                end
+
+	ridge_regression = M.ridge_regression
+    ls = 10 .^ (-6:.25:4)
+    logls = log10.(ls)
+    n = 500
+    markerstyle = (markershape = :circ, markercolor = :white, markeralpha = .5, markerstrokecolor = :darkblue, markersize = 1)
+    coeffs = [ridge_regression(dataset()..., l) for l in ls, _ in 1:n]
+    p1 = scatter(repeat(logls, outer = n), reshape(first.(coeffs), :);
+                 xlabel = "log₁₀(λ₂)", ylabel = "β₀", label = nothing, markerstyle...)
+    plot!(logls, mean(first.(coeffs), dims = 2), lw = 3, label = "average")
+    plot!(logls, zero(ls), lw = 3, label = "true β₀")
+    p2 = scatter(repeat(logls, outer = n), reshape(last.(coeffs), :);
+                 xlabel = "log₁₀(λ₂)", ylabel = "β₁", label = nothing, markerstyle...)
+    plot!(logls, mean(last.(coeffs), dims = 2), lw = 3, label = "average")
+    plot!(logls, zero(ls) .+ .1, lw = 3, label = "true β₁")
+    testerrs = [mean(abs2, c.β₀ .+ c.β₁ * test_x - test_y) for c in coeffs]
+    p3 = scatter(repeat(logls, outer = n),
+                 reshape(testerrs, :); xlabel = "log₁₀(λ₂)", ylabel = "test MSE", label = nothing,
+                 markerstyle...)
+    plot!(logls, mean(testerrs, dims = 2), label = "average", lw = 3)
+    plot!(logls, zero(ls) .+ .2^2, label = "irreducible error", lw = 2, ylims = (.03, .1))
+    plot(plot(p1, p2, layout = (2, 1)), p3)
+end
+
+# ╔═╡ 64b9cfa0-99f7-439b-b70e-f9266754ff74
+md" ## Implementation Details
+For the illustrations in this notebook we use some custom code to run ridge regression and the lasso for the simple example of 1-dimensional input. In this example we penalize also the intercept β₀. For ridge regression the solution is
+```math
+\begin{eqnarray*}
+\beta_1 &= \frac{\langle x y \rangle - \frac{\langle x\rangle \langle y\rangle}{1 + \lambda}}{\langle x^2\rangle - \frac{\langle x\rangle^2}{1 + \lambda} + \lambda}\\
+\beta_0 &= \frac{\langle y \rangle - \beta_1 \langle x \rangle}{1 + \lambda}
+\end{eqnarray*}
+```
+where ``\langle . \rangle`` denotes the average.
+
+For the lasso, we run a fixed point iteration that starts at the unregularized solution of linear regression and shrinks β₁ and β₀ towards zero until there is not change anymore. You do not need to understand the custom code, but feel free to have a look at it, if you are interested.
+"
+
+# ╔═╡ 8bd483cc-f490-11eb-38a1-b342dd2551fd
+begin
+mlcode(
+"""
+import Statistics: mean
+
+begin
+    function ridge_regression(x, y, λ)
+       β₁ = (mean(x .* y) - mean(x) * mean(y)/(1 + λ))/
+		    (mean(x.^2) - mean(x)^2/(1 + λ) + λ)
+       β₀ = (mean(y) - β₁ * mean(x))/(1 + λ)
+       (β₀ = β₀, β₁ = β₁)
+    end
+    function updateβ₀(x̄, ȳ, β₁, l)
+        tmp = ȳ - β₁ * x̄
+        abs(tmp) > l ? tmp - sign(tmp) * l : 0.
+    end
+    function updateβ₁(x̄, ȳ, x2, xy, β₀, l)
+        tmp = (x̄ * ȳ - xy - x̄ * sign(β₀) * l)
+        abs(tmp) > l ? (tmp - sign(tmp) * l)/(x̄^2 - x2) : 0
+    end
+    function lasso(x, y, λ)
+        x̄ = mean(x)
+        ȳ = mean(y)
+        x2 = mean(x.^2)
+        xy = mean(x .* y)
+        β₁ = (x̄ * ȳ - xy)/(x̄^2 - x2)
+        β₀ = ȳ - β₁ * x̄
+        β₀old, β₁old = zero(β₀), zero(β₁)
+        i = 0
+        while β₀old != β₀ || β₁old != β₁
+            β₀old, β₁old = β₀, β₁
+            β₁ = updateβ₁(x̄, ȳ, x2, xy, β₀, λ)
+            β₀ = updateβ₀(x̄, ȳ, β₁, λ)
+            i += 1
+            i == 10^4 && break # prevent infinite loop
+        end
+       (β₀ = β₀, β₁ = β₁)
+    end
+end
+
+# custom dataset
+using Random
+Random.seed!(8)
+
+n = 10
+x = rand(n)
+y = .1x .+ .2randn(n)
+"""
+,
+"""
+import numpy as np
+
+def ridge_regression(x, y, l):
+    b1 = (np.mean(x * y) - np.mean(x) * np.mean(y) / (1 + l)) / \
+         (np.mean(x**2) - np.mean(x)**2 / (1 + l) + l)
+    b0 = (np.mean(y) - b1 * np.mean(x)) / (1 + l)
+    return (b0, b1)
+
+def updateb0(x_bar, y_bar, b1, l):
+    tmp = y_bar - b1 * x_bar
+    return tmp - np.sign(tmp) * l if np.abs(tmp) > l else 0.
+
+def updateb1(x_bar, y_bar, x2, xy, b0, l):
+    tmp = (x_bar * y_bar - xy - x_bar * np.sign(b0) * l)
+    return (tmp - np.sign(tmp) * l) / (x_bar**2 - x2) if np.abs(tmp) > l else 0.
+
+def lasso(x, y, l):
+    x_bar = np.mean(x)
+    y_bar = np.mean(y)
+    x2 = np.mean(x**2)
+    xy = np.mean(x * y)
+    b1 = (x_bar * y_bar - xy) / (x_bar**2 - x2)
+    b0 = y_bar - b1 * x_bar
+    b0_old, b1_old = 0., 0.
+    while b0_old != b0 or b1_old != b1:
+        b0_old, b1_old = b0, b1
+        b1 = updateb1(x_bar, y_bar, x2, xy, b0, l)
+        b0 = updateb0(x_bar, y_bar, b1, l)
+    return (b0, b1)
+
+# custom dataset
+n = 10
+x = np.random.rand(n)
+y = .1 * x + 0.2 * np.random.randn(n)
+ 
+"""
+;
+showoutput = false,
+collapse = "custom code",
+cache = false
+)
+end
+
+# ╔═╡ f43a82e2-1145-426d-8e0e-5363d1c38ccf
+md"## Lasso (L1)"
+
+# ╔═╡ ff7cc2bf-2a38-46d2-8d11-529159b08c82
+md"λ₁ = $(@bind λ₁ Slider([0; 10. .^ (-8:.25:1)], show_value = true))"
+
+# ╔═╡ 4841f9ba-f3d2-4c65-9225-bc8d0c0a9478
+l1coefs = M.lasso(M.x, M.y, λ₁)
+
+# ╔═╡ ed2b7969-79cd-43c8-bcdb-34dab89c2cb0
+let r = λ₁ == 0 ? 10 : norm([l1coefs...], 1),
+    ccol = plot_color(:blue, .3),
+    lasso = M.lasso,
+    x = M.x, y = M.y
+    ls = [0; 10. .^ (-8:.25:1)]
+    lbx = -.1; lby = -.1; ubx = .2; uby = .2
+    path = hcat([[lasso(x, y, l)...] for l in ls]...)
+    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y", legend = :topleft)
+    plot!(x -> l1coefs.β₀ + x * l1coefs.β₁, w = 3, label = "lasso")
+    p2 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
+                 label = "loss", title = "loss with constraints",
+		         legend = :topleft,
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
+    plot!([0, r, 0, -r, 0], [r, 0, -r, 0, r],
+          fill = (0, ccol), label = "constraint", color = ccol)
+    plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
+    scatter!([l1coefs.β₀], [l1coefs.β₁], label = "current fit", markersize = 6,
+		     color = :red)
+    p3 = plot(log10.(ls), path[1, :], label = "β₀", xlabel = "log₁₀(λ₁)", ylabel = "")
+    plot!(log10.(ls), path[2, :], label = "β₁", ylims = (-0.05, .2))
+    scatter!([log10(λ₁)], [l1coefs.β₀], label = nothing, markersize = 6, color = :red)
+    scatter!([log10(λ₁)], [l1coefs.β₁], label = nothing, markersize = 6, color = :red)
+    p4 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2)/2 + λ₁ * (abs(β₀) + abs(β₁)),
+                 label = "loss", title = "regularized loss",
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
+    scatter!([l1coefs.β₀], [l1coefs.β₁], markersize = 6, label = nothing, color = :red)
+    plot(p1, p4, p3, p2,
+         layout = (2, 2), size = (700, 600), cbar = false)
+end
+
+
+# ╔═╡ 4c3c816c-e901-4931-a27c-632b60291ad7
+md"""Instead of using the custom code to compute the ridge regression and the lasso we could have used some $(mlstring("MLJ", "")) functions."""
+
+# ╔═╡ c1033416-334e-4b0e-b81e-6f9137402730
+mlcode(
+"""
+using MLJ, MLJLinearModels, DataFrames
+
+mach = machine(RidgeRegressor(lambda = 3.82, penalize_intercept = true),
+	           DataFrame(x = x), y)
+fit!(mach, verbosity = 0)
+fitted_params(mach)
+"""
+,
+"""
+from sklearn.linear_model import Ridge, Lasso
+from sklearn.linear_model import LassoCV
+
+ridge = Ridge(alpha=3.82, fit_intercept=True)
+ridge.fit(x.reshape(-1, 1), y)
+
+("coeff : ", ridge.coef_, "intercept : ", ridge.intercept_)
+"""
+)
+
+# ╔═╡ 1dae5378-f3eb-4598-a060-445bfd8afe5e
+md"You can check with the slider above that we get indeed the same result with our custom method."
+
+# ╔═╡ 0429acfe-d31e-427a-96d9-deddfa2c30f8
+mlcode(
+"""
+mach = machine(LassoRegressor(lambda = .1,
+	                          # usually the intercept is not penalized,
+	                          # but here we do penalize it.
+	                          penalize_intercept = true,
+	                          # usually the default optimizer is quite good,
+	                          # but here we decrease the tolerance to get
+	                          # higher precision.
+                              solver = ISTA(tol = 1e-8)),
+	           DataFrame(x = x), y)
+fit!(mach, verbosity = 0)
+fitted_params(mach)
+"""
+,
+"""
+lasso = Lasso(alpha=0.1, fit_intercept=True, tol=1e-8)
+lasso.fit(x.reshape(-1, 1), y)
+("coeff : ", lasso.coef_, "intercept : ", lasso.intercept_)
+"""
+)
+
+# ╔═╡ 6c87eb35-ddb3-44a3-b4ae-77a371e28960
+mlstring(md"There is also the `ElasticNetRegressor` that allows to fit with L1 and L2 penalties of different strengths. Look up the documentation to learn more about it.",
+"There is also the `ElasticNet` that allows to fit a Linear regression with combined L1 and L2 priors as regularizer")
+
+# ╔═╡ bb19c718-c401-4c0c-a6ec-5efc83e6588f
+md"""
+## Polynomial Ridge Regression
+
+The idea of regularization is very powerful and generally applicable. Here we look at regularizing polynomial regression. Remember, that a polynomial of degree 20 is very flexible and may easily overfit the training data? To counter overfitting, we can now simply regularize the polyomial regression; even at degree 20, the fit may rather underfit than overfit, if the regularization constant is large.
+
+$(mlstring(md"In `MLJ`, we can apply ridge regression or the lasso to polynomial regression simply by replacing in the pipeline the `LinearRegressor` with a `RidgeRegressor` or a `LassoRegressor`, for example `mach = Polynomial(degree = 3) |> RidgeRegressor(lambda = 1e-3)`.", ""))
+"""
+
+
+# ╔═╡ 3d50111b-3a08-4a41-96ce-d77a8e37275d
+md"degree = $(@bind degree3 Slider(1:20, show_value = true, default = 20))
+
+$(@bind lambda Slider(-14:.1:.5, default = -4))
+"
+
+# ╔═╡ a54e3439-69b8-41c8-bfe0-4575795fb9b8
+md"λ = $(lambda == -14 ? 0 : 10.0^lambda)"
+
+# ╔═╡ bdbf0dfd-8da5-4e54-89c4-ef4d6b3796ce
+let X = select(regression_data, Not(:y)), y = regression_data.y
+    mach = fit!(machine(Polynomial(degree = degree3) |> RidgeRegressor(lambda = lambda == -14 ? 0 : 10.0^lambda),
+                        X, y), verbosity = 0)
+    p1 = scatter(regression_data.x, y, label = "training data", ylims = (-.1, 1.1))
+    plot!(M.f, label = "generator", c = :green, w = 2)
+    grid = 0:.01:1
+    pred = predict(mach, (x = grid,))
+    plot!(grid, pred,
+          label = "fit", w = 3, c = :red, legend = :topleft)
+    annotate!([(.28, .6, "reducible error ≈ $(round(mean((pred .- M.f.(grid)).^2), sigdigits = 3))")])
+end
+
+# ╔═╡ 8e170a5a-9c46-413e-895d-796e178b69df
+md"## Multiple Logistic Ridge Regression on the Spam Data
+
+We load here the preprocessed spam data.
+"
+
+# ╔═╡ 8e542a48-ed28-4297-b2e8-d6a755a5fdf9
+mlcode(
+"""
+using CSV
+spam_train = CSV.read(download("https://go.epfl.ch/bio322-spam_train.csv"), DataFrame)
+spam_train.spam_or_ham = String.(spam_train.spam_or_ham)
+coerce!(spam_train, :spam_or_ham => OrderedFactor)
+spam_test = CSV.read(download("https://go.epfl.ch/bio322-spam_test.csv"), DataFrame)
+spam_test.spam_or_ham = String.(spam_test.spam_or_ham)
+coerce!(spam_test, :spam_or_ham => OrderedFactor)
+spam_train
+"""
+,
+"""
+import pandas as pd
+
+# Read training data from CSV file
+spam_train = pd.read_csv("https://go.epfl.ch/bio322-spam_train.csv")
+spam_train["spam_or_ham"] = spam_train["spam_or_ham"].astype(str).astype("category")
+
+# Convert column to ordered factor
+spam_train["spam_or_ham"] = pd.Categorical(spam_train["spam_or_ham"], ordered=True)
+
+# Read test data from CSV file and Convert column to ordered factor
+spam_test = pd.read_csv("https://go.epfl.ch/bio322-spam_test.csv")
+spam_test["spam_or_ham"] = spam_test["spam_or_ham"].astype(str).astype("category")
+spam_test["spam_or_ham"] = pd.Categorical(spam_test["spam_or_ham"], ordered=True)
+
+spam_train
+"""
+)
+
+# ╔═╡ c5ef5d4e-200d-46d9-86fa-50af1896a6c3
+md"The `LogisticClassifier` and the `MultinomialClassifier` have a `penalty` argument that can be used to enforce an L1 or L2 penalty. Look up the documentation to learn more about it."
+
+# ╔═╡ d956613e-db32-488c-8ebb-fd61dfa31e59
+mlcode(
+"""
+spam_mach = machine(LogisticClassifier(penalty = :l2, lambda = 1e-5),
+                    select(spam_train, Not(:spam_or_ham)),
+                    spam_train.spam_or_ham)
+fit!(spam_mach, verbosity = 0)
+confusion_matrix(predict_mode(spam_mach, select(spam_train, Not(:spam_or_ham))),
+                 spam_train.spam_or_ham) # on training data
+"""
+,
+"""
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from matplotlib import pyplot as plt
+
+spam_mach = LogisticRegression(penalty="l2", C=10)
+spam_mach.fit(spam_train.drop("spam_or_ham", axis=1), spam_train["spam_or_ham"])
+
+cm = confusion_matrix(spam_train["spam_or_ham"], 	spam_mach.predict(spam_train.drop("spam_or_ham", axis=1)))
+color = 'white'
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=spam_mach.classes_)
+disp.plot()
+plt.show()
+"""
+)
+
+
+# ╔═╡ ef701511-db7e-4dc0-8d31-ea14471943ab
+mlcode(
+"""
+confusion_matrix(predict_mode(spam_mach, select(spam_test, Not(:spam_or_ham))),
+                 spam_test.spam_or_ham) # on test data
+"""
+,
+"""
+cm = confusion_matrix(spam_test["spam_or_ham"], 	spam_mach.predict(spam_test.drop("spam_or_ham", axis=1)))
+color = 'white'
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=spam_mach.classes_)
+disp.plot()
+plt.show()
+"""
+)
+
+# ╔═╡ 19bdd76c-4131-422d-983e-1b29cd9edd30
+mlstring(md"We see that the test misclassification rate with regularization
+is lower than in our original fit without regularization
+(notebook \"Generalized Linear Regression\"; 50 false negatives and 34 false
+positives). The misclassification rate on the training set is higher. This
+indicates that unregularized logistic regression is too flexible for our spam
+data set.
+",
+"
+We see that the test misclassification rate with regularization
+is lower than in our original fit without regularization
+(notebook \"Generalized Linear Regression\"; 56 false negatives and 36 false
+positives). The misclassification rate on the training set is higher. This
+indicates that unregularized logistic regression is too flexible for our spam
+data set.
+")
+
+# ╔═╡ 13655a50-fbbb-46c7-bdf7-ed5644646966
+md"## The Lasso Path for the Weather Data
+
+For the Lasso it is often interesting to see the fitted parameter values for different regularization values (the Lasso path). In the following we use the package `GLMNet` to do so."
+
+# ╔═╡ 1fa932c1-ce29-40ca-a8dc-e636aa2ecf66
+mlcode(
+"""
+using CSV
+weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"), 
+                   DataFrame)
+"""
+,
+"""
+import pandas as pd
+
+weather = pd.read_csv("https://go.epfl.ch/bio322-weather2015-2018.csv")
+weather
+"""
+,
+)
+
+# ╔═╡ ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
+mlcode(
+"""
+import GLMNet: glmnet
+weather_input = select(weather, Not(:LUZ_wind_peak))[1:end-5, :]
+weather_output = weather.LUZ_wind_peak[6:end]
+weather_fits = glmnet(Array(weather_input), weather_output)
+"""
+,
+"""
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import lasso_path
+
+weather_input = weather.drop("LUZ_wind_peak", axis=1).iloc[:-5, :]
+weather_output = weather["LUZ_wind_peak"].iloc[5:]
+
+scaler = StandardScaler().fit(weather_input)
+weather_input = scaler.transform(weather_input)
+
+alphas =np.logspace(-6,1,10)
+alphas_lasso, coefs_lasso, _ = lasso_path(weather_input, weather_output, alphas=alphas)
+alphas_lasso
+"""
+,
+cache_jl_vars = [:weather_fits, :weather_input]
+)
+
+# ╔═╡ f6158ed5-bd0d-4781-b9cd-22b271e86ef8
+md"In the following figure we can see that the predictor `BER_wind_peak` is the first one to have a non-zero coefficient when we decrease the regularization constant `λ`."
+
+# ╔═╡ 4652a904-5edb-463c-a046-5c5d378f7cca
+let fits = M.weather_fits,
+    lambda = log.(fits.lambda),
+    col_names = names(M.weather_input)
+	cols = union((x -> x[1]).(findall(fits.betas .> 0)))
+	append!(cols, setdiff(1:length(col_names), cols))
+	p = [PP.scatter(x = lambda, y = fits.betas[i, :],
+	                name = col_names[i])
+        for i in cols]
+    PP.PlutoPlot(PP.Plot(p, PP.Layout(xaxis_title = "log(λ)")))
+end
+
+# ╔═╡ 83fe757f-a9aa-4a60-8a49-dce5e9fcf56c
+# mlstring("",md"Python version :")
+
+# ╔═╡ 35913b1d-86d0-4338-9f7c-41a89651b2dc
+mlcode(
+"""
+""",
+"""
+df = pd.DataFrame ({"parameters":np.tile(weather.drop("LUZ_wind_peak", axis=1).columns, len(alphas_lasso)),
+                    "log_alpha": np.log(np.repeat(alphas_lasso,len(coefs_lasso))),
+                    "coefs": np.array(coefs_lasso).T.flatten()})
+
+import plotly.express as px
+fig = px.line(df,x="log_alpha", y="coefs", color="parameters")
+# fig.show()
+"""
+,
+showinput = false,
+eval = false,
+showoutput = false
+)
+
+# ╔═╡ 6f5b0cd1-ba68-46a5-a348-fed201da4a15
+md"Indeed, if we were allowed to use only one predictor, the wind peak in Bern is most informative about the wind peak in Luzern five hours later. The correlation is positive, but there is a lot of noise."
+
+# ╔═╡ c9ed011c-8d36-4926-9ec4-84be3b4878d7
+mlcode(
+"""
+scatter(weather_input.BER_wind_peak, weather_output,
+        xlabel = "wind peak in Bern [km/h]",
+        ylabel = "wind peak in Luzern 5 hours later [km/h]",
+        label = nothing)
+"""
+,
+"""
+plt.figure()
+plt.scatter(weather["BER_wind_peak"].iloc[:-5], weather_output.values)
+plt.xlabel("wind peak in Bern [km/h]")
+plt.ylabel("wind peak in Luzern 5 hours later [km/h]")
+plt.show()
+"""
+)
+
+# ╔═╡ 45df70c6-4c5a-419b-af9d-05d276b3759a
+md"In the figures below we see that the first few predictors explain most of the variability that is explainable with linear models. In fact, at `log(λ) = 0` we see that less than 10 predictors are sufficient to explain approximately 30% of the variance. Adding more predictors increases the explained variance to less than 40%."
+
+# ╔═╡ 40bb385f-1cbd-4555-a8ab-544a67f33595
+mlcode(
+"""
+lambda = log.(weather_fits.lambda)
+p1 = plot(lambda, 100 * weather_fits.dev_ratio, ylabel = "% variance explained")
+p2 = plot(lambda, reshape(sum(weather_fits.betas .!= 0, dims = 1), :),
+          ylabel = "non-zero parameters",
+          xlabel = "log(λ)")
+plot(p1, p2, layout = (2, 1), legend = false)
+""",
+"""
+from sklearn.linear_model import LassoCV
+
+# Initialize the LassoCV model with cross-validation
+lasso_cv = LassoCV(alphas=alphas, cv=5)
+
+# Fit the LassoCV model to the data
+lasso_cv.fit (weather_input, weather_output)
+
+# Get the variance explained by each alpha
+variance_explained = 1 - (lasso_cv.mse_path_.mean(axis=1) / np.var(weather_output))
+
+fig, (ax1, ax2) = plt.subplots(2, sharex = True)
+ax1.plot(np.log(alphas_lasso), variance_explained)
+ax1.set_ylabel("variance explained")
+ax2.plot(np.log(alphas_lasso), np.count_nonzero(coefs_lasso.T, axis =1))
+ax2.set_ylabel("non zeros parameters")
+ax2.set_xlabel("log(alpha)")
+plt.show()
+"""
+)
+
 # ╔═╡ ae86ee9c-3645-43d2-9a42-79658521c3fb
 md"# Exercises
 
@@ -972,6 +1533,44 @@ MLCourse.save_cache(@__FILE__)
 # ╟─fa8bb711-81ce-44be-98d3-ca87782a858d
 # ╟─6523395e-33ae-453a-94eb-0a7463e9ea94
 # ╟─6a89d461-0c68-4dae-9a52-a86d13767674
+# ╟─78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
+# ╟─1009e251-59af-4f1a-9d0a-e96f4b696cad
+# ╟─50ac0b07-ffee-40c3-843e-984b3c628282
+# ╟─58746554-ca5a-4e8e-97e5-587a9c2aa44c
+# ╟─e3081073-9ff8-45c5-b98d-ce7932639a1a
+# ╟─e79b7859-ff6d-4b39-bfff-7d9ab98ba1de
+# ╟─64b9cfa0-99f7-439b-b70e-f9266754ff74
+# ╟─8bd483cc-f490-11eb-38a1-b342dd2551fd
+# ╟─f43a82e2-1145-426d-8e0e-5363d1c38ccf
+# ╟─ff7cc2bf-2a38-46d2-8d11-529159b08c82
+# ╟─4841f9ba-f3d2-4c65-9225-bc8d0c0a9478
+# ╟─ed2b7969-79cd-43c8-bcdb-34dab89c2cb0
+# ╟─4c3c816c-e901-4931-a27c-632b60291ad7
+# ╟─c1033416-334e-4b0e-b81e-6f9137402730
+# ╟─1dae5378-f3eb-4598-a060-445bfd8afe5e
+# ╟─0429acfe-d31e-427a-96d9-deddfa2c30f8
+# ╟─6c87eb35-ddb3-44a3-b4ae-77a371e28960
+# ╟─bb19c718-c401-4c0c-a6ec-5efc83e6588f
+# ╟─3d50111b-3a08-4a41-96ce-d77a8e37275d
+# ╟─a54e3439-69b8-41c8-bfe0-4575795fb9b8
+# ╟─bdbf0dfd-8da5-4e54-89c4-ef4d6b3796ce
+# ╟─8e170a5a-9c46-413e-895d-796e178b69df
+# ╟─8e542a48-ed28-4297-b2e8-d6a755a5fdf9
+# ╟─c5ef5d4e-200d-46d9-86fa-50af1896a6c3
+# ╟─d956613e-db32-488c-8ebb-fd61dfa31e59
+# ╟─ef701511-db7e-4dc0-8d31-ea14471943ab
+# ╟─19bdd76c-4131-422d-983e-1b29cd9edd30
+# ╟─13655a50-fbbb-46c7-bdf7-ed5644646966
+# ╟─1fa932c1-ce29-40ca-a8dc-e636aa2ecf66
+# ╟─ecf80b6a-1946-46fd-b1b4-bcbe91848e3c
+# ╟─f6158ed5-bd0d-4781-b9cd-22b271e86ef8
+# ╟─4652a904-5edb-463c-a046-5c5d378f7cca
+# ╟─83fe757f-a9aa-4a60-8a49-dce5e9fcf56c
+# ╟─35913b1d-86d0-4338-9f7c-41a89651b2dc
+# ╟─6f5b0cd1-ba68-46a5-a348-fed201da4a15
+# ╟─c9ed011c-8d36-4926-9ec4-84be3b4878d7
+# ╟─45df70c6-4c5a-419b-af9d-05d276b3759a
+# ╟─40bb385f-1cbd-4555-a8ab-544a67f33595
 # ╟─ae86ee9c-3645-43d2-9a42-79658521c3fb
 # ╟─c98a4d29-4dfe-4ca4-a2f1-5342788da6c0
 # ╟─efda845a-4390-40bc-bdf2-89e555d3b1b2
