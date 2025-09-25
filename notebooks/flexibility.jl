@@ -21,10 +21,10 @@ stdout_orig = stdout
 stderr_orig = stderr
 redirect_stdio(stdout = devnull, stderr = devnull)
 Pkg.activate(joinpath(Pkg.devdir(), "MLCourse"))
-using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, DataFrames, Statistics, NearestNeighborModels
+using MLCourse, HypertextLiteral, Plots, Random, MLJ, MLJLinearModels, LinearAlgebra, DataFrames, Statistics, NearestNeighborModels
 import MLCourse: fitted_linear_func
 import PlutoPlotly as PP
-const M = MLCourse.JlMod 
+const M = MLCourse.JlMod
 redirect_stdio(stdout = stdout_orig, stderr = stderr_orig)
 MLCourse.load_cache(@__FILE__)
 MLCourse.CSS_STYLE
@@ -940,7 +940,7 @@ def lasso(x, y, l):
 n = 10
 x = np.random.rand(n)
 y = .1 * x + 0.2 * np.random.randn(n)
- 
+
 """
 ;
 showoutput = false,
@@ -1268,7 +1268,7 @@ For the Lasso it is often interesting to see the fitted parameter values for dif
 mlcode(
 """
 using CSV
-weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"), 
+weather = CSV.read(download("https://go.epfl.ch/bio322-weather2015-2018.csv"),
                    DataFrame)
 """
 ,
