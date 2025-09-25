@@ -842,87 +842,7 @@ end
 
 # ╔═╡ 78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
 md"# 6. Regularization
-## Ridge Regression (L2)
-"
 
-# ╔═╡ 1009e251-59af-4f1a-9d0a-e96f4b696cad
-md"λ₂ = $(@bind λ₂ Slider([0; 10. .^ (-6:.25:3)], show_value = true))"
-
-# ╔═╡ 50ac0b07-ffee-40c3-843e-984b3c628282
-l2coefs = M.ridge_regression(M.x, M.y, λ₂)
-
-# ╔═╡ 58746554-ca5a-4e8e-97e5-587a9c2aa44c
-let r = λ₂ == 0 ? 6 : norm([l2coefs...]),
-    ccol = plot_color(:blue, .3),
-	ridge_regression = M.ridge_regression,
-    x = M.x, y = M.y
-    ls = [0; 10. .^ (-6:.25:3)]
-    lbx = -.1; lby = -.1; ubx = .2; uby = .2
-    path = hcat([[ridge_regression(x, y, l)...] for l in ls]...)
-    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y",
-	             legend = :topleft)
-    plot!(x -> l2coefs.β₀ + x * l2coefs.β₁, w = 3, label = "ridge regression")
-    p2 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
-                 label = "loss", title = "loss with constraints",
-		         legend = :bottomright,
-                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
-    plot!(t -> r * sin(t), t -> r * cos(t), 0:.001:2π,
-          fill = (0, ccol), label = "constraint", color = ccol)
-    plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
-    scatter!([l2coefs.β₀], [l2coefs.β₁], label = "current fit", markersize = 6, color = :red)
-#     logl = [0; 10. .^ (-6:.25:3)]
-p3 = plot(log10.(ls), path[1, :], label = "β₀", xlabel = "log₁₀(λ₂)", ylabel = "")
-    plot!(log10.(ls), path[2, :], label = "β₁", ylims = (-.05, .2))
-    scatter!([log10(λ₂)], [l2coefs.β₀], label = nothing, markersize = 6, color = :red)
-    scatter!([log10(λ₂)], [l2coefs.β₁], label = nothing, markersize = 6, color = :red)
-    p4 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2) + λ₂ * (β₀^2 + β₁^2),
-                 label = "loss", title = "regularized loss",
-                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
-    scatter!([l2coefs.β₀], [l2coefs.β₁], markersize = 6, label = nothing, color = :red)
-    plot(p1, p4, p3, p2,
-         layout = (2, 2), size = (700, 600), cbar = false)
-end
-
-# ╔═╡ e3081073-9ff8-45c5-b98d-ce7932639a1a
-md"
-**Regularization allows reducing the variance.**
-
-In the figure below, each dot is the result of one dataset, obtained from the data generating process. We see that the coefficients vary a lot for small values of the regularization constant, whereas for large values of the regularization constant, the β₁ coefficient starts to be biased. The test error is smallest for some optimally chosen regularization constant.
-"
-
-# ╔═╡ e79b7859-ff6d-4b39-bfff-7d9ab98ba1de
-let
-    test_x = rand(10^4)
-    test_y = .1 * test_x .+ .2*randn(10^4)
-    dataset = () -> let x = rand(10)
-                    (x, .1 * x .+ .2 * randn(10))
-                end
-
-	ridge_regression = M.ridge_regression
-    ls = 10 .^ (-6:.25:4)
-    logls = log10.(ls)
-    n = 500
-    markerstyle = (markershape = :circ, markercolor = :white, markeralpha = .5, markerstrokecolor = :darkblue, markersize = 1)
-    coeffs = [ridge_regression(dataset()..., l) for l in ls, _ in 1:n]
-    p1 = scatter(repeat(logls, outer = n), reshape(first.(coeffs), :);
-                 xlabel = "log₁₀(λ₂)", ylabel = "β₀", label = nothing, markerstyle...)
-    plot!(logls, mean(first.(coeffs), dims = 2), lw = 3, label = "average")
-    plot!(logls, zero(ls), lw = 3, label = "true β₀")
-    p2 = scatter(repeat(logls, outer = n), reshape(last.(coeffs), :);
-                 xlabel = "log₁₀(λ₂)", ylabel = "β₁", label = nothing, markerstyle...)
-    plot!(logls, mean(last.(coeffs), dims = 2), lw = 3, label = "average")
-    plot!(logls, zero(ls) .+ .1, lw = 3, label = "true β₁")
-    testerrs = [mean(abs2, c.β₀ .+ c.β₁ * test_x - test_y) for c in coeffs]
-    p3 = scatter(repeat(logls, outer = n),
-                 reshape(testerrs, :); xlabel = "log₁₀(λ₂)", ylabel = "test MSE", label = nothing,
-                 markerstyle...)
-    plot!(logls, mean(testerrs, dims = 2), label = "average", lw = 3)
-    plot!(logls, zero(ls) .+ .2^2, label = "irreducible error", lw = 2, ylims = (.03, .1))
-    plot(plot(p1, p2, layout = (2, 1)), p3)
-end
-
-# ╔═╡ 64b9cfa0-99f7-439b-b70e-f9266754ff74
-md" ## Implementation Details
 For the illustrations in this notebook we use some custom code to run ridge regression and the lasso for the simple example of 1-dimensional input. In this example we penalize also the intercept β₀. For ridge regression the solution is
 ```math
 \begin{eqnarray*}
@@ -1027,6 +947,86 @@ showoutput = false,
 collapse = "custom code",
 cache = false
 )
+end
+
+
+# ╔═╡ fbf49ebe-9098-4491-876e-2669bf0ad4ab
+md"## Ridge Regression (L2)"
+
+# ╔═╡ 1009e251-59af-4f1a-9d0a-e96f4b696cad
+md"λ₂ = $(@bind λ₂ Slider([0; 10. .^ (-6:.25:3)], show_value = true))"
+
+# ╔═╡ 50ac0b07-ffee-40c3-843e-984b3c628282
+l2coefs = M.ridge_regression(M.x, M.y, λ₂)
+
+# ╔═╡ 58746554-ca5a-4e8e-97e5-587a9c2aa44c
+let r = λ₂ == 0 ? 6 : norm([l2coefs...]),
+    ccol = plot_color(:blue, .3),
+	ridge_regression = M.ridge_regression,
+    x = M.x, y = M.y
+    ls = [0; 10. .^ (-6:.25:3)]
+    lbx = -.1; lby = -.1; ubx = .2; uby = .2
+    path = hcat([[ridge_regression(x, y, l)...] for l in ls]...)
+    p1 = scatter(x, y, label = "data", xlabel = "x", ylabel = "y",
+	             legend = :topleft)
+    plot!(x -> l2coefs.β₀ + x * l2coefs.β₁, w = 3, label = "ridge regression")
+    p2 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2),
+                 label = "loss", title = "loss with constraints",
+		         legend = :bottomright,
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
+    plot!(t -> r * sin(t), t -> r * cos(t), 0:.001:2π,
+          fill = (0, ccol), label = "constraint", color = ccol)
+    plot!(path[1, :], path[2, :], label = "path", color = :blue, w = 3)
+    scatter!([l2coefs.β₀], [l2coefs.β₁], label = "current fit", markersize = 6, color = :red)
+#     logl = [0; 10. .^ (-6:.25:3)]
+p3 = plot(log10.(ls), path[1, :], label = "β₀", xlabel = "log₁₀(λ₂)", ylabel = "")
+    plot!(log10.(ls), path[2, :], label = "β₁", ylims = (-.05, .2))
+    scatter!([log10(λ₂)], [l2coefs.β₀], label = nothing, markersize = 6, color = :red)
+    scatter!([log10(λ₂)], [l2coefs.β₁], label = nothing, markersize = 6, color = :red)
+    p4 = contour(lbx:.01:ubx, lby:.01:uby, (β₀, β₁) -> mean((β₀ .+ β₁*x .- y).^2) + λ₂ * (β₀^2 + β₁^2),
+                 label = "loss", title = "regularized loss",
+                 levels = 100, aspect_ratio = 1, ylims = (lby, uby), xlims = (lbx, ubx))
+    scatter!([l2coefs.β₀], [l2coefs.β₁], markersize = 6, label = nothing, color = :red)
+    plot(p1, p4, p3, p2,
+         layout = (2, 2), size = (700, 600), cbar = false)
+end
+
+# ╔═╡ e3081073-9ff8-45c5-b98d-ce7932639a1a
+md"
+**Regularization allows reducing the variance.**
+
+In the figure below, each dot is the result of one dataset, obtained from the data generating process. We see that the coefficients vary a lot for small values of the regularization constant, whereas for large values of the regularization constant, the β₁ coefficient starts to be biased. The test error is smallest for some optimally chosen regularization constant.
+"
+
+# ╔═╡ e79b7859-ff6d-4b39-bfff-7d9ab98ba1de
+let
+    test_x = rand(10^4)
+    test_y = .1 * test_x .+ .2*randn(10^4)
+    dataset = () -> let x = rand(10)
+                    (x, .1 * x .+ .2 * randn(10))
+                end
+
+	ridge_regression = M.ridge_regression
+    ls = 10 .^ (-6:.25:4)
+    logls = log10.(ls)
+    n = 500
+    markerstyle = (markershape = :circ, markercolor = :white, markeralpha = .5, markerstrokecolor = :darkblue, markersize = 1)
+    coeffs = [ridge_regression(dataset()..., l) for l in ls, _ in 1:n]
+    p1 = scatter(repeat(logls, outer = n), reshape(first.(coeffs), :);
+                 xlabel = "log₁₀(λ₂)", ylabel = "β₀", label = nothing, markerstyle...)
+    plot!(logls, mean(first.(coeffs), dims = 2), lw = 3, label = "average")
+    plot!(logls, zero(ls), lw = 3, label = "true β₀")
+    p2 = scatter(repeat(logls, outer = n), reshape(last.(coeffs), :);
+                 xlabel = "log₁₀(λ₂)", ylabel = "β₁", label = nothing, markerstyle...)
+    plot!(logls, mean(last.(coeffs), dims = 2), lw = 3, label = "average")
+    plot!(logls, zero(ls) .+ .1, lw = 3, label = "true β₁")
+    testerrs = [mean(abs2, c.β₀ .+ c.β₁ * test_x - test_y) for c in coeffs]
+    p3 = scatter(repeat(logls, outer = n),
+                 reshape(testerrs, :); xlabel = "log₁₀(λ₂)", ylabel = "test MSE", label = nothing,
+                 markerstyle...)
+    plot!(logls, mean(testerrs, dims = 2), label = "average", lw = 3)
+    plot!(logls, zero(ls) .+ .2^2, label = "irreducible error", lw = 2, ylims = (.03, .1))
+    plot(plot(p1, p2, layout = (2, 1)), p3)
 end
 
 # ╔═╡ f43a82e2-1145-426d-8e0e-5363d1c38ccf
@@ -1534,13 +1534,13 @@ MLCourse.save_cache(@__FILE__)
 # ╟─6523395e-33ae-453a-94eb-0a7463e9ea94
 # ╟─6a89d461-0c68-4dae-9a52-a86d13767674
 # ╟─78bdd11d-b6f9-4ba6-8b2e-6189c4005bf1
+# ╟─8bd483cc-f490-11eb-38a1-b342dd2551fd
+# ╟─fbf49ebe-9098-4491-876e-2669bf0ad4ab
 # ╟─1009e251-59af-4f1a-9d0a-e96f4b696cad
 # ╟─50ac0b07-ffee-40c3-843e-984b3c628282
 # ╟─58746554-ca5a-4e8e-97e5-587a9c2aa44c
 # ╟─e3081073-9ff8-45c5-b98d-ce7932639a1a
 # ╟─e79b7859-ff6d-4b39-bfff-7d9ab98ba1de
-# ╟─64b9cfa0-99f7-439b-b70e-f9266754ff74
-# ╟─8bd483cc-f490-11eb-38a1-b342dd2551fd
 # ╟─f43a82e2-1145-426d-8e0e-5363d1c38ccf
 # ╟─ff7cc2bf-2a38-46d2-8d11-529159b08c82
 # ╟─4841f9ba-f3d2-4c65-9225-bc8d0c0a9478
