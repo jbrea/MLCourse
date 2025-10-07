@@ -1676,6 +1676,7 @@ let n = 5000
 	_example_plots(x, y, with_normal_fit = true, with_log_fit = false)
 end
 
+
 # ╔═╡ Cell order:
 # ╟─b70d9848-91a7-4de0-b93e-8078acfd77f8
 # ╟─7eb6a060-f948-4d85-881a-4909e74c15bd
