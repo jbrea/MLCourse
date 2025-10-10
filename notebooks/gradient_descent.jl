@@ -764,54 +764,6 @@ begin
     xor_target = xor_data.y
 end;
 
-# ╔═╡ 9661f274-180f-4e97-90ce-8beb7d1d69bc
-mlcode(
-"""
-    using MLJFlux
-
-    function xor_generator(; n = 200)
-        x = 2 * rand(n, 2) .- 1
-        DataFrame(X1 = x[:, 1], X2 = x[:, 2],
-                  y = (x[:, 1] .> 0) .⊻ (x[:, 2] .> 0))
-    end
-
-    function fit_xor(n_hidden)
-        x = select(xor_data, Not(:y))
-        y = coerce(xor_data.y, Binary)
-        builder = MLJFlux.Short(n_hidden = n_hidden,
-                                dropout = 0,
-                                σ = relu)
-        mach = machine(NeuralNetworkClassifier(builder = builder,
-                                               batch_size = 32,
-                                               epochs = 10^4),
-                       x, y) |> fit!
-        xor_test = xor_generator(n = 10^4)
-        x_test = select(xor_test, Not(:y))
-        y_test = coerce(xor_test.y, Binary)
-        DataFrame(n_hidden = n_hidden,
-                  training_accuracy = mean(predict_mode(mach, x) .== y),
-                  test_accuracy = mean(predict_mode(mach, x_test) .== y_test))
-    end
-
-    xor_results = vcat([fit_xor(n_hidden) for n_hidden in [4, 10], _ in 1:10]...)
-
-    @df xor_results dotplot(:n_hidden, :training_accuracy,
-                            xlabel = "number of hidden units",
-                            ylabel = "accuracy",
-                            label = "training",
-                            yrange = (.5, 1.01),
-                            aspect_ratio = 20,
-                            legend = :bottomright,
-                            xticks = [4, 10])
-    @df xor_results dotplot!(:n_hidden, :test_accuracy, label = "test")
-"""
-,
-nothing
-,
-eval = false,
-collapse = "Implementation details"
-)
-
 # ╔═╡ dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
 begin
     g(x) = .3 * sin(10x) + .7x
@@ -863,7 +815,7 @@ end
 # ╔═╡ e0cc188c-9c8f-47f1-b1fe-afc2a578973d
 md"""# Exercises
 ## Conceptual
-### Exercise 1
+#### Exercise 1
 
 Assume the noise in a linear regression setting comes from a Laplace
 distribution, i.e. the conditional probability density of the response is given by
@@ -925,14 +877,14 @@ end
 
 # ╔═╡ b6af3881-04fb-483a-aa6b-35b9b4574980
 md"""
-### Exercise 2
+#### Exercise 2
 In the \"Vector Features\" section we said that the xor problem has a non-linear decision boundary in the original ``X_1, X_2`` coordinates, but a linear decision boundary in the ``H_1, H_2, H_3, H_4`` coordinates, with ``H_i = \max(0, w_i^TX)`` and we use the vector features ``w_1 = [1, 1]``, ``w_2 = [1, -1]``, ``w_3 = [-1, 1]`` and ``w_4 = [-1, -1]``. Here we prove that ``-H_1 + H_2 + H_3 - H_4 = 0`` defines indeed a linear decision boundary that solves the xor-problem.
 * Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 > 0`` and ``X_2 > 0``.
 * Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 < 0`` and ``X_2 < 0``.
 * Show that ``-H_1 + H_2 + H_3 - H_4  > 0`` for all other points.
 
 ## Applied
-### Exercise 3
+#### Exercise 3
 You are given the following artificial dataset. The data is not linearly separable, meaning that there is no linear decision boundary that would perfectly seperate the blue from the red data points.
     * Find a 2-dimensional feature representation ``H_1 = f_1(X_1, X_2), H_2 = f_2(X_1, X_2)``, such that the transformed data is linearly separable.
     * Generate a similar plot as the one below for the transformed data to visualize that the decision boundary has become linear for the transformed data.
@@ -947,25 +899,13 @@ cldata
 """
 ,
 """
+import pandas as pd
+
 cldata = pd.DataFrame(2*np.random.rand(400, 2)-1, columns=['x1', 'x2'])
 cldata['y'] = cldata['x1']**2 > cldata['x2']
 cldata
 """
 )
-
-# ╔═╡ a81db4a1-e561-4796-896c-26133a8efc60
-md"#### Exercise 4 (optional)
-In Exercise 5 of \"Generalized Linear Regression\" we fitted the bike sharing data using only `:temp` and `:humidity` as predictors. The quality of the fit was not good. Here we try to improve the fit by including more predictors. Many predictors can be treated as categorical, e.g. even the `:hour`, which is actually an ordered, periodic integer, can be treated as categorical to give the linear model a lot of flexibility. Try out different transformations of the input until you find a linear Poisson model that fits the data clearly better than what we had in the previous Exercise. You can measure quality of fit by looking at the same plot as in the previous exercise or by using cross-validation.
-"
-
-# ╔═╡ cb9f858a-f60a-11eb-3f0e-a9b68cf33921
-MLCourse.list_notebooks(@__FILE__)
-
-# ╔═╡ 8459f86e-bce7-4839-9c51-57335ac6353c
-MLCourse.FOOTER
-
-# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
-MLCourse.save_cache(@__FILE__)
 
 # ╔═╡ 6f4427a0-18eb-4637-a19a-ec9aa7b6fda8
 mlcode(
@@ -989,6 +929,50 @@ plt.ylabel('X₂')
 plt.show()
 """
 )
+
+# ╔═╡ a81db4a1-e561-4796-896c-26133a8efc60
+md"#### Exercise 4 (optional)
+In Exercise 5 of \"Generalized Linear Regression\" we fitted the bike sharing data using only `:temp` and `:humidity` as predictors. The quality of the fit was not good. Here we try to improve the fit by including more predictors. Many predictors can be treated as categorical, e.g. even the `:hour`, which is actually an ordered, periodic integer, can be treated as categorical to give the linear model a lot of flexibility. Try out different transformations of the input until you find a linear Poisson model that fits the data clearly better than what we had in the previous Exercise. You can measure quality of fit by looking at the same plot as in the previous exercise or by using cross-validation.
+"
+
+# ╔═╡ cb9f858a-f60a-11eb-3f0e-a9b68cf33921
+MLCourse.list_notebooks(@__FILE__)
+
+# ╔═╡ 8459f86e-bce7-4839-9c51-57335ac6353c
+MLCourse.FOOTER
+
+# ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
+MLCourse.save_cache(@__FILE__)
+
+# ╔═╡ 49c2b3a1-50c0-4fb9-a06b-2de7be216702
+begin
+    Random.seed!(Meta.parse(seed2))
+    θ₀ = .1 * randn(13)
+    tracker_xor = Tracker(θ₀)
+    MLCourse.advanced_gradient_descent(M.log_reg_loss_function(xor_input, xor_target),
+                              θ₀, T = 2*10^4,
+                              callback = tracker_xor)
+    idxs = min.(max.(1:100, floor.(Int, (2e4^(1/100)).^(1:100))), 10^5)
+    losses = M.log_reg_loss_function(xor_input, xor_target).(tracker_xor.path[idxs])
+end;
+
+# ╔═╡ 16d0808e-4094-46ff-8f92-1ed21aa6191b
+let idx = idxs[t7], path = tracker_xor.path
+    θ = path[idx]
+    prediction = σ.(M.f(xor_input, θ)) .> .5
+    p1 = scatter(xor_data.X1, xor_data.X2, c = prediction .+ 1,
+                 xlim = (-1.5, 1.5), ylim = (-1.5, 1.5),
+                 xlabel = "X1", ylabel = "X2")
+    for i in 1:4
+        plot!([0, θ[i*2 - 1]], [0, θ[i*2]], c = :green, w = 3, arrow = true)
+    end
+    hline!([0], c = :black)
+    vline!([0], c = :black)
+    p2 = plot(idxs, losses, xscale = :log10, xlabel = "gradient descent step t",
+              ylabel = "loss", title = "learning curve", yrange = (-.03, 1))
+    scatter!([idxs[t7]], [losses[t7]], c = :red)
+    plot(p1, p2, layout = (1, 2), size = (700, 400), legend = false)
+end
 
 # ╔═╡ Cell order:
 # ╟─e03882f9-843e-4552-90b1-c47b6cbba19b
@@ -1041,9 +1025,9 @@ plt.show()
 # ╟─a2539e77-943e-464c-9ad3-c8542eab36ab
 # ╟─235c6588-8210-4b8e-812c-537a72ce950f
 # ╟─258a3459-3fef-4655-830c-3bdf11eb282d
+# ╟─16d0808e-4094-46ff-8f92-1ed21aa6191b
 # ╟─9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
 # ╟─fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
-# ╟─9661f274-180f-4e97-90ce-8beb7d1d69bc
 # ╟─dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
 # ╟─4dabcbed-9c35-4226-a78f-e7afa5115d92
 # ╟─e0cc188c-9c8f-47f1-b1fe-afc2a578973d
@@ -1057,3 +1041,4 @@ plt.show()
 # ╟─8459f86e-bce7-4839-9c51-57335ac6353c
 # ╟─7aa547f8-25d4-488d-9fc3-f633f7f03f57
 # ╟─9d250061-e570-4537-b1aa-f6a9019f343d
+# ╟─49c2b3a1-50c0-4fb9-a06b-2de7be216702
