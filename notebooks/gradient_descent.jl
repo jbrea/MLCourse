@@ -553,6 +553,265 @@ In early stopping we start (stochastic) gradient descent with smart parameter va
 # ╔═╡ 075f35cf-4271-4676-b9f3-e2bcf610c2d1
 md"step t = $(@bind t4 Slider(0:10^3:3*10^4, show_value = true))"
 
+# ╔═╡ a10b3fa1-358b-4a94-b927-5e0f71edd1f3
+md"# 5. The XOR-Problem and Vector Features
+
+In this section we look at a version of the famous xor problem. It is a binary classification problem with 2-dimensional input. It is called xor problem, because the class label is true if and only if the ``X_1`` and ``X_2`` coordinate of a point have different sign, which is reminiscent of the [logical exclusive or operation](https://en.wikipedia.org/wiki/Exclusive_or). The decision boundary is non-linear. By taking the scalar product with 4 different 2-dimensional vectors and setting to 0 all scalar product that would be negative, we find a 4-dimensional feature representation for which linear logistic regression can classify each point correctly."
+
+# ╔═╡ b66c7efc-8fd8-4152-9b0f-9332f760b51b
+mlcode(
+"""
+using DataFrames, MLJ, MLJLinearModels
+
+function xor_generator(; n = 200)
+	x = 2 * rand(n, 2) .- 1
+	DataFrame(X1 = x[:, 1], X2 = x[:, 2],
+		      y = coerce((x[:, 1] .> 0) .⊻ (x[:, 2] .> 0), Binary))
+end
+xor_data = xor_generator()
+"""
+,
+"""
+import pandas as pd
+
+def xor_generator(n=200):
+    x = 2 * np.random.rand(n, 2) - 1
+    df = pd.DataFrame({'X1': x[:, 0], 'X2': x[:, 1], 'y': np.logical_xor(x[:, 0] > 0, x[:, 1] > 0)})
+    return df
+
+xor_data = xor_generator()
+xor_data
+"""
+,
+cache = true
+)
+
+# ╔═╡ 8cd98650-7f52-40d9-b92d-ce564e57cfa7
+mlcode("""
+using Plots
+
+scatter(xor_data.X1, xor_data.X2, c = int.(xor_data.y) .+ 1,
+		label = nothing, xlabel = "X₁", ylabel = "X₂")
+hline!([0], label = nothing, c = :black)
+vline!([0], label = nothing, c = :black, size = (400, 300))
+""",
+"""
+import matplotlib.pyplot as plt
+
+plt.scatter(xor_data['X1'], xor_data['X2'], c=np.array(xor_data['y'], dtype=int)+1, label=None, cmap ='coolwarm')
+plt.axhline(y=0, color='black', linestyle='-', label=None)
+plt.axvline(x=0, color='black', linestyle='-', label=None)
+plt.xlabel('X₁')
+plt.ylabel('X₂')
+plt.show()
+"""
+)
+
+# ╔═╡ 99d3ae30-6bc2-47bf-adc4-1cc1d3ff178d
+mlcode(
+"""
+lin_mach = machine(LogisticClassifier(penalty = :none),
+                   select(xor_data, Not(:y)),
+                   xor_data.y)
+fit!(lin_mach, verbosity = 0)
+lin_pred = predict_mode(lin_mach, select(xor_data, Not(:y)))
+(training_misclassification_rate = mean(lin_pred .!= xor_data.y),)
+"""
+,
+"""
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+lin_mach = LogisticRegression(penalty=None)
+lin_mach.fit(xor_data[['X1', 'X2']], xor_data['y'])
+lin_pred = lin_mach.predict(xor_data[['X1', 'X2']])
+training_misclassification_rate = np.mean(xor_data['y'] != lin_pred)
+
+("training_misclassification_rate",training_misclassification_rate,)
+"""
+)
+
+# ╔═╡ 1c13dd1a-83ce-47e7-98b5-b6a0d8d2426f
+md"Now we transform the data to the vector features discussed in the slides."
+
+# ╔═╡ 3da4ce70-d4ab-4d9b-841d-d1f3fb385b81
+mlcode(
+"""
+xor_data_h = DataFrame(H1 = max.(0, xor_data.X1 + xor_data.X2),
+	                   H2 = max.(0, xor_data.X1 - xor_data.X2),
+	                   H3 = max.(0, -xor_data.X1 + xor_data.X2),
+	                   H4 = max.(0, -xor_data.X1 - xor_data.X2),
+                       y = xor_data.y)
+"""
+,
+"""
+xor_data_h = pd.DataFrame({
+		'H1': np.maximum(0, xor_data['X1'] + xor_data['X2']), 
+		'H2': np.maximum(0, xor_data['X1'] - xor_data['X2']), 
+		'H3': np.maximum(0, -xor_data['X1'] + xor_data['X2']), 
+		'H4': np.maximum(0, -xor_data['X1'] - xor_data['X2']), 
+		'y': xor_data['y']})
+
+xor_data_h
+"""
+)
+
+# ╔═╡ d73c777a-f993-4ef8-a3f5-8f6717920436
+md"... and we find that the training misclassification rate becomes 0 with this feature representation."
+
+# ╔═╡ 60689196-ca58-4937-8999-4e6f6cd7bdbc
+mlcode(
+"""
+lin_mach_h = machine(LogisticClassifier(penalty = :none),
+                     select(xor_data_h, Not(:y)),
+                     xor_data_h.y)
+fit!(lin_mach_h, verbosity = 0)
+lin_pred_h = predict_mode(lin_mach_h, select(xor_data_h, Not(:y)))
+(training_misclassification_rate_h = mean(lin_pred_h .!= xor_data_h.y),)
+"""
+,
+"""
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+lin_mach = LogisticRegression(penalty=None)
+lin_mach.fit(xor_data_h.drop(["y"], axis=1), xor_data_h['y'])
+lin_pred = lin_mach.predict(xor_data_h.drop(["y"], axis=1))
+training_misclassification_rate = np.mean(xor_data_h['y'] != lin_pred)
+
+("training_misclassification_rate", training_misclassification_rate,)
+"""
+)
+
+
+
+# ╔═╡ c95ad296-5191-4f72-a7d7-87ddebc43a65
+md"## Solving the XOR Problem with Gradient Descent and Learned Feature Vectors
+
+In the following example we define a loss function that learns the features (weights of the hidden neurons) and the \"regression coefficients\" (output weights) with gradient descent.
+"
+
+# ╔═╡ a908176b-319a-445d-9f33-6271c2ef6149
+md"First, we define a neural network with one hidden layer of 4 relu-neurons and the negative log-likelihood loss function."
+
+# ╔═╡ a2539e77-943e-464c-9ad3-c8542eab36ab
+mlcode(
+"""
+import Statistics: mean
+
+relu(x) = max(0, x)
+f(x, w₁, w₂, w₃, w₄, β) = β[1] * relu.(x * w₁) .+
+                          β[2] * relu.(x * w₂) .+
+                          β[3] * relu.(x * w₃) .+
+                          β[4] * relu.(x * w₄) .+
+                          β[5]
+f(x, θ) = f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
+logp(x) = ifelse(x < -40, x, -log(1 + exp(-x))) # for numerical stability
+function log_reg_loss_function(X, y)
+    function(θ)
+        tmp = f(X, θ)
+        -mean(@. y * logp(tmp) + (1 - y) * logp(-tmp))
+    end
+end
+"""
+,
+"""
+import numpy as np
+
+def relu(x):
+    return np.maximum(0, x)
+
+def f(x, w1, w2, w3, w4, beta):
+    return beta[0] * relu(x * w1) + beta[1] * relu(x * w2) + beta[2] * relu(x * w3) + beta[3] * relu(x * w4) + beta[4]
+
+def f(x, θ) :
+	return f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
+
+def logp(x):
+    return np.where(x < -40, x, -np.log(1 + np.exp(-x)))
+
+def log_reg_loss_function(X, y, theta):
+    def loss_function(theta):
+        tmp = f(X, theta)
+        return -np.mean(y * logp(tmp) + (1 - y) * logp(-tmp))
+    return loss_function
+""",
+showoutput = false,
+cache = false
+)
+
+# ╔═╡ 235c6588-8210-4b8e-812c-537a72ce950f
+md"Now we can run gradient descent. The initial parameters θ₀ depend on a pseudo-random number generator whose seed can be set in the dropdown menu below."
+
+# ╔═╡ 258a3459-3fef-4655-830c-3bdf11eb282d
+md"seed = $(@bind(seed2, Select([string(i) for i in 1:20])))
+
+t = $(@bind t7 Slider(1:10^2))
+"
+
+# ╔═╡ 9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
+md"The green arrows in the figure above are the weights w₁, …, w₄ of the four (hidden) neurons. The coloring of the dots is based on classification at decision threshold 0.5, i.e. if the activation of the output neuron is above 0.5 for a given input point, this point is classified as red (green, otherwise). Note that the initial configuration of the green vectors depends on the initialization of gradient descent and therefore on the seed. For some seeds the optimal solution to the xor-problem is not found by gradient descent."
+
+# ╔═╡ fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
+begin
+    function xor_generator(; n = 200)
+        x = 2 * rand(n, 2) .- 1
+        DataFrame(X1 = x[:, 1], X2 = x[:, 2],
+                  y = (x[:, 1] .> 0) .⊻ (x[:, 2] .> 0))
+    end
+    xor_data = xor_generator()
+    xor_input = Array(select(xor_data, Not(:y)))
+    xor_target = xor_data.y
+end;
+
+# ╔═╡ 9661f274-180f-4e97-90ce-8beb7d1d69bc
+mlcode(
+"""
+    using MLJFlux
+
+    function xor_generator(; n = 200)
+        x = 2 * rand(n, 2) .- 1
+        DataFrame(X1 = x[:, 1], X2 = x[:, 2],
+                  y = (x[:, 1] .> 0) .⊻ (x[:, 2] .> 0))
+    end
+
+    function fit_xor(n_hidden)
+        x = select(xor_data, Not(:y))
+        y = coerce(xor_data.y, Binary)
+        builder = MLJFlux.Short(n_hidden = n_hidden,
+                                dropout = 0,
+                                σ = relu)
+        mach = machine(NeuralNetworkClassifier(builder = builder,
+                                               batch_size = 32,
+                                               epochs = 10^4),
+                       x, y) |> fit!
+        xor_test = xor_generator(n = 10^4)
+        x_test = select(xor_test, Not(:y))
+        y_test = coerce(xor_test.y, Binary)
+        DataFrame(n_hidden = n_hidden,
+                  training_accuracy = mean(predict_mode(mach, x) .== y),
+                  test_accuracy = mean(predict_mode(mach, x_test) .== y_test))
+    end
+
+    xor_results = vcat([fit_xor(n_hidden) for n_hidden in [4, 10], _ in 1:10]...)
+
+    @df xor_results dotplot(:n_hidden, :training_accuracy,
+                            xlabel = "number of hidden units",
+                            ylabel = "accuracy",
+                            label = "training",
+                            yrange = (.5, 1.01),
+                            aspect_ratio = 20,
+                            legend = :bottomright,
+                            xticks = [4, 10])
+    @df xor_results dotplot!(:n_hidden, :test_accuracy, label = "test")
+"""
+,
+nothing
+,
+eval = false,
+collapse = "Implementation details"
+)
+
 # ╔═╡ dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
 begin
     g(x) = .3 * sin(10x) + .7x
@@ -601,9 +860,10 @@ let poly_path = tracker5.path
 end
 
 
-
 # ╔═╡ e0cc188c-9c8f-47f1-b1fe-afc2a578973d
-md"""# Exercise
+md"""# Exercises
+## Conceptual
+### Exercise 1
 
 Assume the noise in a linear regression setting comes from a Laplace
 distribution, i.e. the conditional probability density of the response is given by
@@ -663,6 +923,41 @@ Hint: do not forget that we fit without intercept.
 """
 end
 
+# ╔═╡ b6af3881-04fb-483a-aa6b-35b9b4574980
+md"""
+### Exercise 2
+In the \"Vector Features\" section we said that the xor problem has a non-linear decision boundary in the original ``X_1, X_2`` coordinates, but a linear decision boundary in the ``H_1, H_2, H_3, H_4`` coordinates, with ``H_i = \max(0, w_i^TX)`` and we use the vector features ``w_1 = [1, 1]``, ``w_2 = [1, -1]``, ``w_3 = [-1, 1]`` and ``w_4 = [-1, -1]``. Here we prove that ``-H_1 + H_2 + H_3 - H_4 = 0`` defines indeed a linear decision boundary that solves the xor-problem.
+* Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 > 0`` and ``X_2 > 0``.
+* Show that ``-H_1 + H_2 + H_3 - H_4  < 0`` for all points with ``X_1 < 0`` and ``X_2 < 0``.
+* Show that ``-H_1 + H_2 + H_3 - H_4  > 0`` for all other points.
+
+## Applied
+### Exercise 3
+You are given the following artificial dataset. The data is not linearly separable, meaning that there is no linear decision boundary that would perfectly seperate the blue from the red data points.
+    * Find a 2-dimensional feature representation ``H_1 = f_1(X_1, X_2), H_2 = f_2(X_1, X_2)``, such that the transformed data is linearly separable.
+    * Generate a similar plot as the one below for the transformed data to visualize that the decision boundary has become linear for the transformed data.
+"""
+
+# ╔═╡ 9a0e0bf7-44e6-4385-ac46-9a6a8e4245bb
+mlcode(
+"""
+cldata = DataFrame(2*rand(400, 2).-1, :auto)
+cldata.y = cldata.x1.^2 .> cldata.x2
+cldata
+"""
+,
+"""
+cldata = pd.DataFrame(2*np.random.rand(400, 2)-1, columns=['x1', 'x2'])
+cldata['y'] = cldata['x1']**2 > cldata['x2']
+cldata
+"""
+)
+
+# ╔═╡ a81db4a1-e561-4796-896c-26133a8efc60
+md"#### Exercise 4 (optional)
+In Exercise 5 of \"Generalized Linear Regression\" we fitted the bike sharing data using only `:temp` and `:humidity` as predictors. The quality of the fit was not good. Here we try to improve the fit by including more predictors. Many predictors can be treated as categorical, e.g. even the `:hour`, which is actually an ordered, periodic integer, can be treated as categorical to give the linear model a lot of flexibility. Try out different transformations of the input until you find a linear Poisson model that fits the data clearly better than what we had in the previous Exercise. You can measure quality of fit by looking at the same plot as in the previous exercise or by using cross-validation.
+"
+
 # ╔═╡ cb9f858a-f60a-11eb-3f0e-a9b68cf33921
 MLCourse.list_notebooks(@__FILE__)
 
@@ -671,6 +966,29 @@ MLCourse.FOOTER
 
 # ╔═╡ 9d250061-e570-4537-b1aa-f6a9019f343d
 MLCourse.save_cache(@__FILE__)
+
+# ╔═╡ 6f4427a0-18eb-4637-a19a-ec9aa7b6fda8
+mlcode(
+"""
+using Plots
+
+scatter(cldata.x1, cldata.x2,
+        c = Int.(cldata.y) .+ 1, legend = false,
+        xlabel = "X₁", ylabel = "X₂")
+"""
+,
+"""
+import matplotlib.pyplot as plt
+
+plt.figure()
+plt.scatter(cldata["x1"], cldata["x2"],
+            c=cldata["y"].astype(int) + 1,
+            label=None, cmap ='coolwarm')
+plt.xlabel('X₁')
+plt.ylabel('X₂')
+plt.show()
+"""
+)
 
 # ╔═╡ Cell order:
 # ╟─e03882f9-843e-4552-90b1-c47b6cbba19b
@@ -710,11 +1028,31 @@ MLCourse.save_cache(@__FILE__)
 # ╟─08a9418f-786e-4992-b1a5-04cf9060f8fe
 # ╟─075f35cf-4271-4676-b9f3-e2bcf610c2d1
 # ╟─0d431c00-9eef-4ce4-9542-9571728d1501
+# ╟─a10b3fa1-358b-4a94-b927-5e0f71edd1f3
+# ╟─b66c7efc-8fd8-4152-9b0f-9332f760b51b
+# ╟─8cd98650-7f52-40d9-b92d-ce564e57cfa7
+# ╟─99d3ae30-6bc2-47bf-adc4-1cc1d3ff178d
+# ╟─1c13dd1a-83ce-47e7-98b5-b6a0d8d2426f
+# ╟─3da4ce70-d4ab-4d9b-841d-d1f3fb385b81
+# ╟─d73c777a-f993-4ef8-a3f5-8f6717920436
+# ╟─60689196-ca58-4937-8999-4e6f6cd7bdbc
+# ╟─c95ad296-5191-4f72-a7d7-87ddebc43a65
+# ╟─a908176b-319a-445d-9f33-6271c2ef6149
+# ╟─a2539e77-943e-464c-9ad3-c8542eab36ab
+# ╟─235c6588-8210-4b8e-812c-537a72ce950f
+# ╟─258a3459-3fef-4655-830c-3bdf11eb282d
+# ╟─9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
+# ╟─fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
+# ╟─9661f274-180f-4e97-90ce-8beb7d1d69bc
 # ╟─dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
 # ╟─4dabcbed-9c35-4226-a78f-e7afa5115d92
 # ╟─e0cc188c-9c8f-47f1-b1fe-afc2a578973d
 # ╟─8f3a30c3-0d7b-4028-a8cd-185fb1858b40
 # ╟─c0285107-0131-404f-9617-229f1c88f091
+# ╟─b6af3881-04fb-483a-aa6b-35b9b4574980
+# ╟─9a0e0bf7-44e6-4385-ac46-9a6a8e4245bb
+# ╟─6f4427a0-18eb-4637-a19a-ec9aa7b6fda8
+# ╟─a81db4a1-e561-4796-896c-26133a8efc60
 # ╟─cb9f858a-f60a-11eb-3f0e-a9b68cf33921
 # ╟─8459f86e-bce7-4839-9c51-57335ac6353c
 # ╟─7aa547f8-25d4-488d-9fc3-f633f7f03f57
