@@ -1147,9 +1147,6 @@ knot 3 = $(@bind knot3 Slider(30:70, default = 50, show_value = true))
 
 knot 4 = $(@bind knot4 Slider(40:80, default = 60, show_value = true))"
 
-# ╔═╡ 75a2d9fa-2edd-4506-bb10-ee8e9c780626
-md"Similarly to polynomial regression, we will use now the `spline_features` function to compute spline features as a first step in a pipeline and then perform linear regression on these spline features."
-
 # ╔═╡ cfcad2d7-7dd9-43fe-9633-7ce9e51e1e27
 md"# 7. Transformations of the Output
 
@@ -1253,9 +1250,14 @@ gamma_fit = Distributions.fit_mle(Gamma, weather.LUZ_wind_peak);
 
 # ╔═╡ 62491145-48b9-4ac5-8e7b-0676e9616fe9
 begin
-	histogram(weather.LUZ_wind_peak, normalize = :pdf,
+	p1 = histogram(weather.LUZ_wind_peak, normalize = :pdf,
+		      xlabel = "LUZ_wind_peak", label = nothing, ylabel = "probability density")
+	lognormal_fit = Distributions.fit(Distributions.LogNormal, weather.LUZ_wind_peak);
+	plot!(x -> pdf(lognormal_fit, x), w = 2, label = "fitted Lognormal distribution")
+	p2 = histogram(weather.LUZ_wind_peak, normalize = :pdf,
 		      xlabel = "LUZ_wind_peak", label = nothing)
 	plot!(x -> pdf(gamma_fit, x), w = 2, label = "fitted Gamma distribution")
+	plot(p1, p2, layout = (1, 2), size = (700, 500))
 end
 
 # ╔═╡ ed239411-185a-4d9f-b0ec-360400f24dc7
@@ -1266,10 +1268,10 @@ let
 	p1 = histogram(weather.LUZ_wind_peak, normalize = :pdf,
 		      xlabel = "LUZ_wind_peak", label = nothing, ylabel = "probability density")
 	plot!(x -> pdf(normal_fit, x), w = 2, label = "fitted Normal distribution")
-    lognormal_fit = Distributions.fit(Normal, log.(weather.LUZ_wind_peak));
+    log_fit = Distributions.fit(Normal, log.(weather.LUZ_wind_peak));
 	p2 = histogram(log.(weather.LUZ_wind_peak), normalize = :pdf,
 		      xlabel = "log(LUZ_wind_peak)", label = nothing)
-	plot!(x -> pdf(lognormal_fit, x), w = 2, label = "fitted Normal distribution")
+	plot!(x -> pdf(log_fit, x), w = 2, label = "fitted Normal distribution")
     plot(p1, p2, layout = (1, 2), size = (700, 500))
 end
 
@@ -1783,7 +1785,8 @@ end
 # ╟─69b9c8ed-acf1-43bf-8478-3a9bc57bc36a
 # ╟─933cf81e-39e7-428c-a270-c638e6ead6fe
 # ╟─001c88b3-c0db-4ad4-9c0f-04a2ea7b090d
-# ╟─75a2d9fa-2edd-4506-bb10-ee8e9c780626
+# ╟─5774b82f-a09e-46f8-a458-0f85fc4c53d8
+# ╟─0815ba19-5c7d-40d6-b948-8edccfb5c386
 # ╟─cfcad2d7-7dd9-43fe-9633-7ce9e51e1e27
 # ╟─15faf5e7-fa72-4519-a83b-3007486450dd
 # ╟─1e4ba3ab-1bf1-495a-b9c4-b9ea657fc91c
@@ -1806,8 +1809,6 @@ end
 # ╟─38554070-7233-4794-825f-2617a856bf78
 # ╟─f7a64959-ea12-4aa0-bad1-4ee03c3b1fcc
 # ╟─80593756-ed60-4368-8801-d558a1af7adb
-# ╟─5774b82f-a09e-46f8-a458-0f85fc4c53d8
-# ╟─0815ba19-5c7d-40d6-b948-8edccfb5c386
 # ╟─ee89c448-1e69-4fd1-a4b8-7297a09f2685
 # ╟─c0e33f73-59cc-4c8b-965b-21d8ea83d1ce
 # ╟─186fa41b-5e74-4191-bc2d-e8d865606fc1
