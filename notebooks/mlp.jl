@@ -39,141 +39,13 @@ end
 
 # ╔═╡ c1cbcbf4-f9a9-4763-add8-c5ed7cbd2889
 md"The goal of this week is to
-1. understand, how the XOR problem can be solved without feature engineering.
-2. understand, how neurons and neural networks can be written in code.
-3. learn how to run regression with neural networks.
-4. learn how to run classification with neural networks.
+1. understand, how neurons and neural networks can be written in code.
+2. learn how to run regression with neural networks.
+3. learn how to run classification with neural networks.
 "
-
-# ╔═╡ c95ad296-5191-4f72-a7d7-87ddebc43a65
-md"# 1. Solving the XOR Problem with Learned Feature Vectors
-
-In the following example we define a loss function that learns the features (weights of the hidden neurons) and the \"regression coefficients\" (output weights) with gradient descent.
-"
-
-# ╔═╡ a908176b-319a-445d-9f33-6271c2ef6149
-md"First, we define a neural network with one hidden layer of 4 relu-neurons and the negative log-likelihood loss function."
-
-# ╔═╡ a2539e77-943e-464c-9ad3-c8542eab36ab
-mlcode(
-"""
-import Statistics: mean
-
-relu(x) = max(0, x)
-f(x, w₁, w₂, w₃, w₄, β) = β[1] * relu.(x * w₁) .+
-                          β[2] * relu.(x * w₂) .+
-                          β[3] * relu.(x * w₃) .+
-                          β[4] * relu.(x * w₄) .+
-                          β[5]
-f(x, θ) = f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
-logp(x) = ifelse(x < -40, x, -log(1 + exp(-x))) # for numerical stability
-function log_reg_loss_function(X, y)
-    function(θ)
-        tmp = f(X, θ)
-        -mean(@. y * logp(tmp) + (1 - y) * logp(-tmp))
-    end
-end
-"""
-,
-"""
-import numpy as np
-
-def relu(x):
-    return np.maximum(0, x)
-
-def f(x, w1, w2, w3, w4, beta):
-    return beta[0] * relu(x * w1) + beta[1] * relu(x * w2) + beta[2] * relu(x * w3) + beta[3] * relu(x * w4) + beta[4]
-
-def f(x, θ) :
-	return f(x, θ[1:2], θ[3:4], θ[5:6], θ[7:8], θ[9:13])
-
-def logp(x):
-    return np.where(x < -40, x, -np.log(1 + np.exp(-x)))
-
-def log_reg_loss_function(X, y, theta):
-    def loss_function(theta):
-        tmp = f(X, theta)
-        return -np.mean(y * logp(tmp) + (1 - y) * logp(-tmp))
-    return loss_function
-""",
-showoutput = false,
-cache = false
-)
-
-# ╔═╡ 235c6588-8210-4b8e-812c-537a72ce950f
-md"Now we can run gradient descent. The initial parameters θ₀ depend on a pseudo-random number generator whose seed can be set in the dropdown menu below."
-
-# ╔═╡ 258a3459-3fef-4655-830c-3bdf11eb282d
-md"seed = $(@bind(seed, Select([string(i) for i in 1:20])))
-
-t = $(@bind t Slider(1:10^2))
-"
-
-# ╔═╡ 9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
-md"The green arrows in the figure above are the weights w₁, …, w₄ of the four (hidden) neurons. The coloring of the dots is based on classification at decision threshold 0.5, i.e. if the activation of the output neuron is above 0.5 for a given input point, this point is classified as red (green, otherwise). Note that the initial configuration of the green vectors depends on the initialization of gradient descent and therefore on the seed. For some seeds the optimal solution to the xor-problem is not found by gradient descent."
-
-# ╔═╡ fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
-begin
-    function xor_generator(; n = 200)
-        x = 2 * rand(n, 2) .- 1
-        DataFrame(X1 = x[:, 1], X2 = x[:, 2],
-                  y = (x[:, 1] .> 0) .⊻ (x[:, 2] .> 0))
-    end
-    xor_data = xor_generator()
-    xor_input = Array(select(xor_data, Not(:y)))
-    xor_target = xor_data.y
-end;
-
-# ╔═╡ 9661f274-180f-4e97-90ce-8beb7d1d69bc
-mlcode(
-"""
-    using MLJFlux
-
-    function xor_generator(; n = 200)
-        x = 2 * rand(n, 2) .- 1
-        DataFrame(X1 = x[:, 1], X2 = x[:, 2],
-                  y = (x[:, 1] .> 0) .⊻ (x[:, 2] .> 0))
-    end
-
-    function fit_xor(n_hidden)
-        x = select(xor_data, Not(:y))
-        y = coerce(xor_data.y, Binary)
-        builder = MLJFlux.Short(n_hidden = n_hidden,
-                                dropout = 0,
-                                σ = relu)
-        mach = machine(NeuralNetworkClassifier(builder = builder,
-                                               batch_size = 32,
-                                               epochs = 10^4),
-                       x, y) |> fit!
-        xor_test = xor_generator(n = 10^4)
-        x_test = select(xor_test, Not(:y))
-        y_test = coerce(xor_test.y, Binary)
-        DataFrame(n_hidden = n_hidden,
-                  training_accuracy = mean(predict_mode(mach, x) .== y),
-                  test_accuracy = mean(predict_mode(mach, x_test) .== y_test))
-    end
-
-    xor_results = vcat([fit_xor(n_hidden) for n_hidden in [4, 10], _ in 1:10]...)
-
-    @df xor_results dotplot(:n_hidden, :training_accuracy,
-                            xlabel = "number of hidden units",
-                            ylabel = "accuracy",
-                            label = "training",
-                            yrange = (.5, 1.01),
-                            aspect_ratio = 20,
-                            legend = :bottomright,
-                            xticks = [4, 10])
-    @df xor_results dotplot!(:n_hidden, :test_accuracy, label = "test")
-"""
-,
-nothing
-,
-eval = false,
-collapse = "Implementation details"
-)
 
 # ╔═╡ 5c2154ef-2a35-4d91-959d-f72100049894
-md"# 2. Multilayer Perceptrons
+md"# 1. Multilayer Perceptrons
 
 Below you see three equivalent ways to implement a neural network. It is recommendable to read and try to understand this code, to get a feeling for the different ways, how a neural network can be implemented. Later we will use dedicated deep learning packages instead of this custom code, however. The deep learning packages usually work with the matrix version.
 
@@ -379,7 +251,7 @@ let x = -5:.1:5, neuron = M.neuron
 end
 
 # ╔═╡ 9d3e7643-34fd-40ee-b442-9d2a434f30e0
-md"""# 3. Regression with MLPs
+md"""# 2. Regression with MLPs
 
 ## Constructing Multilayer Neural Networks
 
@@ -927,7 +799,7 @@ plt.show()
 M.eval(:(using MLJFlux)) # hack to have @builder work in the next cell
 
 # ╔═╡ 14a8eacb-352e-4c3b-8908-2a6f77ffc6fe
-md"# 4. Classification with MLPs
+md"# 3. Classification with MLPs
 
 ## Fitting MNIST
 
@@ -1155,48 +1027,6 @@ function MLCourse.embed_figure(name)
 end
 end;
 
-# ╔═╡ 49c2b3a1-50c0-4fb9-a06b-2de7be216702
-begin
-    Random.seed!(Meta.parse(seed))
-    θ₀ = .1 * randn(13)
-    tracker = Tracker(θ₀)
-    MLCourse.advanced_gradient_descent(M.log_reg_loss_function(xor_input, xor_target),
-                              θ₀, T = 2*10^4,
-                              callback = tracker)
-    idxs = min.(max.(1:100, floor.(Int, (2e4^(1/100)).^(1:100))), 10^5)
-    losses = M.log_reg_loss_function(xor_input, xor_target).(tracker.path[idxs])
-end;
-
-# ╔═╡ 16d0808e-4094-46ff-8f92-1ed21aa6191b
-let idx = idxs[t], path = tracker.path
-    θ = path[idx]
-    prediction = σ.(M.f(xor_input, θ)) .> .5
-    p1 = scatter(xor_data.X1, xor_data.X2, c = prediction .+ 1,
-                 xlim = (-1.5, 1.5), ylim = (-1.5, 1.5),
-                 xlabel = "X1", ylabel = "X2")
-    for i in 1:4
-        plot!([0, θ[i*2 - 1]], [0, θ[i*2]], c = :green, w = 3, arrow = true)
-    end
-    hline!([0], c = :black)
-    vline!([0], c = :black)
-    p2 = plot(idxs, losses, xscale = :log10, xlabel = "gradient descent step t",
-              ylabel = "loss", title = "learning curve", yrange = (-.03, 1))
-    scatter!([idxs[t]], [losses[t]], c = :red)
-    plot(p1, p2, layout = (1, 2), size = (700, 400), legend = false)
-end
-
-# ╔═╡ 8c54bfb2-54c5-4777-ad53-97926da97f7e
-Markdown.parse("
-## Avoiding Local Minima with Overparametrization
-The following code fits 10 times with different initial guesses for the
-parameters an MLP with 4 hidden neurons and 10 times an MLP with 10 hidden
-neurons to our xor data. We see that training and test accuracy is better for
-the larger network. The reason is that gradient descent for the the larger
-network does not get stuck in suboptimal solutions.
-
-$(MLCourse.embed_figure("overparametrized.png"))
-")
-
 # ╔═╡ 8c72c4b5-452d-4ba3-903b-866cac1c799d
 MLCourse.FOOTER
 
@@ -1206,17 +1036,6 @@ MLCourse.save_cache(@__FILE__)
 
 # ╔═╡ Cell order:
 # ╟─c1cbcbf4-f9a9-4763-add8-c5ed7cbd2889
-# ╟─c95ad296-5191-4f72-a7d7-87ddebc43a65
-# ╟─a908176b-319a-445d-9f33-6271c2ef6149
-# ╟─a2539e77-943e-464c-9ad3-c8542eab36ab
-# ╟─235c6588-8210-4b8e-812c-537a72ce950f
-# ╟─258a3459-3fef-4655-830c-3bdf11eb282d
-# ╟─16d0808e-4094-46ff-8f92-1ed21aa6191b
-# ╟─9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
-# ╟─fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
-# ╟─49c2b3a1-50c0-4fb9-a06b-2de7be216702
-# ╟─8c54bfb2-54c5-4777-ad53-97926da97f7e
-# ╟─9661f274-180f-4e97-90ce-8beb7d1d69bc
 # ╟─5c2154ef-2a35-4d91-959d-f72100049894
 # ╟─71dabb22-816b-4aa2-9a29-f2894989b2ea
 # ╟─653ea4e8-47b2-4d9f-bc5c-583468d6e1ae

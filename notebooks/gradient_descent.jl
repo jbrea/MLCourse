@@ -38,6 +38,7 @@ md"The goal of this week is to
 2. understand stochatic gradient descent.
 3. know improved versions of (stochastic) gradient descent.
 4. understand, why early stopping gradient descent has a similar effect as regularization.
+5. Understand how we can solve the XOR-Problem with feature engineering and gradient descent
 "
 
 # ╔═╡ 9f18f610-79e2-403a-a792-fe2dafd2054a
@@ -752,6 +753,18 @@ t = $(@bind t7 Slider(1:10^2))
 # ╔═╡ 9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
 md"The green arrows in the figure above are the weights w₁, …, w₄ of the four (hidden) neurons. The coloring of the dots is based on classification at decision threshold 0.5, i.e. if the activation of the output neuron is above 0.5 for a given input point, this point is classified as red (green, otherwise). Note that the initial configuration of the green vectors depends on the initialization of gradient descent and therefore on the seed. For some seeds the optimal solution to the xor-problem is not found by gradient descent."
 
+# ╔═╡ 8c54bfb2-54c5-4777-ad53-97926da97f7e
+Markdown.parse("
+## Avoiding Local Minima with Overparametrization
+The following code fits 10 times with different initial guesses for the
+parameters an MLP with 4 hidden neurons and 10 times an MLP with 10 hidden
+neurons to our xor data. We see that training and test accuracy is better for
+the larger network. The reason is that gradient descent for the the larger
+network does not get stuck in suboptimal solutions.
+
+$(MLCourse.embed_figure("overparametrized.png"))
+")
+
 # ╔═╡ fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
 begin
     function xor_generator(; n = 200)
@@ -763,6 +776,55 @@ begin
     xor_input = Array(select(xor_data, Not(:y)))
     xor_target = xor_data.y
 end;
+
+# ╔═╡ 9661f274-180f-4e97-90ce-8beb7d1d69bc
+mlcode(
+"""
+    using MLJFlux
+
+    function xor_generator(; n = 200)
+        x = 2 * rand(n, 2) .- 1
+        DataFrame(X1 = x[:, 1], X2 = x[:, 2],
+                  y = (x[:, 1] .> 0) .⊻ (x[:, 2] .> 0))
+    end
+
+    function fit_xor(n_hidden)
+        x = select(xor_data, Not(:y))
+        y = coerce(xor_data.y, Binary)
+        builder = MLJFlux.Short(n_hidden = n_hidden,
+                                dropout = 0,
+                                σ = relu)
+        mach = machine(NeuralNetworkClassifier(builder = builder,
+                                               batch_size = 32,
+                                               epochs = 10^4),
+                       x, y) |> fit!
+        xor_test = xor_generator(n = 10^4)
+        x_test = select(xor_test, Not(:y))
+        y_test = coerce(xor_test.y, Binary)
+        DataFrame(n_hidden = n_hidden,
+                  training_accuracy = mean(predict_mode(mach, x) .== y),
+                  test_accuracy = mean(predict_mode(mach, x_test) .== y_test))
+    end
+
+    xor_results = vcat([fit_xor(n_hidden) for n_hidden in [4, 10], _ in 1:10]...)
+
+    @df xor_results dotplot(:n_hidden, :training_accuracy,
+                            xlabel = "number of hidden units",
+                            ylabel = "accuracy",
+                            label = "training",
+                            yrange = (.5, 1.01),
+                            aspect_ratio = 20,
+                            legend = :bottomright,
+                            xticks = [4, 10])
+    @df xor_results dotplot!(:n_hidden, :test_accuracy, label = "test")
+"""
+,
+nothing
+,
+eval = false,
+collapse = "Implementation details"
+)
+
 
 # ╔═╡ dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
 begin
@@ -810,7 +872,6 @@ let poly_path = tracker5.path
     hline!([vmin], c = :red, linestyle = :dash, label = nothing)
     plot(p1, p2, layout = (1, 2), size = (700, 400))
 end
-
 
 # ╔═╡ e0cc188c-9c8f-47f1-b1fe-afc2a578973d
 md"""# Exercises
@@ -1027,7 +1088,9 @@ end
 # ╟─258a3459-3fef-4655-830c-3bdf11eb282d
 # ╟─16d0808e-4094-46ff-8f92-1ed21aa6191b
 # ╟─9aa58d2b-783a-4b74-ae36-f2ff0fb0be3f
+# ╟─8c54bfb2-54c5-4777-ad53-97926da97f7e
 # ╟─fde9639d-5f41-4037-ab7b-d3dbb09e8d3d
+# ╟─9661f274-180f-4e97-90ce-8beb7d1d69bc
 # ╟─dc57d700-2a82-4ab0-9bd2-6ce622cb0fa5
 # ╟─4dabcbed-9c35-4226-a78f-e7afa5115d92
 # ╟─e0cc188c-9c8f-47f1-b1fe-afc2a578973d
