@@ -20,7 +20,7 @@ ENV html_export=true
 ENV JULIA_PKG_DEVDIR=/home
 ENV DISABLE_CACHE_SAVE=
 COPY --chown=MLCourse notebooks/.cache notebooks/.cache
-COPY --chown=MLCourse flies flies
+# COPY --chown=MLCourse flies flies
 
 # Initialize the julia project environment that will be used to run the bind server.
 # RUN julia --project=/home/MLCourse -e "import Pkg; Pkg.instantiate(); Pkg.precompile(); using MLCourse"
