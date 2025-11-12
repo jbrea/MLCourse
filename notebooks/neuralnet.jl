@@ -227,7 +227,7 @@ plt.title('Learning Curve')
 plt.show()
 """
 ,
-recompute = true
+recompute = false
 )
 
 # ╔═╡ 8735326c-6c53-4b3a-a962-487ae4d79013
@@ -244,7 +244,7 @@ plt.ylabel("predicted mode of counts")
 plt.show()
 """
 ,
-recompute=true
+recompute = false
 )
 
 # ╔═╡ 2e4387f3-598f-4c01-891d-d1577b65ab95
@@ -271,7 +271,7 @@ net_poisson = NeuralNetRegressor(
 scores_poisson = cross_val_score(net_poisson, X, y, cv=5, scoring='neg_mean_poisson_deviance')
 scores_poisson
 """,
-recompute=true
+recompute = false
 )
 
 # ╔═╡ 22a8f42c-c7ca-4547-92d9-b6b557780377
@@ -301,7 +301,7 @@ scores_poisson_reg
 """)
 
 # ╔═╡ e43e7f0b-879f-4f04-a390-7bfa3bc4c806
-mlcode("", "{'linear model': cv_scores1.mean(), 'without regularization': scores_poisson.mean(), 'with dropout': scores_poisson_reg.mean()}", recompute = true)
+mlcode("", "{'linear model': cv_scores1.mean(), 'without regularization': scores_poisson.mean(), 'with dropout': scores_poisson_reg.mean()}", recompute = false)
 
 # ╔═╡ 0440f6b1-b422-4209-9c72-bda3313d986a
 md"With a little bit of dropout the estimate of the test score is much higher, and in fact better than the linear model. Again, this could be the starting point of more detailed hyper-parameter tuning."
