@@ -361,7 +361,7 @@ for epoch in range(num_epochs):
 
 ```
 1. How many parameters does the `net` have?
-2. List all hyper-parameters in this code.
+2. List all hyper-parameters in this code, and indicate for each one whether increasing its value increases or decreases the flexibility of the method. *Hint:* for some hyper-parameters it is difficult to give a clear-cut answer, without considering the other hyper-parameter values.
 3. Write a summary of 5-10 sentences to explain this code to a SV semester 5 student who didn't take this course.
 """
 
@@ -371,11 +371,13 @@ The following text can be found in a [research paper on dropout](https://jmlr.or
 #### Exercise 2
 $(MLCourse.embed_figure("dropout.png"))
 
-Show with a simple example of a neural network with one hidden layer of relu neurons and a linear readout layer, that
+Show with a simple example of a neural network with one hidden layer of tanh neurons and a linear readout layer, that
 
-a) the approximate model matches the true model average if dropout is applied after the relu layer.
+a) the approximate model matches the true model average if dropout is applied after the tanh.
 
-b) the approximate model doesn't match the true model average if dropout is applied before the relu layer.
+*Hint*: Use a random variable \$r_i\$ drawn from a Bernoulli distribution to indicate, whether a hidden neuron \$i\$ is dropped or not, i.e. you can write the activity of a single readout neuron as \$\\sum_{i}w_ir_i\\tanh(h_i)\$ with \$h_i = b^{(1)}_i + w^{(1)}_i x\$.
+
+b) the approximate model doesn't match the true model average if dropout is applied before the tanh.
 """
 )
 
@@ -407,7 +409,7 @@ def generate_nonlinear_3class_dataset(n_samples=300, random_state=None):
             y[i] = 2
     return X, y
 
-X, y = generate_nonlinear_3class_dataset(100, random_state=142)
+X, y = generate_nonlinear_3class_dataset(200, random_state=142)
 
 "
 )
@@ -416,12 +418,15 @@ X, y = generate_nonlinear_3class_dataset(100, random_state=142)
 md"
 a) Train a neural network with two hidden layers of ``n`` relu neurons, and a third hidden layer of 2 relu neurons. Choose `n` and the number of epochs large enough to reach zero classification error on the training set.
 
-b) Plot the raw 2-dimensional input data, as well as the activity in the third (2D) hidden layer. Color the points with the class label.
+b) Estimate the L2 norm of the parameters and the test error on a large test set with 5000 samples. *Hint:* Write a function for this; you can reuse it in part d.
 
-c) Estimate the test error on a large test set.
+c) Plot the raw 2-dimensional input data, as well as the activity in the third (2D) hidden layer for both the training and the test set. Color the points with the class label. *Hint*: you can use `net[:-1](X)` to extract the activations of the penultimate layer. *Hint 2:* Write a function for this plot; you can reuse it in part d.
 
-d) Regularize your neural network in 3 different ways: dropout in the first two hidden layers, L2 regularization, and early stopping. Compare the 3 results (also with the solution found in a) in terms of the L2 norm of the final parameter values, representation in the third hidden layer (plot as in b), and test error.
+d) Regularize your neural network in 3 different ways: dropout in the first two hidden layers, L2 regularization, and early stopping (try out different values). Compare the 3 results (also with the solution found in a) in terms of the L2 norm of the final parameter values, representation in the third hidden layer (plot as in b), and test error.
 "
+
+# ╔═╡ e816e3f3-3135-415c-b784-f49c382a9b47
+MLCourse.list_notebooks(@__FILE__)
 
 # ╔═╡ 8d6dfbd5-90d3-4d61-98c9-ae73879e803e
 MLCourse.FOOTER
@@ -461,6 +466,7 @@ MLCourse.save_cache(@__FILE__)
 # ╟─46597df0-4386-4567-b424-29a69c856568
 # ╟─7545547b-db7e-444d-b924-b6a6fa0e2ac9
 # ╟─2a666ce7-f074-4e62-a5ba-0f7ab185da48
+# ╟─e816e3f3-3135-415c-b784-f49c382a9b47
 # ╟─8d6dfbd5-90d3-4d61-98c9-ae73879e803e
 # ╟─87f59dc7-5149-4eb6-9d81-440ee8cecd72
 # ╟─14bc31ad-c5b9-44c9-ad6a-028dbea2b06b
