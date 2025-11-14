@@ -409,7 +409,7 @@ def generate_nonlinear_3class_dataset(n_samples=300, random_state=None):
             y[i] = 2
     return X, y
 
-X, y = generate_nonlinear_3class_dataset(200, random_state=142)
+X, y = generate_nonlinear_3class_dataset(100, random_state=142)
 
 "
 )
