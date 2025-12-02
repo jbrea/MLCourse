@@ -1,4 +1,5 @@
 [deps]
+fancyimpute = ""
 matplotlib = ""
 scikit-learn = ""
 plotly = ""

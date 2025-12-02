@@ -966,6 +966,74 @@ end
 # )
 #
 
+# ╔═╡ 93dbdf23-8c38-4691-86c0-26189e399263
+md"## PCA for Matrix Completion (Imputation)
+
+To illustrate imputation with matrix completion, we generate an artificial dataset with missing values.
+"
+
+# ╔═╡ b9b9b970-f024-4a0b-b12e-030237eaf22c
+mlcode("",
+"""
+import numpy as np
+
+mean = [0, 0]
+cov = [[1, 1.1],
+       [1.1, 1.4]]
+original_samples = np.random.multivariate_normal(mean, cov, 200)
+samples = np.copy(original_samples)
+samples[0:50, 0] = np.nan
+samples[50:100, 1] = np.nan
+samples
+"""
+,
+recompute = false
+)
+
+# ╔═╡ 97737faa-a50c-4b3c-843c-2a4f8a8fab05
+mlcode("",
+"""
+from sklearn.impute import SimpleImputer
+import matplotlib.pyplot as plt
+
+samples_imputed = SimpleImputer(strategy='median').fit_transform(samples)
+
+plt.figure()
+plt.scatter(samples_imputed[:, 0], samples_imputed[:, 1], c='blue')
+plt.scatter(original_samples[:, 0], original_samples[:, 1], c='green')
+plt.xlabel('X1')
+plt.ylabel('X2')
+plt.title('Median Imputation')
+plt.show()
+"""
+,
+recompute = false
+)
+
+# ╔═╡ fd71b3ad-60fa-4313-b5c8-8c6dd0f11f03
+md"The plot above shows the data points with median imputation in blue."
+
+# ╔═╡ 9f7f0ca4-4ae1-4c66-adb5-89c8d64e9edc
+mlcode("",
+"""
+from fancyimpute import SoftImpute
+
+samples_soft_imputed = SoftImpute().fit_transform(samples)
+
+plt.figure()
+plt.scatter(samples_soft_imputed[:, 0], samples_soft_imputed[:, 1], c='blue')
+plt.scatter(original_samples[:, 0], original_samples[:, 1], c='green')
+plt.xlabel('X1')
+plt.ylabel('X2')
+plt.title('Imputation with Matrix Completion')
+plt.show()
+""",
+recompute = false
+)
+
+# ╔═╡ 926ec890-b753-48b5-8b11-f2f13e87beba
+md"""With matrix imputation (`SoftImpute`) the data points with missing values (blue) look more "in-distribution" than with median imputation."""
+
 # ╔═╡ d44be4c6-a409-421a-8e68-39fa752db4c0
 md"# 3. Limitations of PCA as a Dimension Reduction Tool
 
@@ -1571,6 +1639,12 @@ MLCourse.save_cache(@__FILE__)
 # ╟─8e466825-0c84-41c7-93c6-e3cc81a60ef5
 # ╟─218d4c11-45a1-4d92-8b48-d08251804638
 # ╟─0943f000-a148-4470-ae5e-9d8d39cd8207
+# ╟─93dbdf23-8c38-4691-86c0-26189e399263
+# ╟─b9b9b970-f024-4a0b-b12e-030237eaf22c
+# ╟─97737faa-a50c-4b3c-843c-2a4f8a8fab05
+# ╟─fd71b3ad-60fa-4313-b5c8-8c6dd0f11f03
+# ╟─9f7f0ca4-4ae1-4c66-adb5-89c8d64e9edc
+# ╟─926ec890-b753-48b5-8b11-f2f13e87beba
 # ╟─d44be4c6-a409-421a-8e68-39fa752db4c0
 # ╟─d3b769d7-ec71-4496-926a-e838c3b50c2a
 # ╟─67395b94-46bd-43e5-9e12-0bd921de8203
