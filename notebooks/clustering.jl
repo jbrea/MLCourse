@@ -246,6 +246,7 @@ weights = [0.4, 0.35, 0.25]
 # Generate samples
 samples = []
 labels = []
+np.random.seed(3)
 for i, (mean, cov, weight) in enumerate(zip(means, covariances, weights)):
     n = int(n_samples * weight)
     samples.append(np.random.multivariate_normal(mean, cov, n))
@@ -265,7 +266,7 @@ plt.grid(True)
 plt.show()
 """
 ,
-recompute = false
+recompute = true
 )
 
 # ╔═╡ d02e7c1a-b847-4e81-85b5-b5d67e1d3f98
@@ -290,7 +291,7 @@ plt.grid(True)
 plt.show()
 """
 ,
-recompute = false
+recompute = true
 )
 
 # ╔═╡ fe07a99a-915c-4157-a224-3c8197705b56
@@ -316,7 +317,7 @@ plt.colorbar(scatter, label='Cluster')
 plt.grid(True)
 plt.show()
 """,
-recompute = false
+recompute = true
 )
 
 # ╔═╡ 12317841-c1f8-4022-970e-8ef613c79b78
